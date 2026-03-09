@@ -6,7 +6,7 @@ import { Text } from "./ui/text";
 
 function Navbar() {
   return (
-    <nav className="flex items-center bg-gray-900 text-white py-2 px-8 m-2 rounded-2xl">
+    <nav className="flex items-center bg-gray-900 text-white py-2 px-5 my-2 mx-auto rounded-2xl w-[50%] ">
       <Link href="/" className="flex-1 flex items-center gap-2">
         <LibraryBigIcon className="w-5.5 h-5.5" />
         <Text variant="heading-2">BookReview</Text>
