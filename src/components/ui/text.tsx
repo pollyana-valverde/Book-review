@@ -20,14 +20,14 @@ const textVariants = cva("", {
 });
 
 interface TextProps
-  extends React.ComponentProps<"span">, VariantProps<typeof textVariants> {
-  as?: React.ElementType;
+  extends React.HTMLAttributes<HTMLElement>, VariantProps<typeof textVariants> {
+  as?: keyof React.JSX.IntrinsicElements;
 }
 
-function Text({ children, as = "span", className, variant }: TextProps) {
+function Text({ children, as = "span", className, variant, ...rest }: TextProps) {
   return React.createElement(
     as,
-    { className: cn(textVariants({ variant }), className) },
+    { className: cn(textVariants({ variant }), className), ...rest },
     children,
   );
 }
