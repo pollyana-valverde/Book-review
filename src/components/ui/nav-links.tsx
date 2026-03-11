@@ -9,7 +9,7 @@ import Link from "next/link";
 const links = [
   {
     label: "Todos",
-    href: "/",
+    href: "/books",
   },
   {
     label: "Albuns",
