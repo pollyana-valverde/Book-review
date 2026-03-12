@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { LibraryBigIcon } from "lucide-react";
 
-import { NavLinks } from "./ui/nav-links";
-import { Text } from "./ui/text";
+import { NavLinks } from "../ui/nav-links";
+import { Text } from "../ui/text";
 
 function Navbar() {
   return (

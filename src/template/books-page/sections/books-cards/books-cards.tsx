@@ -5,10 +5,10 @@ import {
   CardAction,
   CardDescription,
   CardFooter,
-} from "../ui/card";
-import { Text } from "../ui/text";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+} from "@/components/ui/card";
+import { Text } from "@/components/ui/text";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const books: Book[] = [
   {

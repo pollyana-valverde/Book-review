@@ -1,12 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
-
+import { AlbunsPage } from "@/template/albuns-page";
 
 export default function Albuns() {
-  return (
-    <div>
-      <Button >Albuns</Button>
-      <Text>Teste</Text>
-    </div>
-  );
+  return <AlbunsPage />;
 }
