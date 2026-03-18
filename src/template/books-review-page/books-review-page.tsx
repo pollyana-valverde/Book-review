@@ -9,7 +9,7 @@ function BooksReviewPage() {
           Resenhas
         </Text>
         <Text as="p" className="text-muted-foreground">
-          Encontre e compartilhe suas resenhas de livros favoritos
+          Todas as suas resenhas de livros
         </Text>
       </div>
       <SearchSection />

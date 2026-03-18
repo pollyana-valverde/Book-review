@@ -21,11 +21,40 @@ const books: Book[] = [
     badge: [{ label: "Fantasia", variant: "default" }],
     rating: 4,
   },
+  {
+    title: "Book Title 1",
+    author: "Author 1",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    badge: [{ label: "Fantasia", variant: "default" }],
+    rating: 4,
+  },
+  {
+    title: "Book Title 1",
+    author: "Author 1",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    badge: [{ label: "Fantasia", variant: "default" }],
+    rating: 4,
+  },
+  {
+    title: "Book Title 1",
+    author: "Author 1",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    badge: [{ label: "Fantasia", variant: "default" }],
+    rating: 4,
+  },
 ];
 
 function BooksCards() {
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div
+      className={`grid 
+    sm:grid-cols-2 
+    lg:grid-cols-3 
+    xl:grid-cols-4 gap-3`}
+    >
       {books.map((book, index) => (
         <Card key={`${book}-${index}`}>
           <CardHeader className="flex flex-col gap-3">
