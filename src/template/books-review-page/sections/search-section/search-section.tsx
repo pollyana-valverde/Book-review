@@ -32,7 +32,7 @@ function SearchSection() {
       </Field>
 
       <Select>
-        <SelectTrigger className="w-full max-w-56">
+        <SelectTrigger className="w-full md:max-w-56">
           <SelectValue placeholder="Select a category" />
         </SelectTrigger>
         <SelectContent>
