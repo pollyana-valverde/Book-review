@@ -1,4 +1,5 @@
 import { Text } from "@/components/ui/text";
+import { ResumeList } from "./components";
 
 function HomePage() {
   return (
@@ -11,6 +12,8 @@ function HomePage() {
           Visão geral das suas resenhas
         </Text>
       </div>
+      
+      <ResumeList />
     </div>
   );
 }
