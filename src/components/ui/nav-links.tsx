@@ -6,37 +6,27 @@ import { cn } from "@/lib/utils";
 import { Text } from "./text";
 import Link from "next/link";
 
-const links = [
-  {
-    label: "Todos",
-    href: "/books",
-  },
-  {
-    label: "Albuns",
-    href: "/albuns",
-  },
-];
+interface NavLinkProps {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
-function NavLinks() {
+function NavLink({ href, label, icon }: NavLinkProps) {
   const pathname = usePathname();
 
   return (
-    <div className="flex gap-2 items-center">
-      {links.map((link, index) => (
-        <Link
-          key={index}
-          href={link.href}
-          className={cn(
-            "hover:underline rounded-md px-3 py-1.5 transition-colors duration-200",
-            pathname === link.href &&
-              "bg-white text-gray-900 hover:no-underline",
-          )}
-        >
-          <Text>{link.label}</Text>
-        </Link>
-      ))}
-    </div>
+    <Link
+      href={href}
+      className={cn(
+        "hover:underline flex items-center rounded-md px-3 py-1.5 transition-colors duration-200",
+        pathname === href && "bg-white text-gray-900 hover:no-underline",
+      )}
+    >
+      {icon && <span className="mr-1">{icon}</span>}
+      <Text>{label}</Text>
+    </Link>
   );
 }
 
-export { NavLinks };
+export { NavLink };

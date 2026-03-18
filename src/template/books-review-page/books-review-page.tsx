@@ -1,6 +1,6 @@
 import { BooksCards, SearchSection } from "./sections";
 
-function BooksPage() {
+function BooksReviewPage() {
   return (
     <div>
       <SearchSection />
@@ -9,4 +9,4 @@ function BooksPage() {
   );
 }
 
-export { BooksPage };
+export { BooksReviewPage };
