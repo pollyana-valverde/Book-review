@@ -18,7 +18,7 @@ const NAVLINKS = [
   },
   {
     label: "Nova Resenha",
-    href: "/books-review/new",
+    href: "/books-review/new-review",
     icon: PlusCircleIcon,
   },
   {

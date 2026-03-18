@@ -1,7 +1,16 @@
+import { Text } from "@/components/ui/text";
+
 function NewReviewPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">New Review</h1>
+    <div className="flex flex-col gap-4">
+      <div>
+        <Text as="h1" variant="heading-1">
+          Nova Resenha
+        </Text>
+        <Text as="p" className="text-muted-foreground">
+          Adicione uma nova resenha de livro
+        </Text>
+      </div>
     </div>
   );
 }
