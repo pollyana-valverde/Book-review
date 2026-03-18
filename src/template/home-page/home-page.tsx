@@ -1,5 +1,5 @@
 import { Text } from "@/components/ui/text";
-import { ResumeList } from "./components";
+import { RecentReviewList, ResumeList } from "./components";
 
 function HomePage() {
   return (
@@ -12,8 +12,23 @@ function HomePage() {
           Visão geral das suas resenhas
         </Text>
       </div>
-      
       <ResumeList />
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 ">
+          <Text as="h3" variant="heading-3">
+            Resenhas Recentes
+          </Text>
+          <RecentReviewList />
+        </div>
+
+        <div>
+          <Text as="h3" variant="heading-3">
+            Álbuns
+          </Text>
+          Lista de álbuns
+        </div>
+      </div>
     </div>
   );
 }
