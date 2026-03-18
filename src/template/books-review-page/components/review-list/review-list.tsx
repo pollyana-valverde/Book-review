@@ -7,7 +7,7 @@ const booksReview: BookReview[] = [
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     badge: [{ label: "Fantasia", variant: "default" }],
-    rating: 4,
+    rating: 3,
   },
   {
     title: "Book Title 1",
@@ -41,7 +41,8 @@ function ReviewList() {
       className={`grid 
       sm:grid-cols-2 
       lg:grid-cols-3 
-      xl:grid-cols-4 gap-3`}
+      xl:grid-cols-4 gap-3
+     `}
     >
       {booksReview.map((book, index) => (
         <ReviewCard key={`${book}-${index}`} book={book} />

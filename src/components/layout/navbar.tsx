@@ -37,6 +37,7 @@ function Navbar() {
     <nav
       className={`
     hidden 
+    fixed top-0 left-0 right-0
     md:flex items-center 
     bg-gray-900 text-white rounded-xl
     py-2 px-5 mt-2 mb-4 mx-auto w-[99%] 

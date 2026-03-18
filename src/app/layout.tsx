@@ -22,8 +22,12 @@ export default function RootLayout({
     <html lang="pt-br">
       <body className={`${roboto.variable} antialiased font-sans`}>
         <Navbar />
-        <div className="mx-16">
-        {children}
+        <div
+          className={`
+          container mx-auto px-4 py-8 
+          mb-14 md:mb-0 md:mt-14`}
+        >
+          {children}
         </div>
         <MobileNavbar />
       </body>
