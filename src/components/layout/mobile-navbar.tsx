@@ -21,7 +21,7 @@ const links = [
     icon: <LibraryBigIcon className="w-4 h-4" />,
   },
   {
-    label: "Nova Resenha",
+    label: "Nova",
     href: "/books-review/new",
     icon: <PlusCircleIcon className="w-4 h-4" />,
   },
@@ -32,19 +32,18 @@ const links = [
   },
 ];
 
-function Navbar() {
+function MobileNavbar() {
   return (
-    <nav className="flex items-center bg-gray-900 text-white py-2 px-5 mt-2 mb-4 mx-auto rounded-xl w-[70%] ">
-      <Link href="/" className="flex-1 flex items-center gap-2">
-        <LibraryBigIcon className="w-5.5 h-5.5" />
-        <Text variant="heading-2">BookReview</Text>
-      </Link>
-
+    <nav className="flex items-center justify-center bg-gray-900 text-white py-2 px-5 m-2 mx-auto rounded-xl w-fit ">
       <div className="flex gap-2 items-center">
         {links.map((link, index) => (
-          <NavLink key={index} href={link.href}>
-            <span className="mr-1">{link.icon}</span>
-            <Text>{link.label}</Text>
+          <NavLink
+            key={index}
+            href={link.href}
+            className="flex-col text-center"
+          >
+            <span className="mb-1">{link.icon}</span>
+            <Text variant="content-2">{link.label}</Text>
           </NavLink>
         ))}
       </div>
@@ -52,4 +51,4 @@ function Navbar() {
   );
 }
 
-export { Navbar };
+export { MobileNavbar };

@@ -3,16 +3,13 @@
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-import { Text } from "./text";
 import Link from "next/link";
 
-interface NavLinkProps {
+interface NavLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
-  label: string;
-  icon: React.ReactNode;
 }
 
-function NavLink({ href, label, icon }: NavLinkProps) {
+function NavLink({ href, children, className, ...props }: NavLinkProps) {
   const pathname = usePathname();
 
   return (
@@ -21,10 +18,11 @@ function NavLink({ href, label, icon }: NavLinkProps) {
       className={cn(
         "hover:underline flex items-center rounded-md px-3 py-1.5 transition-colors duration-200",
         pathname === href && "bg-white text-gray-900 hover:no-underline",
+        className,
       )}
+      {...props}
     >
-      {icon && <span className="mr-1">{icon}</span>}
-      <Text>{label}</Text>
+      {children}
     </Link>
   );
 }
