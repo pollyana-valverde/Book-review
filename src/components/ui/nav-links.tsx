@@ -16,7 +16,7 @@ function NavLink({ href, children, className, ...props }: NavLinkProps) {
     <Link
       href={href}
       className={cn(
-        "hover:underline flex items-center rounded-md px-3 py-1.5 transition-colors duration-200",
+        "hover:underline flex items-center rounded-xl px-3 py-1.5 transition-colors duration-200",
         pathname === href && "bg-white text-gray-900 hover:no-underline",
         className,
       )}
