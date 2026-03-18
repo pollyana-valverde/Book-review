@@ -34,7 +34,7 @@ function BooksCards() {
               </Text>
             </CardTitle>
             <CardDescription className="line-clamp-2 col-span-full">
-              <Text as="p" variant="content-1">
+              <Text as="p" variant="content-1" className="text-muted-foreground">
                 {book.description}
               </Text>
             </CardDescription>
