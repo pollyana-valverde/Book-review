@@ -34,7 +34,14 @@ const links = [
 
 function Navbar() {
   return (
-    <nav className="flex items-center bg-gray-900 text-white py-2 px-5 mt-2 mb-4 mx-auto rounded-xl w-[70%] ">
+    <nav
+      className={`
+    hidden 
+    md:flex items-center 
+    bg-gray-900 text-white rounded-xl
+    py-2 px-5 mt-2 mb-4 mx-auto w-[99%] 
+    `}
+    >
       <Link href="/" className="flex-1 flex items-center gap-2">
         <LibraryBigIcon className="w-5.5 h-5.5" />
         <Text variant="heading-2">BookReview</Text>
