@@ -1,5 +1,5 @@
 import { Text } from "@/components/ui/text";
-import { BooksCards, SearchSection } from "./sections";
+import { ReviewList, SearchSection } from "./components";
 
 function BooksReviewPage() {
   return (
@@ -13,7 +13,7 @@ function BooksReviewPage() {
         </Text>
       </div>
       <SearchSection />
-      <BooksCards />
+      <ReviewList />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-interface Book {
+interface BookReview {
     title: string;
     author: string;
     description?: string;
