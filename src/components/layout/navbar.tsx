@@ -26,8 +26,8 @@ const links = [
     icon: <PlusCircleIcon className="w-4 h-4" />,
   },
   {
-    label: "Albuns",
-    href: "/albuns",
+    label: "Albums",
+    href: "/albums",
     icon: <FolderOpenIcon className="w-4 h-4" />,
   },
 ];

@@ -1,1 +1,0 @@
-export * from "./albuns-page";
