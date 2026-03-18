@@ -1,36 +1,10 @@
 import Link from "next/link";
-import {
-  LibraryBigIcon,
-  FolderOpenIcon,
-  LayoutDashboardIcon,
-  PlusCircleIcon,
-} from "lucide-react";
+import { LibraryBigIcon } from "lucide-react";
 
 import { NavLink } from "../ui/nav-links";
 import { Text } from "../ui/text";
 
-const links = [
-  {
-    label: "Dashboard",
-    href: "/",
-    icon: <LayoutDashboardIcon className="w-4 h-4" />,
-  },
-  {
-    label: "Resenhas",
-    href: "/books-review",
-    icon: <LibraryBigIcon className="w-4 h-4" />,
-  },
-  {
-    label: "Nova Resenha",
-    href: "/books-review/new",
-    icon: <PlusCircleIcon className="w-4 h-4" />,
-  },
-  {
-    label: "Albums",
-    href: "/albums",
-    icon: <FolderOpenIcon className="w-4 h-4" />,
-  },
-];
+import { NAVLINKS } from "@/utils/nav-links";
 
 function Navbar() {
   return (
@@ -49,9 +23,9 @@ function Navbar() {
       </Link>
 
       <div className="flex gap-2 items-center">
-        {links.map((link, index) => (
+        {NAVLINKS.map((link, index) => (
           <NavLink key={index} href={link.href}>
-            <span className="mr-1">{link.icon}</span>
+            <link.icon className="mr-1.5 w-4 h-4" />
             <Text>{link.label}</Text>
           </NavLink>
         ))}
