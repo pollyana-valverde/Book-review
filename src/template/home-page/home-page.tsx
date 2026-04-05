@@ -1,6 +1,5 @@
 import { Text } from "@/components/ui/text";
-import { RecentReviewList, ResumeList } from "./components";
-import { AlbumsBooksList } from "./components/albums-books-list";
+import { RecentReviewList, ResumeList, AlbumsBooksList } from "./components";
 
 function HomePage() {
   return (

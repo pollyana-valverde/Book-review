@@ -1,4 +1,5 @@
 import { Text } from "@/components/ui/text";
+// import { AlbumCard } from "./componentes";
 
 function AlbumsPage() {
   return (
