@@ -4,13 +4,7 @@ interface BookReview {
   description?: string;
   badge?: {
     label: string;
-    variant:
-      | "default"
-      | "secondary"
-      | "destructive"
-      | "outline"
-      | "ghost"
-      | "link";
+    variant: "fantasy" | "fiction" | "romance" | "non-fiction" | "sci-fi";
   }[];
   rating: number;
 }

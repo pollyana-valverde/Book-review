@@ -1,5 +1,6 @@
 import { Text } from "@/components/ui/text";
 import { RecentReviewList, ResumeList } from "./components";
+import { AlbumsBooksList } from "./components/albums-books-list";
 
 function HomePage() {
   return (
@@ -26,7 +27,7 @@ function HomePage() {
           <Text as="h3" variant="heading-3">
             Álbuns
           </Text>
-          Lista de álbuns
+          <AlbumsBooksList />
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ const booksReview: BookReview[] = [
     author: "Author 1",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    badge: [{ label: "Fantasia", variant: "default" }],
+    badge: [{ label: "Fantasia", variant: "fantasy" }],
     rating: 3,
   },
   {
@@ -14,7 +14,7 @@ const booksReview: BookReview[] = [
     author: "Author 1",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    badge: [{ label: "Fantasia", variant: "default" }],
+    badge: [{ label: "Ficção", variant: "fiction" }],
     rating: 4,
   },
   {
@@ -22,7 +22,7 @@ const booksReview: BookReview[] = [
     author: "Author 1",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    badge: [{ label: "Fantasia", variant: "default" }],
+    badge: [{ label: "Ficção científica", variant: "sci-fi" }],
     rating: 4,
   },
   {
@@ -30,7 +30,7 @@ const booksReview: BookReview[] = [
     author: "Author 1",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    badge: [{ label: "Fantasia", variant: "default" }],
+    badge: [{ label: "Romance", variant: "romance" }],
     rating: 4,
   },
 ];
