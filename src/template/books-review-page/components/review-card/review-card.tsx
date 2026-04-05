@@ -44,8 +44,8 @@ function ReviewCard({ book }: ReviewCardProps) {
         </CardDescription>
       </CardHeader>
 
-      <CardFooter>
-        <div className="flex gap-0.5 flex-1">
+      <CardFooter className="grid grid-cols-2 items-center">
+        <div className="flex gap-0.5">
           {Array.from({ length: 5 }).map((_, index) =>
             index < book.rating ? (
               <StarIcon className="text-amber-400 w-5 h-5" key={index} />
@@ -54,7 +54,7 @@ function ReviewCard({ book }: ReviewCardProps) {
             ),
           )}
         </div>
-        <Button asChild variant="link" className="flex-1 p-0 hover:pl-2">
+        <Button asChild variant="link" className="p-0 hover:pl-2">
           <Text>Read More &rarr;</Text>
         </Button>
       </CardFooter>
