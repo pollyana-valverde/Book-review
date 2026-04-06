@@ -37,7 +37,7 @@ function ResumeCard({ resume }: ResumeCardProps) {
           </Text>
           <Text
             as="p"
-            variant="heading-3"
+            variant="content-1"
             className="text-muted-foreground font-normal"
           >
             {resume.label}
