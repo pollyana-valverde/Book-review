@@ -21,11 +21,11 @@ function AlbumCard({ album }: AlbumCardProps) {
   return (
     <Card className="gap-2">
       <CardHeader className="gap-3">
-        <CardTitle className="flex justify-between ">
+        <CardTitle className="flex justify-between items-start gap-4 w-full">
           <Badge size="lg" variant={album.badge}>
             {album.name}
           </Badge>
-          <Trash2Icon className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity " />
+          <Trash2Icon className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-all hover:text-red-700 hover:bg-red-100" />
         </CardTitle>
 
         <CardDescription className="flex gap-1.5 items-center">

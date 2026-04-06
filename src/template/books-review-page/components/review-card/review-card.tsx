@@ -29,7 +29,7 @@ function ReviewCard({ book }: ReviewCardProps) {
               {book.author}
             </Text>
           </div>
-          <Trash2Icon className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity " />
+          <Trash2Icon className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-all hover:text-red-700 hover:bg-red-100" />
         </CardTitle>
 
         <CardAction className="flex flex-wrap gap-1">
