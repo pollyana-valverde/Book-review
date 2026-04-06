@@ -9,7 +9,7 @@ import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { BookOpenIcon } from "lucide-react";
+import { BookOpenIcon, Trash2Icon } from "lucide-react";
 
 interface AlbumCardProps {
   album: Album;
@@ -21,10 +21,11 @@ function AlbumCard({ album }: AlbumCardProps) {
   return (
     <Card className="gap-2">
       <CardHeader className="gap-3">
-        <CardTitle>
+        <CardTitle className="flex justify-between ">
           <Badge size="lg" variant={album.badge}>
             {album.name}
           </Badge>
+          <Trash2Icon className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity " />
         </CardTitle>
 
         <CardDescription className="flex gap-1.5 items-center">

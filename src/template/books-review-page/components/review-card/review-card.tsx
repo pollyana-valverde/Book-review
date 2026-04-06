@@ -10,7 +10,7 @@ import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { StarIcon } from "lucide-react";
+import { StarIcon, Trash2Icon } from "lucide-react";
 
 interface ReviewCardProps {
   book: BookReview;
@@ -20,13 +20,16 @@ function ReviewCard({ book }: ReviewCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3">
-        <CardTitle className="flex flex-col w-full">
-          <Text as="h2" variant="heading-3" className="truncate">
-            {book.title}
-          </Text>
-          <Text as="p" variant="content-1" className="text-muted-foreground">
-            {book.author}
-          </Text>
+        <CardTitle className="flex justify-between items-start gap-4 w-full">
+          <div className="flex flex-col">
+            <Text as="h2" variant="heading-3" className="truncate">
+              {book.title}
+            </Text>
+            <Text as="p" variant="content-1" className="text-muted-foreground">
+              {book.author}
+            </Text>
+          </div>
+          <Trash2Icon className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity " />
         </CardTitle>
 
         <CardAction className="flex flex-wrap gap-1">
