@@ -1,7 +1,7 @@
 const albumsList: Album[] = [
     {
       name: "Fantasia",
-      booksCount: 2,
+      booksCount: 1,
       badge: "fantasy",
     },
     {

@@ -5,6 +5,7 @@ import { Text } from "@/components/ui/text";
 import { albumsList } from "@/utils";
 
 function AlbumsBooksList() {
+  
   return (
     <Card className="p-0 gap-0">
       {albumsList.map((album) => (
@@ -14,7 +15,7 @@ function AlbumsBooksList() {
         >
           <Badge variant={album.badge}>{album.name}</Badge>
           <Text as="p" variant="content-1" className="text-muted-foreground">
-            {album.booksCount} livros
+            {album.booksCount} {album.booksCount > 1 ? "livros" : "livro"}
           </Text>
         </div>
       ))}

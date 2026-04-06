@@ -1,5 +1,5 @@
 import { Text } from "@/components/ui/text";
-// import { AlbumCard } from "./componentes";
+import { AlbumList } from "./componentes";
 
 function AlbumsPage() {
   return (
@@ -12,6 +12,7 @@ function AlbumsPage() {
           Organize seus livros por categorias
         </Text>
       </div>
+      <AlbumList />
     </div>
   );
 }
