@@ -24,7 +24,7 @@ export default function RootLayout({
         <Navbar />
         <div
           className={`
-          container mx-auto px-4 py-8 
+          container mx-auto px-4 py-5 
           mb-14 md:mb-0 md:mt-14`}
         >
           {children}

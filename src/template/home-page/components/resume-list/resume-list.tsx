@@ -9,7 +9,7 @@ import {
 const resumeData = [
   {
     total: 8,
-    label: "Resenhas Criadas",
+    label: "Resenhas",
     iconComponent: {
       icon: BookOpenIcon,
       color: "bg-blue-50 text-blue-500",
@@ -17,7 +17,7 @@ const resumeData = [
   },
   {
     total: 6,
-    label: "Resenhas Criadas",
+    label: "Álbums",
     iconComponent: {
       icon: FolderOpenIcon,
       color: "bg-purple-50 text-purple-500",
@@ -25,7 +25,7 @@ const resumeData = [
   },
   {
     total: 4.5,
-    label: "Resenhas Criadas",
+    label: "Nota Média",
     iconComponent: {
       icon: StarIcon,
       color: "bg-yellow-50 text-yellow-500",
@@ -33,7 +33,7 @@ const resumeData = [
   },
   {
     total: 4,
-    label: "Resenhas Criadas",
+    label: "Este mês",
     iconComponent: {
       icon: TrendingUpIcon,
       color: "bg-green-50 text-green-500",
@@ -43,7 +43,7 @@ const resumeData = [
 
 function ResumeList() {
   return (
-    <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {resumeData.map((resume, index) => (
         <ResumeCard key={`${resume.label}-${index}`} resume={resume} />
       ))}
