@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { StarIcon, Trash2Icon } from "lucide-react";
+import Link from "next/link";
 
 interface ReviewCardProps {
   book: BookReview;
@@ -51,14 +52,19 @@ function ReviewCard({ book }: ReviewCardProps) {
         <div className="flex gap-0.5">
           {Array.from({ length: 5 }).map((_, index) =>
             index < book.rating ? (
-              <StarIcon className="text-amber-400 fill-amber-400 w-5 h-5" key={index} />
+              <StarIcon
+                className="text-amber-400 fill-amber-400 w-5 h-5"
+                key={index}
+              />
             ) : (
               <StarIcon className="text-border w-5 h-5" key={index} />
             ),
           )}
         </div>
-        <Button variant="link" className="p-0 hover:pl-2">
-          Read More &rarr;
+        <Button asChild variant="link" className="p-0 hover:pl-2">
+          <Link href={`/books-review/${book.id}`} className="text-primary">
+            Read More &rarr;
+          </Link>
         </Button>
       </CardFooter>
     </Card>

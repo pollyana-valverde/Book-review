@@ -1,4 +1,5 @@
 interface BookReview {
+  id: string;
   title: string;
   author: string;
   description?: string;
