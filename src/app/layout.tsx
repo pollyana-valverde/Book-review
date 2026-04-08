@@ -28,7 +28,7 @@ export default function RootLayout({
         <div
           className={`
           container mx-auto px-4 py-5 
-          mb-14 md:mb-0 md:mt-14`}
+          mb-14 md:mb-0 md:mt-15`}
         >
           {children}
         </div>
