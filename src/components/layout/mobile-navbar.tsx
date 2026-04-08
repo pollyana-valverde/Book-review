@@ -10,7 +10,7 @@ function MobileNavbar() {
     md:hidden 
     fixed bottom-0 left-0 right-0
     flex gap-2 items-center justify-around
-    bg-gray-900 text-white rounded-xl
+    bg-secondary text-muted-foreground rounded-xl
     py-2 px-1 my-1 mx-auto w-[99%] 
     `}
     >

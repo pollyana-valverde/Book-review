@@ -13,11 +13,11 @@ function Navbar() {
     hidden 
     fixed top-0 left-0 right-0
     md:flex items-center 
-    bg-gray-900 text-white rounded-xl
+    bg-secondary text-muted-foreground rounded-xl
     py-2 px-5 mt-2 mb-4 mx-auto w-[99%] 
     `}
     >
-      <Link href="/" className="flex-1 flex items-center gap-2">
+      <Link href="/" className="flex-1 flex items-center gap-2 text-foreground">
         <LibraryBigIcon className="w-5.5 h-5.5" />
         <Text variant="heading-2">BookReview</Text>
       </Link>
