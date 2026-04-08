@@ -38,11 +38,7 @@ function ReviewDetailPage() {
               <Text as="h2" variant="heading-1" className="truncate">
                 {review?.title}
               </Text>
-              <Text
-                as="p"
-                variant="heading-3"
-                className="text-muted-foreground font-normal"
-              >
+              <Text as="p" className="text-muted-foreground font-normal">
                 {review?.author}
               </Text>
             </div>
@@ -81,8 +77,7 @@ function ReviewDetailPage() {
         <CardContent>
           <Text
             as="p"
-            variant="heading-3"
-            className="text-muted-foreground leading-normal md:leading-relaxed font-normal"
+            className="text-muted-foreground leading-normal md:leading-relaxed"
           >
             {review?.description}
           </Text>

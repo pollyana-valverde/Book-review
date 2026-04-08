@@ -17,7 +17,9 @@ function NavLink({ href, children, className, ...props }: NavLinkProps) {
       href={href}
       className={cn(
         "hover:text-foreground flex items-center rounded-xl px-3 py-1.5 transition-colors duration-200",
-        pathname === href && "text-foreground",
+        pathname === href || pathname.startsWith(`${href}/`)
+          ? "text-foreground"
+          : "",
         className,
       )}
       {...props}

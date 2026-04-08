@@ -7,7 +7,7 @@ import { albumsList } from "@/utils";
 function AlbumsBooksList() {
   
   return (
-    <Card className="p-0 gap-0">
+    <Card className="p-0 gap-0 md:p-0">
       {albumsList.map((album) => (
         <div
           key={album.badge}

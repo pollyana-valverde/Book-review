@@ -10,8 +10,8 @@ function MobileNavbar() {
     md:hidden 
     fixed bottom-0 left-0 right-0
     flex gap-2 items-center justify-around
-    bg-secondary text-muted-foreground rounded-xl
-    py-2 px-1 my-1 mx-auto w-[99%] 
+    bg-white text-muted-foreground border-t border-separate
+    py-2 px-1 mx-auto w-full 
     `}
     >
       {NAVLINKS.map((link, index) => (
