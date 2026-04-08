@@ -1,6 +1,6 @@
 import {
   LayoutDashboardIcon,
-  LibraryBigIcon,
+  BookOpenIcon,
   PlusCircleIcon,
   FolderOpenIcon,
 } from "lucide-react";
@@ -14,7 +14,7 @@ const NAVLINKS = [
   {
     label: "Resenhas",
     href: "/books-review",
-    icon: LibraryBigIcon,
+    icon: BookOpenIcon,
   },
   {
     label: "Nova Resenha",

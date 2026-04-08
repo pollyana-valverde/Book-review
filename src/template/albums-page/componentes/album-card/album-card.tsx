@@ -37,8 +37,8 @@ function AlbumCard({ album }: AlbumCardProps) {
       </CardHeader>
 
       <CardFooter>
-        <Button asChild variant="link" className="p-0 hover:pl-2">
-          <Text>Ver resenhas &rarr;</Text>
+        <Button variant="link" className="p-0 hover:pl-2">
+          Ver resenhas &rarr;
         </Button>
       </CardFooter>
     </Card>
