@@ -97,7 +97,10 @@ function SearchSection() {
         </InputGroup>
       </Field>
 
-      <Select onValueChange={handleQueryCategoryChange}>
+      <Select
+        onValueChange={handleQueryCategoryChange}
+        defaultValue={searchQueryCategory}
+      >
         <SelectTrigger className="w-full md:max-w-56">
           <SelectValue placeholder="Select a category" />
         </SelectTrigger>

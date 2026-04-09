@@ -1,3 +1,4 @@
+import Link from "next/link"; 
 import {
   Card,
   CardDescription,
@@ -37,8 +38,12 @@ function AlbumCard({ album }: AlbumCardProps) {
       </CardHeader>
 
       <CardFooter>
-        <Button variant="link" className="p-0 hover:pl-2">
-          Ver resenhas &rarr;
+        <Button asChild variant="link" className="p-0 hover:pl-2">
+          <Link
+            href={`/books-review?title=&&category=${encodeURIComponent(album.badge)}`}
+          >
+            Ver resenhas &rarr;
+          </Link>
         </Button>
       </CardFooter>
     </Card>
