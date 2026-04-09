@@ -6,7 +6,7 @@ const booksReviewList: BookReview[] = [
       description:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
       badge: [{ label: "Fantasia", variant: "fantasy" }],
-      rating: 3,
+      rating: 4,
     },
     {
       id: "2",
@@ -24,7 +24,7 @@ const booksReviewList: BookReview[] = [
       description:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
       badge: [{ label: "Fantasia", variant: "fantasy" }],
-      rating: 4,
+      rating: 5,
     },
     {
       id: "4",
@@ -33,7 +33,7 @@ const booksReviewList: BookReview[] = [
       description:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
       badge: [{ label: "Fantasia", variant: "fantasy" }],
-      rating: 4,
+      rating: 5,
     },
   ];
 

@@ -6,9 +6,11 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 
+import { albumsList, booksReviewList } from "@/utils";
+
 const resumeData = [
   {
-    total: 8,
+    total: booksReviewList.length,
     label: "Resenhas",
     iconComponent: {
       icon: BookOpenIcon,
@@ -16,7 +18,7 @@ const resumeData = [
     },
   },
   {
-    total: 6,
+    total: albumsList.length,
     label: "Álbums",
     iconComponent: {
       icon: FolderOpenIcon,
@@ -24,7 +26,9 @@ const resumeData = [
     },
   },
   {
-    total: 4.5,
+    total: booksReviewList.length > 0
+    ? booksReviewList.reduce((accumulator, review) => accumulator + review.rating, 0) / booksReviewList.length
+    : 0,
     label: "Nota Média",
     iconComponent: {
       icon: StarIcon,
