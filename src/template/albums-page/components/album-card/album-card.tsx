@@ -1,4 +1,4 @@
-import Link from "next/link"; 
+import Link from "next/link";
 import {
   Card,
   CardDescription,
@@ -11,13 +11,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { BookOpenIcon, Trash2Icon } from "lucide-react";
+import { booksReviewList } from "@/utils/book-review-list";
 
 interface AlbumCardProps {
   album: Album;
 }
 
 function AlbumCard({ album }: AlbumCardProps) {
-  const booksPlural = album.booksCount > 1 ? "livros" : "livro";
+  const countBooksInAlbum = (albumBadge: Album["badge"]) => {
+    return booksReviewList.filter((book) =>
+      book.badge?.some((b) => b.variant === albumBadge),
+    ).length;
+  };
+
+  const booksInThisAlbum = countBooksInAlbum(album.badge);
 
   return (
     <Card className="gap-2">
@@ -32,7 +39,10 @@ function AlbumCard({ album }: AlbumCardProps) {
         <CardDescription className="flex gap-1.5 items-center">
           <BookOpenIcon className="w-4 h-4" />
           <Text as="p" variant="content-1" className="text-muted-foreground">
-            {album.booksCount} {booksPlural}
+            {booksInThisAlbum >= 1 && booksInThisAlbum}{" "}
+            {booksInThisAlbum > 1 && "livros"}
+            {booksInThisAlbum === 1 && "livro"}
+            {booksInThisAlbum === 0 && "Nenhum livro"}
           </Text>
         </CardDescription>
       </CardHeader>

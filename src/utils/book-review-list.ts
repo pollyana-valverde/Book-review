@@ -35,6 +35,15 @@ const booksReviewList: BookReview[] = [
       badge: [{ label: "Fantasia", variant: "fantasy" }],
       rating: 5,
     },
+    {
+      id: "5",
+      title: "Book Title 5",
+      author: "Author 5",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      badge: [{ label: "Ficção", variant: "fiction" }],
+      rating: 5,
+    },
   ];
 
 export { booksReviewList };

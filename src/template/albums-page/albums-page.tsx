@@ -1,7 +1,7 @@
 "use client";
 
 import { Text } from "@/components/ui/text";
-import { AlbumList } from "./componentes";
+import { AlbumList } from "./components";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";

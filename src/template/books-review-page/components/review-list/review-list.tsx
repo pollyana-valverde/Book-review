@@ -27,9 +27,9 @@ function ReviewList() {
   if (!hasReviews) {
     return (
       <div className="text-center py-10">
-        <h2 className="text-2xl font-semibold">No reviews found</h2>
+        <h2 className="text-2xl font-semibold">Nenhuma resenha encontrada</h2>
         <p className="text-muted-foreground mt-2">
-          Try adjusting your search or filter to find what you are looking for.
+          Tente ajustar sua pesquisa ou filtro para encontrar o que você está procurando.
         </p>
       </div>
     );
