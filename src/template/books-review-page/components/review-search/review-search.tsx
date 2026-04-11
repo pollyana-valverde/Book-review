@@ -32,15 +32,15 @@ function SearchSection() {
 
       if (searchQueryTitle.trim()) {
         router.push(
-          `/books-review?title=${encodeURIComponent(searchQueryTitle)}&&category=${encodeURIComponent(searchQueryCategory)}`,
+          `/books-review?title=${encodeURIComponent(searchQueryTitle)}&&category=${encodeURIComponent(searchQueryCategory)}`
         );
       }
     },
-    [router, searchQueryTitle, searchQueryCategory],
+    [router, searchQueryTitle, searchQueryCategory]
   );
 
   const handleQueryTitleChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const newQueryTitle = event.target.value;
 
@@ -48,7 +48,7 @@ function SearchSection() {
       `/books-review?title=${encodeURIComponent(newQueryTitle)}&&category=${encodeURIComponent(searchQueryCategory)}`,
       {
         scroll: false,
-      },
+      }
     );
   };
 
@@ -57,7 +57,7 @@ function SearchSection() {
       `/books-review?title=${encodeURIComponent(searchQueryTitle)}&&category=${encodeURIComponent(value)}`,
       {
         scroll: false,
-      },
+      }
     );
 
     if (value === ("all" as Album["badge"])) {

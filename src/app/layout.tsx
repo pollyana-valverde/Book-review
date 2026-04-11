@@ -10,10 +10,11 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: "Book Review",
-  description: "Uma plataforma para compartilhar resenhas de livros e álbuns de música.",
-  icons:{
+  description:
+    "Uma plataforma para compartilhar resenhas de livros e álbuns de música.",
+  icons: {
     icon: "/favicon.ico",
-  }
+  },
 };
 
 export default function RootLayout({

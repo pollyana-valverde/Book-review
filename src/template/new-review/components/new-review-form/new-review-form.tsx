@@ -56,7 +56,7 @@ function NewReviewForm() {
               className={cn(
                 selectedAlbum === album.badge
                   ? "ring-2 ring-offset-2 ring-current"
-                  : "",
+                  : ""
               )}
               key={`${album.badge}-${index}`}
               size="lg"
@@ -89,7 +89,7 @@ function NewReviewForm() {
                 "text-border w-5 h-5 hover:text-amber-400 hover:fill-amber-400 transition-colors",
                 selectedRating >= rating || hoverRating >= rating
                   ? "text-amber-400 fill-amber-400"
-                  : "",
+                  : ""
               )}
               key={index}
             />

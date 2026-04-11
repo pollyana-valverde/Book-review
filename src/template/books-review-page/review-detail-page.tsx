@@ -64,7 +64,7 @@ function ReviewDetailPage() {
                   />
                 ) : (
                   <StarIcon className="text-border w-4 h-4" key={index} />
-                ),
+                )
               )}
             </div>
 

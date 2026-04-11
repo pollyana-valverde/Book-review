@@ -23,7 +23,7 @@ function HomePage() {
           <RecentReviewList />
         </div>
 
-        <div className="space-y-3"> 
+        <div className="space-y-3">
           <Text as="h3" variant="heading-3">
             Álbuns
           </Text>

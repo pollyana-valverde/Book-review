@@ -25,7 +25,7 @@ function ResumeCard({ resume }: ResumeCardProps) {
         <CardAction
           className={cn(
             " rounded-xl py-2 px-2.5 my-auto",
-            resume.iconComponent.color,
+            resume.iconComponent.color
           )}
         >
           <resume.iconComponent.icon className="w-5.5 h-5.5" />

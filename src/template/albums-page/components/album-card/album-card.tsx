@@ -20,7 +20,7 @@ interface AlbumCardProps {
 function AlbumCard({ album }: AlbumCardProps) {
   const countBooksInAlbum = (albumBadge: Album["badge"]) => {
     return booksReviewList.filter((book) =>
-      book.badge?.some((b) => b.variant === albumBadge),
+      book.badge?.some((b) => b.variant === albumBadge)
     ).length;
   };
 

@@ -58,7 +58,7 @@ function ReviewCard({ book }: ReviewCardProps) {
               />
             ) : (
               <StarIcon className="text-border w-5 h-5" key={index} />
-            ),
+            )
           )}
         </div>
         <Button asChild variant="link" className="p-0 hover:pl-2">

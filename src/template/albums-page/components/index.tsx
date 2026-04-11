@@ -1,2 +1,2 @@
-export * from './album-card';
-export * from './album-list';
+export * from "./album-card";
+export * from "./album-list";

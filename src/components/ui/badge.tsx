@@ -18,14 +18,14 @@ const badgeVariants = cva(
       },
       size: {
         default: "px-2 py-0.5 text-xs",
-        lg: "px-3 py-1 text-sm"
-      }
+        lg: "px-3 py-1 text-sm",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
     },
-  },
+  }
 );
 
 function Badge({

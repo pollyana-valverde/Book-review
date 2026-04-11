@@ -20,7 +20,7 @@ function NavLink({ href, children, className, ...props }: NavLinkProps) {
         pathname === href || pathname.startsWith(`${href}/`)
           ? "text-foreground"
           : "",
-        className,
+        className
       )}
       {...props}
     >

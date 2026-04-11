@@ -26,9 +26,13 @@ const resumeData = [
     },
   },
   {
-    total: booksReviewList.length > 0
-    ? booksReviewList.reduce((accumulator, review) => accumulator + review.rating, 0) / booksReviewList.length
-    : 0,
+    total:
+      booksReviewList.length > 0
+        ? booksReviewList.reduce(
+            (accumulator, review) => accumulator + review.rating,
+            0
+          ) / booksReviewList.length
+        : 0,
     label: "Nota Média",
     iconComponent: {
       icon: StarIcon,

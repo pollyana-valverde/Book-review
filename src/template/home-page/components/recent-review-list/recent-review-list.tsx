@@ -5,7 +5,7 @@ import { booksReviewList } from "@/utils/book-review-list";
 function RecentReviewList() {
   // TODO: Adicionar campo 'updatedAt' no tipo BookReview para filtrar por data mais recente
   const REVIEWS_LIMIT = 4;
-  
+
   const recentReviews = booksReviewList
     // .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) // Descomentar quando tiver updatedAt
     .slice(0, REVIEWS_LIMIT);

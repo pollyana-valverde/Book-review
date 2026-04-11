@@ -20,7 +20,7 @@ function AlbumsBooksList() {
 
   const countBooksInAlbum = (albumBadge: Album["badge"]) => {
     return booksReviewList.filter((book) =>
-      book.badge?.some((b) => b.variant === albumBadge),
+      book.badge?.some((b) => b.variant === albumBadge)
     ).length;
   };
 
@@ -28,7 +28,7 @@ function AlbumsBooksList() {
     <Card className="p-0 gap-0 md:p-0">
       {albumsList.map((album) => {
         const booksInThisAlbum = countBooksInAlbum(album.badge);
-        
+
         return (
           <div
             key={album.badge}

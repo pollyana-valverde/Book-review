@@ -35,7 +35,7 @@ function Text({
   return React.createElement(
     as,
     { className: cn(textVariants({ variant }), className), ...rest },
-    children,
+    children
   );
 }
 
