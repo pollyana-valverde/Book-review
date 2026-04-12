@@ -1,128 +1,222 @@
 "use client";
 
-import { Text } from "@/components/ui/text";
-import { Badge } from "@/components/ui/badge";
-import { Field, FieldLabel } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupInput,
-  InputGroupTextarea,
-  InputGroupText,
-  InputGroupAddon,
-} from "@/components/ui/input-group";
-
-import { StarIcon } from "lucide-react";
+import { useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { cn } from "@/lib/utils";
 import { albumsList } from "@/utils";
 
-import { useState } from "react";
+import { Text } from "@/components/ui/text";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+import { StarIcon } from "lucide-react";
+
+const reviewFormSchema = z.object({
+  title: z.string().min(1, "O título é obrigatório"),
+  author: z.string().min(1, "O autor é obrigatório"),
+  categoryId: z.string().min(1, "O álbum é obrigatório"),
+  rating: z
+    .number()
+    .min(1, "A avaliação é obrigatória")
+    .max(5, "A avaliação deve ser entre 1 e 5"),
+  description: z
+    .string("A resenha é obrigatória")
+    .max(280, "A resenha deve ter no máximo 280 caracteres"),
+});
+
+interface ReviewFormValues extends z.infer<typeof reviewFormSchema> {}
 
 function NewReviewForm() {
-  const [selectedAlbum, setSelectedAlbum] = useState("");
-  const [selectedRating, setSelectedRating] = useState(0);
+  const form = useForm<ReviewFormValues>({
+    resolver: zodResolver(reviewFormSchema as never),
+    defaultValues: {
+      title: "",
+      author: "",
+      categoryId: "",
+      rating: 0,
+      description: "",
+    },
+  });
+
+  const selectedAlbum = form.watch("categoryId");
+  const selectedRating = form.watch("rating");
   const [hoverRating, setHoverRating] = useState(0);
 
+  function onSubmit(data: ReviewFormValues) {
+    console.log(data);
+  }
+
   return (
-    <form action="" className="flex flex-col gap-7">
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field className="gap-1">
-          <FieldLabel htmlFor="title" className="text-muted-foreground">
-            Título do livro
-          </FieldLabel>
-          <InputGroup>
-            <InputGroupInput id="title" placeholder="Ex: O senhor dos anéis" />
-          </InputGroup>
-        </Field>
-
-        <Field className="gap-1">
-          <FieldLabel htmlFor="author" className="text-muted-foreground">
-            Autor
-          </FieldLabel>
-          <InputGroup>
-            <InputGroupInput id="author" placeholder="Ex: J.R.R. Tolkein" />
-          </InputGroup>
-        </Field>
-      </div>
-
-      <Field className="gap-1 ">
-        <FieldLabel htmlFor="category" className="text-muted-foreground">
-          Album
-        </FieldLabel>
-        <div className="flex flex-wrap gap-2">
-          {albumsList.map((album, index) => (
-            <Badge
-              className={cn(
-                selectedAlbum === album.badge
-                  ? "ring-2 ring-offset-2 ring-current"
-                  : ""
-              )}
-              key={`${album.badge}-${index}`}
-              size="lg"
-              variant={selectedAlbum === album.badge ? album.badge : "default"}
-              onClick={() => setSelectedAlbum(album.badge)}
-            >
-              {album.name}
-            </Badge>
-          ))}
-        </div>
-      </Field>
-
-      <Field className="gap-1">
-        <FieldLabel htmlFor="category" className="text-muted-foreground">
-          Nota
-          {selectedRating > 0 && (
-            <Text variant="content-1" className="text-foreground font-bold">
-              {selectedRating}/5
-            </Text>
-          )}
-        </FieldLabel>
-
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((rating, index) => (
-            <StarIcon
-              onMouseEnter={() => setHoverRating(rating)}
-              onMouseLeave={() => setHoverRating(0)}
-              onClick={() => setSelectedRating(rating)}
-              className={cn(
-                "text-border w-5 h-5 hover:text-amber-400 hover:fill-amber-400 transition-colors",
-                selectedRating >= rating || hoverRating >= rating
-                  ? "text-amber-400 fill-amber-400"
-                  : ""
-              )}
-              key={index}
-            />
-          ))}
-        </div>
-      </Field>
-
-      <Field className="gap-1">
-        <FieldLabel htmlFor="description" className="text-muted-foreground">
-          Resenha
-        </FieldLabel>
-
-        <InputGroup>
-          <InputGroupTextarea
-            className="min-h-50"
-            id="description"
-            placeholder="O que você achou deste livro?"
+    <Form {...form}>
+      <form
+        className="flex flex-col gap-7"
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="title" className="text-muted-foreground">
+                  Título do livro
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    id="title"
+                    placeholder="Ex: O senhor dos anéis"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <InputGroupAddon align="block-end">
-            <InputGroupText>0/280</InputGroupText>
-          </InputGroupAddon>
-        </InputGroup>
-      </Field>
 
-      <div className="flex gap-2 ">
-        <Button size="lg" type="submit">
-          Salvar resenha
-        </Button>
-        <Button size="lg" type="reset" variant="outline">
-          Cancelar
-        </Button>
-      </div>
-    </form>
+          <FormField
+            control={form.control}
+            name="author"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="author" className="text-muted-foreground">
+                  Autor
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    id="author"
+                    placeholder="Ex: J.R.R. Tolkein"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="categoryId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="categoryId" className="text-muted-foreground">
+                Álbum
+              </FormLabel>
+              <FormControl>
+                <div className="flex flex-wrap gap-2">
+                  {albumsList.map((album, index) => (
+                    <Badge
+                      className={cn(
+                        selectedAlbum === album.badge
+                          ? "ring-2 ring-offset-2 ring-current"
+                          : ""
+                      )}
+                      size="lg"
+                      key={`${album.badge}-${index}`}
+                      variant={
+                        selectedAlbum === album.badge ? album.badge : "default"
+                      }
+                      onClick={(event) => {
+                        event.preventDefault();
+                        field.onChange(album.badge);
+                      }}
+                    >
+                      {album.name}
+                    </Badge>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="rating"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="rating" className="text-muted-foreground">
+                Nota
+                {selectedRating > 0 && (
+                  <Text
+                    variant="content-1"
+                    className="text-foreground font-bold"
+                  >
+                    {selectedRating}/5
+                  </Text>
+                )}
+              </FormLabel>
+              <FormControl>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((rating, index) => (
+                    <StarIcon
+                      onMouseEnter={() => setHoverRating(rating)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => field.onChange(rating)}
+                      className={cn(
+                        "text-border w-5 h-5 hover:text-amber-400 hover:fill-amber-400 transition-colors",
+                        selectedRating >= rating || hoverRating >= rating
+                          ? "text-amber-400 fill-amber-400"
+                          : ""
+                      )}
+                      key={index}
+                    />
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel
+                htmlFor="description"
+                className="text-muted-foreground"
+              >
+                Resenha
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  className="resize-none min-h-55"
+                  id="description"
+                  placeholder="O que você achou deste livro?"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-2 ">
+          <Button size="lg" type="submit">
+            Salvar resenha
+          </Button>
+          <Button size="lg" type="reset" variant="outline">
+            Cancelar
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
 
