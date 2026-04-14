@@ -1,7 +1,9 @@
-import { Text } from "@/components/ui/text";
-import { NewReviewForm } from "./components";
-import { BookOpenIcon } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+
+import { Text } from "@/components/ui/text";
+import { NewReviewForm } from "@/template/new-review/components/new-review-form";
+
+import { BookOpenIcon } from "lucide-react";
 
 async function NewReviewPage() {
   const albums = await prisma.album.findMany({

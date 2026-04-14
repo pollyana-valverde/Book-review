@@ -4,8 +4,10 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createReview } from "@/api/actions";
 
 import { cn } from "@/lib/utils";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +23,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { StarIcon } from "lucide-react";
 import { toast } from "sonner";
-import { createReview } from "@/api/actions";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+
+import { StarIcon } from "lucide-react";
 
 const reviewFormSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),

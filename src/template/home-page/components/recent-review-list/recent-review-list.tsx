@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { ReviewCard } from "@/template/books-review-page/components";
+
+import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
 async function RecentReviewList() {
   const reviews = await prisma.review.findMany({

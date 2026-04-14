@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+
 import { AlbumCard } from "@/template/albums-page/components/album-card";
 
 async function AlbumList() {

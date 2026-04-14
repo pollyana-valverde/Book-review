@@ -1,8 +1,8 @@
 "use client";
 
-import { ReviewCard } from "@/template/books-review-page/components/review-card";
-
 import { useSearchParams } from "next/navigation";
+
+import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
 function ReviewList({ review }: { review: BookReview[] }) {
   const searchParams = useSearchParams();

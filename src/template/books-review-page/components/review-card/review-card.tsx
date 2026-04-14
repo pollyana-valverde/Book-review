@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+
 import {
   Card,
   CardHeader,
@@ -11,8 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { StarIcon, Trash2Icon } from "lucide-react";
-import Link from "next/link";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 interface ReviewCardProps {
   book: BookReview;

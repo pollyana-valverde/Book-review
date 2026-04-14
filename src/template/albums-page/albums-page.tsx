@@ -1,5 +1,6 @@
 import { Text } from "@/components/ui/text";
-import { AlbumFormToggle, AlbumList } from "./components";
+import { AlbumFormToggle } from "@/template/albums-page/components/album-form-toggle";
+import { AlbumList } from "@/template/albums-page/components/album-list";
 
 function AlbumsPage() {
   return (

@@ -1,9 +1,9 @@
 import { RefAttributes, ForwardRefExoticComponent } from "react";
 import { LucideProps } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { Text } from "@/components/ui/text";
 import { Card, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 
 interface ResumeCardProps {
   resume: {

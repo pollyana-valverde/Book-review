@@ -1,9 +1,9 @@
+import { prisma } from "@/lib/prisma";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
-
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
-import { prisma } from "@/lib/prisma";
 
 async function AlbumsBooksList() {
   const albums = await prisma.album.findMany({

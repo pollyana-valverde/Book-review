@@ -1,5 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import { Field } from "@/components/ui/field";
 import {
   InputGroup,
@@ -17,8 +20,6 @@ import {
 } from "@/components/ui/select";
 
 import { CircleXIcon, SearchIcon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
 
 function SearchSection({ albums }: { albums: Album[] }) {
   const router = useRouter();

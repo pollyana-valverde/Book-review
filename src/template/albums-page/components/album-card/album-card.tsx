@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+
 import {
   Card,
   CardDescription,
@@ -11,8 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { BookOpenIcon, Trash2Icon } from "lucide-react";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
-import { prisma } from "@/lib/prisma";
 
 interface AlbumCardProps {
   album: Album;

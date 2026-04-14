@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { ResumeCard } from "../resume-card";
+
+import { ResumeCard } from "@/template/home-page/components/resume-card";
+
 import {
   BookOpenIcon,
   FolderOpenIcon,

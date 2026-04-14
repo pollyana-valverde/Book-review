@@ -1,6 +1,8 @@
-import { Text } from "@/components/ui/text";
-import { ReviewList, SearchSection } from "./components";
 import { prisma } from "@/lib/prisma";
+
+import { Text } from "@/components/ui/text";
+import { ReviewList } from "@/template/books-review-page/components/review-list";
+import { SearchSection } from "@/template/books-review-page/components/review-search";
 
 async function BooksReviewPage() {
   const review = await prisma.review.findMany();
