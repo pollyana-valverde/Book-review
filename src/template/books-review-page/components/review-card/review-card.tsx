@@ -18,7 +18,7 @@ interface ReviewCardProps {
   book: BookReview;
 }
 
-async function ReviewCard({ book }: ReviewCardProps) {
+function ReviewCard({ book }: ReviewCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3">

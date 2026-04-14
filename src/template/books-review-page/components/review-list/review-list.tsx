@@ -1,6 +1,6 @@
 "use client";
 
-import { ReviewCard } from "@/template/books-review-page/components";
+import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
 import { useSearchParams } from "next/navigation";
 
