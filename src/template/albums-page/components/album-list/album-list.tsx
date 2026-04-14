@@ -28,7 +28,7 @@ async function AlbumList() {
         xl:grid-cols-4 gap-3
        `}
     >
-      {albums.map((album, index) => (
+      {albums.map((album) => (
         <AlbumCard key={album.id} album={album} />
       ))}
     </div>

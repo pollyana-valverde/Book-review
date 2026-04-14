@@ -11,7 +11,7 @@ const reviewFormSchema = z.object({
   description: z.string(),
 });
 
-interface ReviewData extends z.infer<typeof reviewFormSchema> {}
+type ReviewData = z.infer<typeof reviewFormSchema>;
 
 async function createReview(data: ReviewData) {
   try {

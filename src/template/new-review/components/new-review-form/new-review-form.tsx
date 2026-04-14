@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ const reviewFormSchema = z.object({
     .max(280, "A resenha deve ter no máximo 280 caracteres"),
 });
 
-interface ReviewFormValues extends z.infer<typeof reviewFormSchema> {}
+type ReviewFormValues = z.infer<typeof reviewFormSchema>;
 
 interface NewReviewFormProps {
   albumsList: Album[];
@@ -58,8 +58,16 @@ function NewReviewForm({ albumsList }: NewReviewFormProps) {
     },
   });
 
-  const selectedAlbum = form.watch("categoryId");
-  const selectedRating = form.watch("rating");
+  const selectedAlbum = useWatch({
+    control: form.control,
+    name: "categoryId",
+  });
+
+  const selectedRating = useWatch({
+    control: form.control,
+    name: "rating",
+  });
+
   const [hoverRating, setHoverRating] = useState(0);
 
   async function onSubmit(data: ReviewFormValues) {

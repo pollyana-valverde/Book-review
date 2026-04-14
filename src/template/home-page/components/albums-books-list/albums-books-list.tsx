@@ -2,7 +2,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 
-import { albumsList, booksReviewList } from "@/utils";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 import { prisma } from "@/lib/prisma";
 

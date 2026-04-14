@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { BookOpenIcon, Trash2Icon } from "lucide-react";
-import { booksReviewList } from "@/utils/book-review-list";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 interface AlbumCardProps {

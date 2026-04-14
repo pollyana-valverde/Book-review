@@ -21,7 +21,7 @@ const AlbumFormSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
 });
 
-interface AlbumFormValues extends z.infer<typeof AlbumFormSchema> {}
+type AlbumFormValues = z.infer<typeof AlbumFormSchema>;
 
 function AlbumForm() {
   const form = useForm<AlbumFormValues>({

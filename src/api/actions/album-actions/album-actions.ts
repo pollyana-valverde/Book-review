@@ -7,7 +7,7 @@ const albumFormSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
 });
 
-interface AlbumData extends z.infer<typeof albumFormSchema> {}
+type AlbumData = z.infer<typeof albumFormSchema>;
 
 async function createAlbum(data: AlbumData) {
   try {

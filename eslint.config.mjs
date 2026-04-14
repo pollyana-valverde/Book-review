@@ -1,12 +1,12 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
-import eslintConfigPrettier from "eslint-config-prettier";
+import prettier from "eslint-config-prettier/flat";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  ...eslintConfigPrettier,
+  prettier,
 
   // Override default ignores of eslint-config-next.
   globalIgnores([
@@ -17,7 +17,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Custom ignores:
     "src/generated/prisma/**",
-    "pgdata/**",
+    "bookreview-pgdata/**",
     "node_modules/**",
   ]),
 ]);
