@@ -12,19 +12,21 @@ import { Button } from "@/components/ui/button";
 
 import { BookOpenIcon, Trash2Icon } from "lucide-react";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import { prisma } from "@/lib/prisma";
 
 interface AlbumCardProps {
   album: Album;
 }
 
-function AlbumCard({ album }: AlbumCardProps) {
-  // const countBooksInAlbum = (albumReviews: Album["reviews"]) => {
-  //   return booksReviewList.filter((book) =>
-  //     book.categoryId === albumReviews
-  //   ).length;
-  // };
+async function AlbumCard({ album }: AlbumCardProps) {
+  const bookReviews = await prisma.review.findMany();
 
-  // const booksInThisAlbum = countBooksInAlbum(album.reviews);
+  const countBooksInAlbum = (albumId: Album["id"]) => {
+    return bookReviews.filter((book) => book.categoryId?.includes(albumId))
+      .length;
+  };
+
+  const booksInThisAlbum = countBooksInAlbum(album.id);
 
   return (
     <Card className="gap-2">
@@ -39,10 +41,10 @@ function AlbumCard({ album }: AlbumCardProps) {
         <CardDescription className="flex gap-1.5 items-center">
           <BookOpenIcon className="w-4 h-4" />
           <Text as="p" variant="content-1" className="text-muted-foreground">
-            {/* {booksInThisAlbum >= 1 && booksInThisAlbum}{" "}
+            {booksInThisAlbum >= 1 && booksInThisAlbum}{" "}
             {booksInThisAlbum > 1 && "livros"}
             {booksInThisAlbum === 1 && "livro"}
-            {booksInThisAlbum === 0 && "Nenhum livro"} */}
+            {booksInThisAlbum === 0 && "Nenhum livro"}
           </Text>
         </CardDescription>
       </CardHeader>
@@ -50,7 +52,7 @@ function AlbumCard({ album }: AlbumCardProps) {
       <CardFooter>
         <Button asChild variant="link" className="p-0 hover:pl-2">
           <Link
-            href={`/books-review?title=&&category=${encodeURIComponent(album.title)}`}
+            href={`/books-review?title=&&category=${encodeURIComponent(album.id)}`}
           >
             Ver resenhas &rarr;
           </Link>

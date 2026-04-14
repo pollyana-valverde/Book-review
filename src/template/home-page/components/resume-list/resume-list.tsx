@@ -18,6 +18,12 @@ const reviewsInThisMonth = reviews.filter((review) => {
 });
 const albums = await prisma.album.findMany();
 
+const totalReviewRating =
+  reviews.length > 0
+    ? reviews.reduce((accumulator, review) => accumulator + review.rating, 0) /
+      reviews.length
+    : 0;
+
 const resumeData = [
   {
     total: reviews.length,
@@ -36,13 +42,7 @@ const resumeData = [
     },
   },
   {
-    total:
-      reviews.length > 0
-        ? reviews.reduce(
-            (accumulator, review) => accumulator + review.rating,
-            0
-          ) / reviews.length
-        : 0,
+    total: Number(totalReviewRating.toFixed(1)),
     label: "Nota Média",
     iconComponent: {
       icon: StarIcon,

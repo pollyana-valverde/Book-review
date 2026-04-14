@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 async function BooksReviewPage() {
   const review = await prisma.review.findMany();
+  const albums = await prisma.album.findMany();
 
   return (
     <div className="flex flex-col gap-4">
@@ -15,7 +16,7 @@ async function BooksReviewPage() {
           Todas as suas resenhas de livros
         </Text>
       </div>
-      <SearchSection />
+      <SearchSection albums={albums} />
       <ReviewList review={review} />
     </div>
   );

@@ -8,7 +8,7 @@ function ReviewList({ review }: { review: BookReview[] }) {
   const searchParams = useSearchParams();
   const searchQueryTitle = searchParams.get("title") || "";
   const searchQueryCategory =
-    (searchParams?.get("category") as Album["title"]) || "";
+    (searchParams?.get("category") as Album["id"]) || "";
 
   const reviewsList = review.filter((book) => {
     const matchesTitle =

@@ -9,22 +9,13 @@ async function RecentReviewList() {
     take: 4,
   });
 
-  const REVIEWS_LIMIT = 4;
-
-  const recentReviews = reviews
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    )
-    .slice(0, REVIEWS_LIMIT);
-
   return (
     <div
       className={`grid 
     sm:grid-cols-2 gap-3
     `}
     >
-      {recentReviews.map((book, index) => (
+      {reviews.map((book, index) => (
         <ReviewCard key={`${book}-${index}`} book={book} />
       ))}
     </div>

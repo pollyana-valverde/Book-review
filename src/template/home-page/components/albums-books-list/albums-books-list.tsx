@@ -26,10 +26,10 @@ async function AlbumsBooksList() {
     );
   }
 
-  const countBooksInAlbum = (albumBadge: Album["id"]) => {
+  function countBooksInAlbum(albumBadge: Album["id"]) {
     return bookReviews.filter((book) => book.categoryId?.includes(albumBadge))
       .length;
-  };
+  }
 
   return (
     <Card className="p-0 gap-0 md:p-0">

@@ -20,7 +20,7 @@ import { CircleXIcon, SearchIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-function SearchSection() {
+function SearchSection({ albums }: { albums: Album[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchQueryTitle = searchParams.get("title") || "";
@@ -52,7 +52,7 @@ function SearchSection() {
     );
   };
 
-  const handleQueryCategoryChange = (value: Album["title"]) => {
+  const handleQueryCategoryChange = (value: Album["id"]) => {
     router.push(
       `/books-review?title=${encodeURIComponent(searchQueryTitle)}&&category=${encodeURIComponent(value)}`,
       {
@@ -60,7 +60,7 @@ function SearchSection() {
       }
     );
 
-    if (value === ("all" as Album["title"])) {
+    if (value === ("all" as Album["id"])) {
       resetSearch();
     }
   };
@@ -108,11 +108,11 @@ function SearchSection() {
           <SelectGroup>
             <SelectLabel>Categories</SelectLabel>
             <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="fiction">Ficção</SelectItem>
-            <SelectItem value="non-fiction">Não-Ficção</SelectItem>
-            <SelectItem value="sci-fi">Ficção Científica</SelectItem>
-            <SelectItem value="fantasy">Fantasia</SelectItem>
-            <SelectItem value="romance">Romance</SelectItem>
+            {albums.map((album) => (
+              <SelectItem key={album.id} value={album.id}>
+                {album.title}
+              </SelectItem>
+            ))}
           </SelectGroup>
         </SelectContent>
       </Select>

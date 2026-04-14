@@ -1,5 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,16 +14,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeftIcon, StarIcon, Trash2Icon } from "lucide-react";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 function ReviewDetailCard({ review }: { review: BookReview[] }) {
   const pathname = usePathname();
   const reviewId = pathname.split("/").pop();
 
   const bookReview = review.find((review) => review.id === reviewId);
+
+  const formattedBookDate = bookReview?.updatedAt.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  const bookStars = Array.from({ length: 5 }).map((_, index) =>
+    index < (bookReview?.rating ?? 0) ? (
+      <StarIcon className="text-amber-400 fill-amber-400 w-4 h-4" key={index} />
+    ) : (
+      <StarIcon className="text-border w-4 h-4" key={index} />
+    )
+  );
 
   return (
     <div className="grid gap-4">
@@ -56,21 +71,10 @@ function ReviewDetailCard({ review }: { review: BookReview[] }) {
               {bookReview?.categoryId}
             </Badge>
 
-            <div className="flex gap-0.5 items-center">
-              {Array.from({ length: 5 }).map((_, index) =>
-                index < (bookReview?.rating ?? 0) ? (
-                  <StarIcon
-                    className="text-amber-400 fill-amber-400 w-4 h-4"
-                    key={index}
-                  />
-                ) : (
-                  <StarIcon className="text-border w-4 h-4" key={index} />
-                )
-              )}
-            </div>
+            <div className="flex gap-0.5 items-center">{bookStars}</div>
 
             <Text variant="content-1" className="text-muted-foreground">
-              2026-03-10
+              {formattedBookDate}
             </Text>
           </CardAction>
         </CardHeader>
