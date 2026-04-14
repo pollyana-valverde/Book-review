@@ -38,12 +38,14 @@ function AlbumForm() {
 
     if (album?.error) {
       toast.error(album.error);
-      return;
+      return { success: false };
     }
 
     toast.success("Álbum criado com sucesso!");
 
     form.reset();
+
+    return { success: true };
   }
 
   return (

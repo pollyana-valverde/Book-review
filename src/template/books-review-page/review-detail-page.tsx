@@ -15,18 +15,9 @@ import {
 
 import { ArrowLeftIcon, StarIcon, Trash2Icon } from "lucide-react";
 
-interface ReviewDetailDTO {
-  id: string;
-  title: string;
-  author: string;
-  description: string;
-  rating: number;
-  categoryId: string;
-  categoryTitle: string;
-  updatedAt: string;
-}
+import { ReviewDTO } from "@/template/books-review-page/types";
 
-async function ReviewDetailPage({ id }: { id: ReviewDetailDTO["id"] }) {
+async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
   if (!id) {
     notFound();
   }
@@ -48,7 +39,7 @@ async function ReviewDetailPage({ id }: { id: ReviewDetailDTO["id"] }) {
     notFound();
   }
 
-  const reviewDetail: ReviewDetailDTO = {
+  const reviewDetail: ReviewDTO = {
     id: review.id,
     title: review.title,
     author: review.author,

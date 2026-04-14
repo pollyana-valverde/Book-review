@@ -9,7 +9,9 @@ const albumFormSchema = z.object({
 
 type AlbumData = z.infer<typeof albumFormSchema>;
 
-async function createAlbum(data: AlbumData) {
+async function createAlbum(
+  data: AlbumData
+): Promise<{ success: boolean; error?: string }> {
   try {
     const parsedData = albumFormSchema.parse(data);
 
@@ -20,7 +22,7 @@ async function createAlbum(data: AlbumData) {
     });
 
     if (existingAlbum) {
-      return { error: "Você já tem um álbum com este título." };
+      return { success: false, error: "Você já tem um álbum com este título." };
     }
 
     await prisma.album.create({
@@ -28,8 +30,10 @@ async function createAlbum(data: AlbumData) {
         ...parsedData,
       },
     });
+    return { success: true };
   } catch (error) {
     console.log(error);
+    return { success: false, error: "Erro ao criar álbum." };
   }
 }
 

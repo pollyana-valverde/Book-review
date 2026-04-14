@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
-import { ReviewDTO } from "@/template/books-review-page/books-review-page";
+import { ReviewDTO } from "@/template/books-review-page/types";
 
 import {
   Card,
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 import { StarIcon, Trash2Icon } from "lucide-react";
 
-function ReviewCard({ review }: ReviewDTO) {
+function ReviewCard({ review }: { review: ReviewDTO }) {
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3">
@@ -37,7 +37,7 @@ function ReviewCard({ review }: ReviewDTO) {
             key={review.categoryId}
             style={getAlbumBadgeColor(review.categoryId)}
           >
-            {review.category.title}
+            {review.categoryTitle}
           </Badge>
         </CardAction>
 

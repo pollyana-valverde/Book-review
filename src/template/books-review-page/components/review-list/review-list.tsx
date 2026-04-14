@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { ReviewDTO } from "@/template/books-review-page/books-review-page";
+import { ReviewDTO } from "@/template/books-review-page/types";
 
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
-function ReviewList({ review }: { review: ReviewDTO["review"][] }) {
+function ReviewList({ review }: { review: ReviewDTO[] }) {
   const searchParams = useSearchParams();
   const searchQueryTitle = searchParams.get("title") || "";
   const searchQueryCategory =
@@ -18,9 +18,7 @@ function ReviewList({ review }: { review: ReviewDTO["review"][] }) {
 
     const matchesCategory =
       !searchQueryCategory ||
-      book.categoryId
-        ?.toLowerCase()
-        .includes(searchQueryCategory.toLowerCase());
+      book.categoryId?.toLowerCase() === searchQueryCategory.toLowerCase();
 
     return matchesTitle && matchesCategory;
   });

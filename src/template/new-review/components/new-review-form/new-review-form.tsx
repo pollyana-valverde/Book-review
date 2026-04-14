@@ -79,12 +79,14 @@ function NewReviewForm({ albumsList }: NewReviewFormProps) {
 
     if (review?.error) {
       toast.error(review.error);
-      return;
+      return { success: false };
     }
 
     toast.success("Resenha salva com sucesso!");
 
     form.reset();
+
+    return { success: true };
   }
 
   return (

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 import {
@@ -20,16 +19,10 @@ interface AlbumCardDTO {
     id: string;
     title: string;
   };
+  countBooksInAlbum: (albumId: Album["id"]) => number;
 }
 
-async function AlbumCard({ album }: AlbumCardDTO) {
-  const bookReviews = await prisma.review.findMany();
-
-  const countBooksInAlbum = (albumId: Album["id"]) => {
-    return bookReviews.filter((book) => book.categoryId?.includes(albumId))
-      .length;
-  };
-
+async function AlbumCard({ album, countBooksInAlbum }: AlbumCardDTO) {
   const booksInThisAlbum = countBooksInAlbum(album.id);
 
   return (
