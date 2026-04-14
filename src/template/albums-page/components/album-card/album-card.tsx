@@ -15,11 +15,14 @@ import { Button } from "@/components/ui/button";
 
 import { BookOpenIcon, Trash2Icon } from "lucide-react";
 
-interface AlbumCardProps {
-  album: Album;
+interface AlbumCardDTO {
+  album: {
+    id: string;
+    title: string;
+  };
 }
 
-async function AlbumCard({ album }: AlbumCardProps) {
+async function AlbumCard({ album }: AlbumCardDTO) {
   const bookReviews = await prisma.review.findMany();
 
   const countBooksInAlbum = (albumId: Album["id"]) => {

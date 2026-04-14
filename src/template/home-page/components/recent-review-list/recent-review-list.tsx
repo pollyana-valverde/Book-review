@@ -8,6 +8,13 @@ async function RecentReviewList() {
       updatedAt: "desc",
     },
     take: 4,
+    include: {
+      category: {
+        select: {
+          title: true,
+        },
+      },
+    },
   });
 
   return (
@@ -16,8 +23,8 @@ async function RecentReviewList() {
     sm:grid-cols-2 gap-3
     `}
     >
-      {reviews.map((book, index) => (
-        <ReviewCard key={`${book}-${index}`} book={book} />
+      {reviews.map((book) => (
+        <ReviewCard key={book.id} review={book} />
       ))}
     </div>
   );

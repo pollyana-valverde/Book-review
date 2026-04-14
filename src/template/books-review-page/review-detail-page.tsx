@@ -26,7 +26,7 @@ interface ReviewDetailDTO {
   updatedAt: string;
 }
 
-async function ReviewDetailPage({ id }: { id: BookReview["id"] }) {
+async function ReviewDetailPage({ id }: { id: ReviewDetailDTO["id"] }) {
   if (!id) {
     notFound();
   }

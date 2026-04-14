@@ -1,10 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { ReviewDTO } from "@/template/books-review-page/books-review-page";
 
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
-function ReviewList({ review }: { review: BookReview[] }) {
+function ReviewList({ review }: { review: ReviewDTO["review"][] }) {
   const searchParams = useSearchParams();
   const searchQueryTitle = searchParams.get("title") || "";
   const searchQueryCategory =
@@ -47,7 +48,7 @@ function ReviewList({ review }: { review: BookReview[] }) {
      `}
     >
       {reviewsList.map((book) => (
-        <ReviewCard key={book.id} book={book} />
+        <ReviewCard key={book.id} review={book} />
       ))}
     </div>
   );
