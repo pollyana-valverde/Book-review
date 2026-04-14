@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { Text } from "@/components/ui/text";
 import { ReviewList } from "@/template/books-review-page/components/review-list";
 import { SearchSection } from "@/template/books-review-page/components/review-search";
+import { ReviewSkeleton } from "@/template/books-review-page/components/review-skeleton";
 
 import { ReviewDTO } from "@/template/books-review-page/types";
 
-async function BooksReviewPage() {
+async function BooksReviewContent() {
   const albums = await prisma.album.findMany();
   const review = await prisma.review.findMany({
     include: {
@@ -31,19 +32,25 @@ async function BooksReviewPage() {
   }));
 
   return (
-    <Suspense fallback={<div>Carregando...</div>}>
-      <div className="flex flex-col gap-4">
-        <div>
-          <Text as="h1" variant="heading-1">
-            Resenhas
-          </Text>
-          <Text as="p" className="text-muted-foreground">
-            Todas as suas resenhas de livros
-          </Text>
-        </div>
-        <SearchSection albums={albums} />
-        <ReviewList review={bookReviews} />
+    <div className="flex flex-col gap-4">
+      <div>
+        <Text as="h1" variant="heading-1">
+          Resenhas
+        </Text>
+        <Text as="p" className="text-muted-foreground">
+          Todas as suas resenhas de livros
+        </Text>
       </div>
+      <SearchSection albums={albums} />
+      <ReviewList review={bookReviews} />
+    </div>
+  );
+}
+
+async function BooksReviewPage() {
+  return (
+    <Suspense fallback={<ReviewSkeleton />}>
+      <BooksReviewContent />
     </Suspense>
   );
 }

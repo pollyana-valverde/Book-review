@@ -1,9 +1,12 @@
+import { Suspense } from "react";
+
+import { HomeSkeleton } from "./components/home-skeleton";
 import { Text } from "@/components/ui/text";
 import { RecentReviewList } from "@/template/home-page/components/recent-review-list";
 import { ResumeList } from "@/template/home-page/components/resume-list";
 import { AlbumsBooksList } from "@/template/home-page/components/albums-books-list";
 
-function HomePage() {
+async function HomePageContent() {
   return (
     <div className="flex flex-col gap-7">
       <div>
@@ -33,6 +36,14 @@ function HomePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+async function HomePage() {
+  return (
+    <Suspense fallback={<HomeSkeleton />}>
+      <HomePageContent />
+    </Suspense>
   );
 }
 
