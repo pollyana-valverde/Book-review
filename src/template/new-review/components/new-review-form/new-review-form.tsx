@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 
 import { StarIcon } from "lucide-react";
+import Link from "next/link";
 
 const reviewFormSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
@@ -241,8 +242,8 @@ function NewReviewForm({ albumsList }: NewReviewFormProps) {
           >
             {form.formState.isSubmitting ? "Salvando..." : "Salvar resenha"}
           </Button>
-          <Button size="lg" type="reset" variant="outline">
-            Cancelar
+          <Button size="lg" type="reset" variant="outline" asChild>
+            <Link href="/books-review">Cancelar</Link>
           </Button>
         </div>
       </form>
