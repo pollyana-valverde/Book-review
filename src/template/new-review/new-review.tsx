@@ -1,8 +1,15 @@
 import { Text } from "@/components/ui/text";
 import { NewReviewForm } from "./components";
 import { BookOpenIcon } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
-function NewReviewPage() {
+async function NewReviewPage() {
+  const albums = await prisma.album.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
   return (
     <div className="flex flex-col gap-7">
       <div className="flex gap-4 items-center">
@@ -19,7 +26,7 @@ function NewReviewPage() {
         </div>
       </div>
 
-      <NewReviewForm />
+      <NewReviewForm albumsList={albums} />
     </div>
   );
 }

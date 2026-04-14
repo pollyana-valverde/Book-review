@@ -1,7 +1,10 @@
 import { Text } from "@/components/ui/text";
 import { ReviewList, SearchSection } from "./components";
+import { prisma } from "@/lib/prisma";
 
-function BooksReviewPage() {
+async function BooksReviewPage() {
+  const review = await prisma.review.findMany();
+
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -13,7 +16,7 @@ function BooksReviewPage() {
         </Text>
       </div>
       <SearchSection />
-      <ReviewList />
+      <ReviewList review={review} />
     </div>
   );
 }

@@ -52,7 +52,7 @@ function SearchSection() {
     );
   };
 
-  const handleQueryCategoryChange = (value: Album["badge"]) => {
+  const handleQueryCategoryChange = (value: Album["title"]) => {
     router.push(
       `/books-review?title=${encodeURIComponent(searchQueryTitle)}&&category=${encodeURIComponent(value)}`,
       {
@@ -60,7 +60,7 @@ function SearchSection() {
       }
     );
 
-    if (value === ("all" as Album["badge"])) {
+    if (value === ("all" as Album["title"])) {
       resetSearch();
     }
   };

@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { cn } from "@/lib/utils";
-import { albumsList } from "@/utils";
 
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +22,9 @@ import {
 } from "@/components/ui/form";
 
 import { StarIcon } from "lucide-react";
+import { toast } from "sonner";
+import { createReview } from "@/api/actions";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 const reviewFormSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
@@ -33,13 +35,18 @@ const reviewFormSchema = z.object({
     .min(1, "A avaliação é obrigatória")
     .max(5, "A avaliação deve ser entre 1 e 5"),
   description: z
-    .string("A resenha é obrigatória")
+    .string()
+    .min(1, "A resenha é obrigatória")
     .max(280, "A resenha deve ter no máximo 280 caracteres"),
 });
 
 interface ReviewFormValues extends z.infer<typeof reviewFormSchema> {}
 
-function NewReviewForm() {
+interface NewReviewFormProps {
+  albumsList: Album[];
+}
+
+function NewReviewForm({ albumsList }: NewReviewFormProps) {
   const form = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema as never),
     defaultValues: {
@@ -55,8 +62,19 @@ function NewReviewForm() {
   const selectedRating = form.watch("rating");
   const [hoverRating, setHoverRating] = useState(0);
 
-  function onSubmit(data: ReviewFormValues) {
-    console.log(data);
+  async function onSubmit(data: ReviewFormValues) {
+    const review = await createReview({
+      ...data,
+    });
+
+    if (review?.error) {
+      toast.error(review.error);
+      return;
+    }
+
+    toast.success("Resenha salva com sucesso!");
+
+    form.reset();
   }
 
   return (
@@ -97,7 +115,7 @@ function NewReviewForm() {
                 <FormControl>
                   <Input
                     id="author"
-                    placeholder="Ex: J.R.R. Tolkein"
+                    placeholder="Ex: J.R.R. Tolkien"
                     {...field}
                   />
                 </FormControl>
@@ -117,24 +135,23 @@ function NewReviewForm() {
               </FormLabel>
               <FormControl>
                 <div className="flex flex-wrap gap-2">
-                  {albumsList.map((album, index) => (
+                  {albumsList?.map((album) => (
                     <Badge
+                      style={getAlbumBadgeColor(album.id || album.title)}
                       className={cn(
-                        selectedAlbum === album.badge
+                        "border",
+                        selectedAlbum === album.id
                           ? "ring-2 ring-offset-2 ring-current"
                           : ""
                       )}
                       size="lg"
-                      key={`${album.badge}-${index}`}
-                      variant={
-                        selectedAlbum === album.badge ? album.badge : "default"
-                      }
+                      key={album.id}
                       onClick={(event) => {
                         event.preventDefault();
-                        field.onChange(album.badge);
+                        field.onChange(album.id);
                       }}
                     >
-                      {album.name}
+                      {album.title}
                     </Badge>
                   ))}
                 </div>
@@ -208,8 +225,12 @@ function NewReviewForm() {
         />
 
         <div className="flex gap-2 ">
-          <Button size="lg" type="submit">
-            Salvar resenha
+          <Button
+            size="lg"
+            type="submit"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? "Salvando..." : "Salvar resenha"}
           </Button>
           <Button size="lg" type="reset" variant="outline">
             Cancelar

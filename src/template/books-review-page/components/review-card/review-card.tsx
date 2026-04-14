@@ -12,12 +12,13 @@ import { Button } from "@/components/ui/button";
 
 import { StarIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 interface ReviewCardProps {
   book: BookReview;
 }
 
-function ReviewCard({ book }: ReviewCardProps) {
+async function ReviewCard({ book }: ReviewCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3">
@@ -34,11 +35,12 @@ function ReviewCard({ book }: ReviewCardProps) {
         </CardTitle>
 
         <CardAction className="flex flex-wrap gap-1">
-          {book.badge?.map((badge, index) => (
-            <Badge key={`${badge}-${index}`} variant={badge.variant}>
-              {badge.label}
-            </Badge>
-          ))}
+          <Badge
+            key={book.categoryId}
+            style={getAlbumBadgeColor(book.categoryId)}
+          >
+            {book.categoryId}
+          </Badge>
         </CardAction>
 
         <CardDescription className="line-clamp-2 col-span-full">

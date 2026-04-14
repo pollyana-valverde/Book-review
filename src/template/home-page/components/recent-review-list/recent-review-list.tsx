@@ -1,13 +1,23 @@
+import { prisma } from "@/lib/prisma";
 import { ReviewCard } from "@/template/books-review-page/components";
 
 import { booksReviewList } from "@/utils/book-review-list";
 
-function RecentReviewList() {
-  // TODO: Adicionar campo 'updatedAt' no tipo BookReview para filtrar por data mais recente
+async function RecentReviewList() {
+  const reviews = await prisma.review.findMany({
+    orderBy: {
+      updatedAt: "desc",
+    },
+    take: 4,
+  });
+
   const REVIEWS_LIMIT = 4;
 
-  const recentReviews = booksReviewList
-    // .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) // Descomentar quando tiver updatedAt
+  const recentReviews = reviews
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )
     .slice(0, REVIEWS_LIMIT);
 
   return (

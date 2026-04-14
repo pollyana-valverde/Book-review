@@ -1,23 +1,25 @@
 "use client";
+
 import { ReviewCard } from "@/template/books-review-page/components";
 
-import { booksReviewList } from "@/utils/book-review-list";
 import { useSearchParams } from "next/navigation";
 
-function ReviewList() {
+function ReviewList({ review }: { review: BookReview[] }) {
   const searchParams = useSearchParams();
   const searchQueryTitle = searchParams.get("title") || "";
   const searchQueryCategory =
-    (searchParams?.get("category") as Album["badge"]) || "";
+    (searchParams?.get("category") as Album["title"]) || "";
 
-  const reviewsList = booksReviewList.filter((book) => {
+  const reviewsList = review.filter((book) => {
     const matchesTitle =
       !searchQueryTitle ||
       book.title.toLowerCase().includes(searchQueryTitle.toLowerCase());
 
     const matchesCategory =
       !searchQueryCategory ||
-      book.badge?.some((b) => b.variant === searchQueryCategory);
+      book.categoryId
+        ?.toLowerCase()
+        .includes(searchQueryCategory.toLowerCase());
 
     return matchesTitle && matchesCategory;
   });
@@ -44,8 +46,8 @@ function ReviewList() {
       xl:grid-cols-4 gap-3
      `}
     >
-      {reviewsList.map((book, index) => (
-        <ReviewCard key={`${book}-${index}`} book={book} />
+      {reviewsList.map((book) => (
+        <ReviewCard key={book.id} book={book} />
       ))}
     </div>
   );

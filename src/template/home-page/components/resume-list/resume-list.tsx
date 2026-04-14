@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { ResumeCard } from "../resume-card";
 import {
   BookOpenIcon,
@@ -6,11 +7,20 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 
-import { albumsList, booksReviewList } from "@/utils";
+const reviews = await prisma.review.findMany();
+const reviewsInThisMonth = reviews.filter((review) => {
+  const reviewDate = new Date(review.createdAt);
+  const currentDate = new Date();
+  return (
+    reviewDate.getMonth() === currentDate.getMonth() &&
+    reviewDate.getFullYear() === currentDate.getFullYear()
+  );
+});
+const albums = await prisma.album.findMany();
 
 const resumeData = [
   {
-    total: booksReviewList.length,
+    total: reviews.length,
     label: "Resenhas",
     iconComponent: {
       icon: BookOpenIcon,
@@ -18,7 +28,7 @@ const resumeData = [
     },
   },
   {
-    total: albumsList.length,
+    total: albums.length,
     label: "Álbums",
     iconComponent: {
       icon: FolderOpenIcon,
@@ -27,11 +37,11 @@ const resumeData = [
   },
   {
     total:
-      booksReviewList.length > 0
-        ? booksReviewList.reduce(
+      reviews.length > 0
+        ? reviews.reduce(
             (accumulator, review) => accumulator + review.rating,
             0
-          ) / booksReviewList.length
+          ) / reviews.length
         : 0,
     label: "Nota Média",
     iconComponent: {
@@ -40,7 +50,7 @@ const resumeData = [
     },
   },
   {
-    total: 4,
+    total: reviewsInThisMonth.length,
     label: "Este mês",
     iconComponent: {
       icon: TrendingUpIcon,

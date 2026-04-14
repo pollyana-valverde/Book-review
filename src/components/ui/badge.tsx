@@ -10,11 +10,6 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        fantasy: "bg-purple-100 text-purple-700",
-        fiction: "bg-blue-100 text-blue-700",
-        romance: "bg-pink-100 text-pink-700",
-        "non-fiction": "bg-green-100 text-green-700",
-        "sci-fi": "bg-cyan-100 text-cyan-700",
       },
       size: {
         default: "px-2 py-0.5 text-xs",

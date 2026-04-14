@@ -1,9 +1,13 @@
-import { AlbumCard } from "@/template/albums-page/components";
+import { prisma } from "@/lib/prisma";
+import { AlbumCard } from "@/template/albums-page/components/album-card";
 
-import { albumsList } from "@/utils";
-
-function AlbumList() {
-  const hasAlbums = albumsList.length > 0;
+async function AlbumList() {
+  const albums = await prisma.album.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  const hasAlbums = albums.length > 0;
 
   if (!hasAlbums) {
     return (
@@ -24,8 +28,8 @@ function AlbumList() {
         xl:grid-cols-4 gap-3
        `}
     >
-      {albumsList.map((album, index) => (
-        <AlbumCard key={`${album}-${index}`} album={album} />
+      {albums.map((album, index) => (
+        <AlbumCard key={album.id} album={album} />
       ))}
     </div>
   );

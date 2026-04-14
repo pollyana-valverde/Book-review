@@ -3,9 +3,18 @@ import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 
 import { albumsList, booksReviewList } from "@/utils";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import { prisma } from "@/lib/prisma";
 
-function AlbumsBooksList() {
-  const hasAlbums = albumsList.length > 0;
+async function AlbumsBooksList() {
+  const albums = await prisma.album.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  const bookReviews = await prisma.review.findMany();
+
+  const hasAlbums = albums.length > 0;
 
   if (!hasAlbums) {
     return (
@@ -18,23 +27,24 @@ function AlbumsBooksList() {
     );
   }
 
-  const countBooksInAlbum = (albumBadge: Album["badge"]) => {
-    return booksReviewList.filter((book) =>
-      book.badge?.some((b) => b.variant === albumBadge)
-    ).length;
+  const countBooksInAlbum = (albumBadge: Album["id"]) => {
+    return bookReviews.filter((book) => book.categoryId?.includes(albumBadge))
+      .length;
   };
 
   return (
     <Card className="p-0 gap-0 md:p-0">
-      {albumsList.map((album) => {
-        const booksInThisAlbum = countBooksInAlbum(album.badge);
+      {albums.map((album) => {
+        const booksInThisAlbum = countBooksInAlbum(album.id);
 
         return (
           <div
-            key={album.badge}
+            key={album.id}
             className="p-4 flex justify-between items-center not-first:border-t"
           >
-            <Badge variant={album.badge}>{album.name}</Badge>
+            <Badge style={getAlbumBadgeColor(album.id || album.title)}>
+              {album.title}
+            </Badge>
             <Text as="p" variant="content-1" className="text-muted-foreground">
               {booksInThisAlbum >= 1 && booksInThisAlbum}{" "}
               {booksInThisAlbum > 1 && "livros"}

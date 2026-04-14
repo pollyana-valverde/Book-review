@@ -1,5 +1,7 @@
 interface Album {
-  name: string;
-  booksCount: number;
-  badge: "fantasy" | "fiction" | "romance" | "non-fiction" | "sci-fi";
+  id: string;
+  title: string;
+  reviews?: BookReview[];
+  created_at?: Date;
+  updated_at?: Date;
 }

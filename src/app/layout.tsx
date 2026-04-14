@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "@/styles/globals.css";
+
+import { Toaster } from "sonner";
 import { Navbar, MobileNavbar } from "@/components/layout";
 
 const roboto = Roboto({
@@ -34,6 +36,7 @@ export default function RootLayout({
           {children}
         </div>
         <MobileNavbar />
+        <Toaster position="top-right" />
       </body>
     </html>
   );
