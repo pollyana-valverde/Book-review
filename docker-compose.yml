@@ -10,8 +10,14 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./bookreview-pgdata:/var/lib/postgresql/data
+      - bookreview-pgdata:/bitnami/postgresql
+      - bookreview-initdb:/docker-entrypoint-initdb.d
+      - bookreview-preinitdb:/docker-entrypoint-preinitdb.d
 
 volumes:
   bookreview-pgdata:
     name: bookreview-pgdata
+  bookreview-initdb:
+    name: bookreview-initdb
+  bookreview-preinitdb:
+    name: bookreview-preinitdb
