@@ -41,4 +41,23 @@ async function createAlbum(
   }
 }
 
-export { createAlbum };
+async function deleteAlbum(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await prisma.album.delete({
+      where: {
+        id,
+      },
+    });
+
+    revalidatePath("/albums");
+
+    return { success: true };
+  } catch (error) {
+    console.log(error);
+    return { success: false, error: "Erro ao deletar álbum." };
+  }
+}
+
+export { createAlbum, deleteAlbum };

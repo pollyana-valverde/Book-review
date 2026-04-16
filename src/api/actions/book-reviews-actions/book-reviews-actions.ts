@@ -54,4 +54,23 @@ async function createReview(
   }
 }
 
-export { createReview };
+async function deleteReview(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await prisma.review.delete({
+      where: {
+        id,
+      },
+    });
+
+    revalidatePath("/books-review");
+
+    return { success: true };
+  } catch (error) {
+    console.log(error);
+    return { success: false, error: "Erro ao deletar resenha." };
+  }
+}
+
+export { createReview, deleteReview };

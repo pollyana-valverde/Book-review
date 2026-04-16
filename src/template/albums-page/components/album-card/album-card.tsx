@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { deleteAlbum } from "@/api/actions";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 import {
@@ -8,11 +12,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { BookOpenIcon, Trash2Icon } from "lucide-react";
+import { BookOpenIcon, Trash2Icon as DeleteIcon } from "lucide-react";
+import { toast } from "sonner";
 
 interface AlbumCardDTO {
   album: {
@@ -20,6 +37,54 @@ interface AlbumCardDTO {
     title: string;
   };
   countBooksInAlbum: (albumId: Album["id"]) => number;
+}
+
+function DeleteAlbumDialog({ id }: { id: string }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDelete() {
+    setIsDeleting(true);
+
+    const deletedAlbum = await deleteAlbum(id);
+
+    if (deletedAlbum.error) {
+      toast.error(deletedAlbum.error);
+      return;
+    }
+
+    toast.success("Álbum deletado com sucesso!");
+    setIsDeleting(false);
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <DeleteIcon className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-all hover:text-red-700 hover:bg-red-100" />
+      </AlertDialogTrigger>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+            <DeleteIcon />
+          </AlertDialogMedia>
+          <AlertDialogTitle>Deletar Álbum?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja deletar este álbum? Esta ação não pode ser
+            desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel variant="outline">Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            Deletar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 async function AlbumCard({ album, countBooksInAlbum }: AlbumCardDTO) {
@@ -32,7 +97,7 @@ async function AlbumCard({ album, countBooksInAlbum }: AlbumCardDTO) {
           <Badge style={getAlbumBadgeColor(album.id || album.title)} size="lg">
             {album.title}
           </Badge>
-          <Trash2Icon className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-all hover:text-red-700 hover:bg-red-100" />
+          <DeleteAlbumDialog id={album.id} />
         </CardTitle>
 
         <CardDescription className="flex gap-1.5 items-center">

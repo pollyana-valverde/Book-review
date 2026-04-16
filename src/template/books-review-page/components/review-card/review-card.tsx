@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import { deleteReview } from "@/api/actions";
 import { ReviewDTO } from "@/template/books-review-page/types";
+import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 import {
   Card,
@@ -10,11 +14,73 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { StarIcon, Trash2Icon } from "lucide-react";
+import { StarIcon, Trash2Icon as DeleteIcon } from "lucide-react";
+
+import { toast } from "sonner";
+
+function DeleteCardDialog({ id }: { id: string }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDelete() {
+    setIsDeleting(true);
+
+    const deletedReview = await deleteReview(id);
+
+    if (deletedReview.error) {
+      toast.error(deletedReview.error);
+      return;
+    }
+
+    toast.success("Resenha deletada com sucesso!");
+    setIsDeleting(false);
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <DeleteIcon className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-all hover:text-red-700 hover:bg-red-100" />
+      </AlertDialogTrigger>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+            <DeleteIcon />
+          </AlertDialogMedia>
+          <AlertDialogTitle>Deletar Resenha?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja deletar esta resenha? Esta ação não pode ser
+            desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel variant="outline">Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            Deletar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 function ReviewCard({ review }: { review: ReviewDTO }) {
   return (
@@ -29,7 +95,7 @@ function ReviewCard({ review }: { review: ReviewDTO }) {
               {review.author}
             </Text>
           </div>
-          <Trash2Icon className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-all hover:text-red-700 hover:bg-red-100" />
+          <DeleteCardDialog id={review.id} />
         </CardTitle>
 
         <CardAction className="flex flex-wrap gap-1">
