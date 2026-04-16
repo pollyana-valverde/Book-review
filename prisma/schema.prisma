@@ -14,10 +14,10 @@ datasource db {
 
 model Review {
   id          String @id @default(uuid())
-  title       String
+  title       String @unique
   author      String
   categoryId  String
-  rating      Int    @default(0)
+  rating      Int    @default(1)
   description String
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -30,11 +30,12 @@ model Review {
 
 model Album {
   id      String   @id @default(uuid())
-  title   String
+  title   String   @unique
   reviews Review[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
 
   @@map("albums")
 }

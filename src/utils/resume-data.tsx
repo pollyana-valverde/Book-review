@@ -7,8 +7,8 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 
-const reviews = await prisma.review.findMany();
-const reviewsInThisMonth = reviews.filter((review) => {
+const reviews = async () => await prisma.review.findMany();
+const reviewsInThisMonth = (await reviews()).filter((review) => {
   const reviewDate = new Date(review.createdAt);
   const currentDate = new Date();
   return (
@@ -16,17 +16,19 @@ const reviewsInThisMonth = reviews.filter((review) => {
     reviewDate.getFullYear() === currentDate.getFullYear()
   );
 });
-const albums = await prisma.album.findMany();
+const albums = async () => await prisma.album.findMany();
 
 const totalReviewRating =
-  reviews.length > 0
-    ? reviews.reduce((accumulator, review) => accumulator + review.rating, 0) /
-      reviews.length
+  (await reviews()).length > 0
+    ? (await reviews()).reduce(
+        (accumulator, review) => accumulator + review.rating,
+        0
+      ) / (await reviews()).length
     : 0;
 
 const RESUME_DATA = [
   {
-    total: reviews.length,
+    total: (await reviews()).length,
     label: "Resenhas",
     iconComponent: {
       icon: BookOpenIcon,
@@ -34,7 +36,7 @@ const RESUME_DATA = [
     },
   },
   {
-    total: albums.length,
+    total: (await albums()).length,
     label: "Albums",
     iconComponent: {
       icon: FolderOpenIcon,

@@ -3,17 +3,19 @@ import { prisma } from "@/lib/prisma";
 import { AlbumCard } from "@/template/albums-page/components/album-card";
 
 async function AlbumList() {
-  const bookReviews = await prisma.review.findMany();
   const albums = await prisma.album.findMany({
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      _count: {
+        select: {
+          reviews: true,
+        },
+      },
+    },
   });
   const hasAlbums = albums.length > 0;
-
-  const countBooksInAlbum = (albumId: Album["id"]) => {
-    return bookReviews.filter((book) => book.categoryId === albumId).length;
-  };
 
   if (!hasAlbums) {
     return (
@@ -35,11 +37,7 @@ async function AlbumList() {
        `}
     >
       {albums.map((album) => (
-        <AlbumCard
-          key={album.id}
-          album={album}
-          countBooksInAlbum={countBooksInAlbum}
-        />
+        <AlbumCard key={album.id} album={album} />
       ))}
     </div>
   );

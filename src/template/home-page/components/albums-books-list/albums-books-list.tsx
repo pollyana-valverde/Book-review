@@ -10,8 +10,14 @@ async function AlbumsBooksList() {
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      _count: {
+        select: {
+          reviews: true,
+        },
+      },
+    },
   });
-  const bookReviews = await prisma.review.findMany();
 
   const hasAlbums = albums.length > 0;
 
@@ -26,15 +32,15 @@ async function AlbumsBooksList() {
     );
   }
 
-  function countBooksInAlbum(albumBadge: Album["id"]) {
-    return bookReviews.filter((book) => book.categoryId?.includes(albumBadge))
-      .length;
-  }
+  // function countBooksInAlbum(albumBadge: Album["id"]) {
+  //   return bookReviews.filter((book) => book.categoryId?.includes(albumBadge))
+  //     .length;
+  // }
 
   return (
     <Card className="p-0 gap-0 md:p-0">
       {albums.map((album) => {
-        const booksInThisAlbum = countBooksInAlbum(album.id);
+        const booksInThisAlbum = album._count.reviews;
 
         return (
           <div

@@ -44,6 +44,7 @@ function DeleteCardDialog({ id }: { id: string }) {
 
     if (deletedReview.error) {
       toast.error(deletedReview.error);
+      setIsDeleting(false);
       return;
     }
 

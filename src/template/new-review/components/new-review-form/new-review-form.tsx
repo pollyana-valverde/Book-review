@@ -50,7 +50,7 @@ interface NewReviewFormProps {
 
 function NewReviewForm({ albumsList }: NewReviewFormProps) {
   const form = useForm<ReviewFormValues>({
-    resolver: zodResolver(reviewFormSchema as never),
+    resolver: zodResolver(reviewFormSchema),
     defaultValues: {
       title: "",
       author: "",

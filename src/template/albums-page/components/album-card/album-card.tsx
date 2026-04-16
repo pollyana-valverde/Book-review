@@ -35,8 +35,10 @@ interface AlbumCardDTO {
   album: {
     id: string;
     title: string;
+    _count: {
+      reviews: number;
+    };
   };
-  countBooksInAlbum: (albumId: Album["id"]) => number;
 }
 
 function DeleteAlbumDialog({ id }: { id: string }) {
@@ -87,8 +89,8 @@ function DeleteAlbumDialog({ id }: { id: string }) {
   );
 }
 
-async function AlbumCard({ album, countBooksInAlbum }: AlbumCardDTO) {
-  const booksInThisAlbum = countBooksInAlbum(album.id);
+function AlbumCard({ album }: AlbumCardDTO) {
+  const booksInThisAlbum = album._count.reviews;
 
   return (
     <Card className="gap-2">

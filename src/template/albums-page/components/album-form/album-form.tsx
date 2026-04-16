@@ -25,7 +25,7 @@ type AlbumFormValues = z.infer<typeof AlbumFormSchema>;
 
 function AlbumForm() {
   const form = useForm<AlbumFormValues>({
-    resolver: zodResolver(AlbumFormSchema as never),
+    resolver: zodResolver(AlbumFormSchema),
     defaultValues: {
       title: "",
     },

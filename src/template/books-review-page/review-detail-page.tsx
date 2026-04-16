@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { ArrowLeftIcon, StarIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, StarIcon } from "lucide-react";
 
 import { ReviewDTO } from "@/template/books-review-page/types";
 
@@ -87,10 +87,6 @@ async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
               <Text as="p" className="text-muted-foreground font-normal">
                 {reviewDetail.author}
               </Text>
-            </div>
-
-            <div className="p-1.5 rounded-sm text-muted-foreground transition-all hover:text-red-700 hover:bg-red-100">
-              <Trash2Icon className="w-5 h-5" />
             </div>
           </CardTitle>
 
