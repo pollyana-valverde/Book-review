@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Field } from "@/components/ui/field";
 import {
@@ -23,6 +23,7 @@ import { CircleXIcon, SearchIcon } from "lucide-react";
 
 function SearchSection({ albums }: { albums: Album[] }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchQueryTitle = searchParams.get("title") || "";
   const searchQueryCategory = searchParams.get("category") || "";
@@ -31,43 +32,57 @@ function SearchSection({ albums }: { albums: Album[] }) {
     (event: React.ChangeEvent<HTMLFormElement>) => {
       event.preventDefault();
 
+      const newQuery = new URLSearchParams(searchParams.toString());
+
       if (searchQueryTitle.trim()) {
-        router.push(
-          `/books-review?title=${encodeURIComponent(searchQueryTitle)}&&category=${encodeURIComponent(searchQueryCategory)}`
-        );
+        newQuery.set("title", searchQueryTitle);
+      } else {
+        newQuery.delete("title");
       }
+
+      if (searchQueryCategory && searchQueryCategory !== "all") {
+        newQuery.set("category", searchQueryCategory);
+      } else {
+        newQuery.delete("category");
+      }
+
+      const queryString = newQuery.toString();
+      router.push(queryString ? `${pathname}?${queryString}` : pathname);
     },
-    [router, searchQueryTitle, searchQueryCategory]
+    [pathname, router, searchParams, searchQueryCategory, searchQueryTitle]
   );
 
   const handleQueryTitleChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const newQueryTitle = event.target.value;
+    const newQuery = new URLSearchParams(searchParams.toString());
+    const queryTitle = event.target.value;
 
-    router.push(
-      `/books-review?title=${encodeURIComponent(newQueryTitle)}&&category=${encodeURIComponent(searchQueryCategory)}`,
-      {
-        scroll: false,
-      }
-    );
+    if (queryTitle.trim()) {
+      newQuery.set("title", queryTitle);
+    } else {
+      newQuery.delete("title");
+    }
+
+    const queryString = newQuery.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
   };
 
-  const handleQueryCategoryChange = (value: Album["id"]) => {
-    router.push(
-      `/books-review?title=${encodeURIComponent(searchQueryTitle)}&&category=${encodeURIComponent(value)}`,
-      {
-        scroll: false,
-      }
-    );
+  const handleQueryCategoryChange = (selectedAlbum: Album["id"]) => {
+    const newQuery = new URLSearchParams(searchParams.toString());
 
-    if (value === ("all" as Album["id"])) {
-      resetSearch();
+    if (selectedAlbum === ("all" as Album["id"])) {
+      newQuery.delete("category");
+    } else {
+      newQuery.set("category", selectedAlbum);
     }
+
+    const queryString = newQuery.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
   };
 
   const resetSearch = () => {
-    router.push("/books-review", {
+    router.push(pathname, {
       scroll: false,
     });
   };
@@ -100,7 +115,7 @@ function SearchSection({ albums }: { albums: Album[] }) {
 
       <Select
         onValueChange={handleQueryCategoryChange}
-        defaultValue={searchQueryCategory}
+        value={searchQueryCategory || "all"}
       >
         <SelectTrigger className="w-full md:max-w-56">
           <SelectValue placeholder="Select a category" />

@@ -29,6 +29,19 @@ async function RecentReviewList() {
     updatedAt: r.updatedAt.toISOString(),
   }));
 
+  const hasReviews = bookReviews.length > 0;
+
+  if (!hasReviews) {
+    return (
+      <div className="text-center py-10">
+        <h2 className="text-2xl font-semibold">Nenhuma resenha encontrada</h2>
+        <p className="text-muted-foreground mt-2">
+          Crie resenhas para seus livros favoritos e elas aparecerão aqui.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`grid 

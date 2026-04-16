@@ -9,4 +9,9 @@ interface ReviewDTO {
   updatedAt: string;
 }
 
-export type { ReviewDTO };
+type BooksReviewSearchParams = {
+  title?: string | string[];
+  category?: string | string[];
+};
+
+export type { BooksReviewSearchParams, ReviewDTO };
