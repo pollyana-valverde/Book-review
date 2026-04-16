@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import z from "zod";
 
 const albumFormSchema = z.object({
@@ -30,6 +31,9 @@ async function createAlbum(
         ...parsedData,
       },
     });
+
+    revalidatePath("/albums");
+
     return { success: true };
   } catch (error) {
     console.log(error);

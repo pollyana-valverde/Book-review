@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import z from "zod";
 
 const reviewFormSchema = z.object({
@@ -43,6 +44,9 @@ async function createReview(
         ...parsedData,
       },
     });
+
+    revalidatePath("/books-review");
+
     return { success: true };
   } catch (error) {
     console.log(error);
