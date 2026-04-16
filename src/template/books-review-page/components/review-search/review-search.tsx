@@ -2,6 +2,10 @@
 
 import { useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  pushWithParams,
+  setOrDeleteParam,
+} from "@/template/books-review-page/lib";
 
 import { Field } from "@/components/ui/field";
 import {
@@ -34,20 +38,10 @@ function SearchSection({ albums }: { albums: Album[] }) {
 
       const newQuery = new URLSearchParams(searchParams.toString());
 
-      if (searchQueryTitle.trim()) {
-        newQuery.set("title", searchQueryTitle);
-      } else {
-        newQuery.delete("title");
-      }
+      setOrDeleteParam(newQuery, "title", searchQueryTitle);
+      setOrDeleteParam(newQuery, "category", searchQueryCategory);
 
-      if (searchQueryCategory && searchQueryCategory !== "all") {
-        newQuery.set("category", searchQueryCategory);
-      } else {
-        newQuery.delete("category");
-      }
-
-      const queryString = newQuery.toString();
-      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+      pushWithParams(router, pathname, newQuery);
     },
     [pathname, router, searchParams, searchQueryCategory, searchQueryTitle]
   );
@@ -58,27 +52,17 @@ function SearchSection({ albums }: { albums: Album[] }) {
     const newQuery = new URLSearchParams(searchParams.toString());
     const queryTitle = event.target.value;
 
-    if (queryTitle.trim()) {
-      newQuery.set("title", queryTitle);
-    } else {
-      newQuery.delete("title");
-    }
+    setOrDeleteParam(newQuery, "title", queryTitle);
 
-    const queryString = newQuery.toString();
-    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+    pushWithParams(router, pathname, newQuery);
   };
 
   const handleQueryCategoryChange = (selectedAlbum: Album["id"]) => {
     const newQuery = new URLSearchParams(searchParams.toString());
 
-    if (selectedAlbum === ("all" as Album["id"])) {
-      newQuery.delete("category");
-    } else {
-      newQuery.set("category", selectedAlbum);
-    }
+    setOrDeleteParam(newQuery, "category", selectedAlbum);
 
-    const queryString = newQuery.toString();
-    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+    pushWithParams(router, pathname, newQuery);
   };
 
   const resetSearch = () => {
