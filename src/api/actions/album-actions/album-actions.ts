@@ -24,7 +24,7 @@ async function createAlbum(
       data: parsedData,
     });
 
-    revalidatePath("/albums");
+    revalidatePath("/");
 
     return { success: true };
   } catch (error) {
@@ -59,7 +59,7 @@ async function deleteAlbum(
       },
     });
 
-    revalidatePath("/albums");
+    revalidatePath("/");
 
     return { success: true };
   } catch (error) {
