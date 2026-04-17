@@ -1,43 +1,51 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { fetchFirstAlbum } from "@/api/services/album-services";
 import { revalidatePath } from "next/cache";
-import z from "zod";
+import { AlbumDataValues, albumDataSchema } from "./schema";
 
-const albumFormSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório"),
-});
-
-type AlbumData = z.infer<typeof albumFormSchema>;
+import { ZodError } from "zod";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
 async function createAlbum(
-  data: AlbumData
+  data: AlbumDataValues
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const parsedData = albumFormSchema.parse(data);
+    const parsedData = albumDataSchema.parse(data);
 
-    const existingAlbum = await prisma.album.findFirst({
-      where: {
-        title: parsedData.title,
-      },
-    });
+    const existingAlbum = await fetchFirstAlbum("title", parsedData.title);
 
     if (existingAlbum) {
-      return { success: false, error: "Você já tem um álbum com este título." };
+      return { success: false, error: "Você já tem um album com este título." };
     }
 
     await prisma.album.create({
-      data: {
-        ...parsedData,
-      },
+      data: parsedData,
     });
 
     revalidatePath("/albums");
 
     return { success: true };
   } catch (error) {
-    console.log(error);
-    return { success: false, error: "Erro ao criar álbum." };
+    console.error(error);
+
+    // ZodError - validação falhou
+    if (error instanceof ZodError) {
+      const messages = error.issues.map((issue) => issue.message);
+      return { success: false, error: messages.join(", ") };
+    }
+
+    // Prisma - erro conhecido (ex: unique constraint)
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return { success: false, error: "Já existe um álbum com este título." };
+      }
+      return { success: false, error: "Erro ao criar álbum. Tente novamente." };
+    }
+
+    // Erro genérico
+    return { success: false, error: "Erro ao criar album." };
   }
 }
 
@@ -55,8 +63,16 @@ async function deleteAlbum(
 
     return { success: true };
   } catch (error) {
-    console.log(error);
-    return { success: false, error: "Erro ao deletar álbum." };
+    console.error(error);
+
+    // Prisma - erro conhecido (ex: registro não encontrado)
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return { success: false, error: "Álbum não encontrado." };
+      }
+    }
+
+    return { success: false, error: "Erro ao deletar album." };
   }
 }
 

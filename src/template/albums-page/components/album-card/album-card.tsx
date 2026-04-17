@@ -51,6 +51,7 @@ function DeleteAlbumDialog({ id }: { id: string }) {
 
     if (deletedAlbum.error) {
       toast.error(deletedAlbum.error);
+      setIsDeleting(false);
       return;
     }
 
@@ -81,7 +82,7 @@ function DeleteAlbumDialog({ id }: { id: string }) {
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            Deletar
+            {isDeleting ? "Deletando..." : "Deletar"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

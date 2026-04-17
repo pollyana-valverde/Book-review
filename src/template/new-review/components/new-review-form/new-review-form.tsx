@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { z } from "zod";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createReview } from "@/api/actions";
+import {
+  ReviewDataValues,
+  reviewDataSchema,
+} from "@/api/actions/book-reviews-actions/schema";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
@@ -26,31 +30,14 @@ import {
 import { toast } from "sonner";
 
 import { StarIcon } from "lucide-react";
-import Link from "next/link";
-
-const reviewFormSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório"),
-  author: z.string().min(1, "O autor é obrigatório"),
-  categoryId: z.string().min(1, "O álbum é obrigatório"),
-  rating: z
-    .number()
-    .min(1, "A avaliação é obrigatória")
-    .max(5, "A avaliação deve ser entre 1 e 5"),
-  description: z
-    .string()
-    .min(1, "A resenha é obrigatória")
-    .max(280, "A resenha deve ter no máximo 280 caracteres"),
-});
-
-type ReviewFormValues = z.infer<typeof reviewFormSchema>;
 
 interface NewReviewFormProps {
   albumsList: Album[];
 }
 
 function NewReviewForm({ albumsList }: NewReviewFormProps) {
-  const form = useForm<ReviewFormValues>({
-    resolver: zodResolver(reviewFormSchema),
+  const form = useForm<ReviewDataValues>({
+    resolver: zodResolver(reviewDataSchema),
     defaultValues: {
       title: "",
       author: "",
@@ -72,7 +59,7 @@ function NewReviewForm({ albumsList }: NewReviewFormProps) {
 
   const [hoverRating, setHoverRating] = useState(0);
 
-  async function onSubmit(data: ReviewFormValues) {
+  async function onSubmit(data: ReviewDataValues) {
     const review = await createReview({
       ...data,
     });
@@ -151,7 +138,7 @@ function NewReviewForm({ albumsList }: NewReviewFormProps) {
                     <Badge
                       style={getAlbumBadgeColor(album.id || album.title)}
                       className={cn(
-                        "border",
+                        "border cursor-pointer",
                         selectedAlbum === album.id
                           ? "ring-2 ring-offset-2 ring-current"
                           : ""

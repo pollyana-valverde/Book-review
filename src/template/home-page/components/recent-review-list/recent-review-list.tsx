@@ -1,22 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import { fetchTakeReviews } from "@/api/services/book-reviews-services";
 import { ReviewDTO } from "@/template/books-review-page/types";
 
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
 async function RecentReviewList() {
-  const reviews = await prisma.review.findMany({
-    orderBy: {
-      updatedAt: "desc",
-    },
-    take: 4,
-    include: {
-      category: {
-        select: {
-          title: true,
-        },
-      },
-    },
-  });
+  const reviews = await fetchTakeReviews(4);
 
   const bookReviews: ReviewDTO[] = reviews.map((r) => ({
     id: r.id,

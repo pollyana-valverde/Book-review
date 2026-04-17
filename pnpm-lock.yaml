@@ -31,9 +31,6 @@ importers:
       pg:
         specifier: ^8.20.0
         version: 8.20.0
-      pnpm:
-        specifier: ^10.30.3
-        version: 10.33.0
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -92,6 +89,9 @@ importers:
       lefthook:
         specifier: ^2.1.5
         version: 2.1.5
+      pnpm:
+        specifier: ^10.33.0
+        version: 10.33.0
       prettier:
         specifier: ^3.8.2
         version: 3.8.2

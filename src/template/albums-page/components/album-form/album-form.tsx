@@ -1,9 +1,12 @@
 "use client";
 
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createAlbum } from "@/api/actions";
+import {
+  AlbumDataValues,
+  albumDataSchema,
+} from "@/api/actions/album-actions/schema";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,21 +20,15 @@ import {
 
 import { toast } from "sonner";
 
-const AlbumFormSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório"),
-});
-
-type AlbumFormValues = z.infer<typeof AlbumFormSchema>;
-
 function AlbumForm() {
-  const form = useForm<AlbumFormValues>({
-    resolver: zodResolver(AlbumFormSchema),
+  const form = useForm<AlbumDataValues>({
+    resolver: zodResolver(albumDataSchema),
     defaultValues: {
       title: "",
     },
   });
 
-  async function onSubmit(data: AlbumFormValues) {
+  async function onSubmit(data: AlbumDataValues) {
     const album = await createAlbum({
       ...data,
     });

@@ -75,7 +75,7 @@ function DeleteCardDialog({ id }: { id: string }) {
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            Deletar
+            {isDeleting ? "Deletando..." : "Deletar"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

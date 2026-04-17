@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { prisma } from "@/lib/prisma";
+import { fetchAlbums } from "@/api/services/album-services";
+import { fetchFilteredReview } from "@/api/services/book-reviews-services";
 
 import { Text } from "@/components/ui/text";
 import { ReviewList } from "@/template/books-review-page/components/review-list";
@@ -19,23 +20,8 @@ async function BooksReviewPage({
   const normalizedCategory =
     category && category !== "all" ? category : undefined;
 
-  const albums = await prisma.album.findMany();
-  const review = await prisma.review.findMany({
-    where: {
-      title: {
-        contains: normalizedTitle,
-        mode: "insensitive",
-      },
-      categoryId: normalizedCategory,
-    },
-    include: {
-      category: {
-        select: {
-          title: true,
-        },
-      },
-    },
-  });
+  const albums = await fetchAlbums();
+  const review = await fetchFilteredReview(normalizedTitle, normalizedCategory);
 
   const bookReviews: ReviewDTO[] = review.map((r) => ({
     id: r.id,

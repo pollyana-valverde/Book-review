@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { fetchAlbums } from "@/api/services/album-services";
 
 import { Text } from "@/components/ui/text";
 import { NewReviewForm } from "@/template/new-review/components/new-review-form";
@@ -6,11 +6,7 @@ import { NewReviewForm } from "@/template/new-review/components/new-review-form"
 import { BookOpenIcon } from "lucide-react";
 
 async function NewReviewPage() {
-  const albums = await prisma.album.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const albums = await fetchAlbums();
 
   return (
     <div className="flex flex-col gap-7">

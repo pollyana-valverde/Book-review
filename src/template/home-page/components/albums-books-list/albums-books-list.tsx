@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { fetchAlbumsWithBookCount } from "@/api/services/album-services";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 import { Card } from "@/components/ui/card";
@@ -6,18 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 
 async function AlbumsBooksList() {
-  const albums = await prisma.album.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      _count: {
-        select: {
-          reviews: true,
-        },
-      },
-    },
-  });
+  const albums = await fetchAlbumsWithBookCount();
 
   const hasAlbums = albums.length > 0;
 
@@ -31,11 +20,6 @@ async function AlbumsBooksList() {
       </div>
     );
   }
-
-  // function countBooksInAlbum(albumBadge: Album["id"]) {
-  //   return bookReviews.filter((book) => book.categoryId?.includes(albumBadge))
-  //     .length;
-  // }
 
   return (
     <Card className="p-0 gap-0 md:p-0">

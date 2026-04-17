@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { fetchReviewById } from "@/api/services/book-reviews-services";
 import Link from "next/link";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 import { notFound } from "next/navigation";
@@ -22,18 +22,7 @@ async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
     notFound();
   }
 
-  const review = await prisma.review.findUnique({
-    where: {
-      id: id,
-    },
-    include: {
-      category: {
-        select: {
-          title: true,
-        },
-      },
-    },
-  });
+  const review = await fetchReviewById(id);
 
   if (!review) {
     notFound();

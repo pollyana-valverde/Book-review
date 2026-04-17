@@ -1,20 +1,8 @@
-import { prisma } from "@/lib/prisma";
-
+import { fetchAlbumsWithBookCount } from "@/api/services/album-services";
 import { AlbumCard } from "@/template/albums-page/components/album-card";
 
 async function AlbumList() {
-  const albums = await prisma.album.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      _count: {
-        select: {
-          reviews: true,
-        },
-      },
-    },
-  });
+  const albums = await fetchAlbumsWithBookCount();
   const hasAlbums = albums.length > 0;
 
   if (!hasAlbums) {

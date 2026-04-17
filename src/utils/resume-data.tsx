@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-
+import { fetchAlbums } from "@/api/services/album-services";
+import { fetchReviews } from "@/api/services/book-reviews-services";
 import {
   BookOpenIcon,
   FolderOpenIcon,
@@ -7,58 +7,62 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 
-const reviews = async () => await prisma.review.findMany();
-const reviewsInThisMonth = (await reviews()).filter((review) => {
-  const reviewDate = new Date(review.createdAt);
+async function getResumeData() {
+  const [albums, reviews] = await Promise.all([fetchAlbums(), fetchReviews()]);
   const currentDate = new Date();
-  return (
-    reviewDate.getMonth() === currentDate.getMonth() &&
-    reviewDate.getFullYear() === currentDate.getFullYear()
-  );
-});
-const albums = async () => await prisma.album.findMany();
 
-const totalReviewRating =
-  (await reviews()).length > 0
-    ? (await reviews()).reduce(
-        (accumulator, review) => accumulator + review.rating,
-        0
-      ) / (await reviews()).length
-    : 0;
+  const reviewsInThisMonth = reviews.filter((review) => {
+    const reviewDate = new Date(review.createdAt);
+    return (
+      reviewDate.getMonth() === currentDate.getMonth() &&
+      reviewDate.getFullYear() === currentDate.getFullYear()
+    );
+  });
 
-const RESUME_DATA = [
-  {
-    total: (await reviews()).length,
-    label: "Resenhas",
-    iconComponent: {
-      icon: BookOpenIcon,
-      color: "bg-blue-50 text-blue-500",
-    },
-  },
-  {
-    total: (await albums()).length,
-    label: "Albums",
-    iconComponent: {
-      icon: FolderOpenIcon,
-      color: "bg-purple-50 text-purple-500",
-    },
-  },
-  {
-    total: Number(totalReviewRating.toFixed(1)),
-    label: "Nota Média",
-    iconComponent: {
-      icon: StarIcon,
-      color: "bg-yellow-50 text-yellow-500",
-    },
-  },
-  {
-    total: reviewsInThisMonth.length,
-    label: "Este mês",
-    iconComponent: {
-      icon: TrendingUpIcon,
-      color: "bg-green-50 text-green-500",
-    },
-  },
-];
+  const totalReviewRating =
+    reviews.length > 0
+      ? reviews.reduce(
+          (accumulator, review) => accumulator + review.rating,
+          0
+        ) / reviews.length
+      : 0;
 
-export { RESUME_DATA };
+  const resumeData = [
+    {
+      total: reviews.length,
+      label: "Resenhas",
+      iconComponent: {
+        icon: BookOpenIcon,
+        color: "bg-blue-50 text-blue-500",
+      },
+    },
+    {
+      total: albums.length,
+      label: "Albums",
+      iconComponent: {
+        icon: FolderOpenIcon,
+        color: "bg-purple-50 text-purple-500",
+      },
+    },
+    {
+      total: Number(totalReviewRating.toFixed(1)),
+      label: "Nota Média",
+      iconComponent: {
+        icon: StarIcon,
+        color: "bg-yellow-50 text-yellow-500",
+      },
+    },
+    {
+      total: reviewsInThisMonth.length,
+      label: "Este mês",
+      iconComponent: {
+        icon: TrendingUpIcon,
+        color: "bg-green-50 text-green-500",
+      },
+    },
+  ];
+
+  return resumeData;
+}
+
+export { getResumeData };

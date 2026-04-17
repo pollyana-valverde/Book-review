@@ -1,36 +1,20 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { fetchFirstReview } from "@/api/services/book-reviews-services";
 import { revalidatePath } from "next/cache";
-import z from "zod";
+import { reviewDataSchema, type ReviewDataValues } from "./schema";
 
-const reviewFormSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório"),
-  author: z.string().min(1, "O autor é obrigatório"),
-  categoryId: z.string().min(1, "O álbum é obrigatório"),
-  rating: z
-    .number()
-    .min(1, "A avaliação é obrigatória")
-    .max(5, "A avaliação deve ser entre 1 e 5"),
-  description: z
-    .string()
-    .min(1, "A resenha é obrigatória")
-    .max(280, "A resenha deve ter no máximo 280 caracteres"),
-});
-
-type ReviewData = z.infer<typeof reviewFormSchema>;
+import { ZodError } from "zod";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
 async function createReview(
-  data: ReviewData
+  data: ReviewDataValues
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const parsedData = reviewFormSchema.parse(data);
+    const parsedData = reviewDataSchema.parse(data);
 
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        title: parsedData.title,
-      },
-    });
+    const existingReview = await fetchFirstReview("title", parsedData.title);
 
     if (existingReview) {
       return {
@@ -49,7 +33,30 @@ async function createReview(
 
     return { success: true };
   } catch (error) {
-    console.log(error);
+    console.error(error);
+
+    // ZodError - validação falhou
+    if (error instanceof ZodError) {
+      const messages = error.issues.map((issue) => issue.message);
+      return { success: false, error: messages.join(", ") };
+    }
+
+    // Prisma - erro conhecido (ex: unique constraint)
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return {
+          success: false,
+          error: "Já existe uma resenha para este livro.",
+        };
+      }
+      return {
+        success: false,
+        error: "Erro ao criar resenha. Tente novamente.",
+      };
+    }
+
+    // Erro genérico
+
     return { success: false, error: "Erro ao criar resenha." };
   }
 }
@@ -68,7 +75,15 @@ async function deleteReview(
 
     return { success: true };
   } catch (error) {
-    console.log(error);
+    console.error(error);
+
+    // Prisma - erro conhecido (ex: registro não encontrado)
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return { success: false, error: "Resenha não encontrada." };
+      }
+    }
+
     return { success: false, error: "Erro ao deletar resenha." };
   }
 }
