@@ -12,7 +12,7 @@ async function AlbumsBooksList() {
 
   if (!hasAlbums) {
     return (
-      <div className="text-center py-10">
+      <div className="py-10">
         <h2 className="text-2xl font-semibold">Nenhum álbum encontrado</h2>
         <p className="text-muted-foreground mt-2">
           Crie um álbum para organizar suas resenhas de livros.

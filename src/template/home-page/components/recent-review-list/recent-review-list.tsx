@@ -21,7 +21,7 @@ async function RecentReviewList() {
 
   if (!hasReviews) {
     return (
-      <div className="text-center py-10">
+      <div className="py-10">
         <h2 className="text-2xl font-semibold">Nenhuma resenha encontrada</h2>
         <p className="text-muted-foreground mt-2">
           Crie resenhas para seus livros favoritos e elas aparecerão aqui.
