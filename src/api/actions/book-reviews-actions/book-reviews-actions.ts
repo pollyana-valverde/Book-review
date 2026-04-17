@@ -8,6 +8,13 @@ import { reviewDataSchema, type ReviewDataValues } from "./schema";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
+const REVIEW_REVALIDATE_PATHS = [
+  "/",
+  "/albums",
+  "/books-review",
+  "/new-review",
+];
+
 async function createReview(
   data: ReviewDataValues
 ): Promise<{ success: boolean; error?: string }> {
@@ -29,7 +36,9 @@ async function createReview(
       },
     });
 
-    revalidatePath("/books-review");
+    for (const path of REVIEW_REVALIDATE_PATHS) {
+      revalidatePath(path);
+    }
 
     return { success: true };
   } catch (error) {
@@ -56,7 +65,6 @@ async function createReview(
     }
 
     // Erro genérico
-
     return { success: false, error: "Erro ao criar resenha." };
   }
 }
@@ -71,7 +79,9 @@ async function deleteReview(
       },
     });
 
-    revalidatePath("/books-review");
+    for (const path of REVIEW_REVALIDATE_PATHS) {
+      revalidatePath(path);
+    }
 
     return { success: true };
   } catch (error) {

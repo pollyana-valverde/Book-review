@@ -8,6 +8,8 @@ import { AlbumDataValues, albumDataSchema } from "./schema";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
+const ALBUM_REVALIDATE_PATHS = ["/", "/albums", "/books-review", "/new-review"];
+
 async function createAlbum(
   data: AlbumDataValues
 ): Promise<{ success: boolean; error?: string }> {
@@ -24,7 +26,9 @@ async function createAlbum(
       data: parsedData,
     });
 
-    revalidatePath("/");
+    for (const path of ALBUM_REVALIDATE_PATHS) {
+      revalidatePath(path);
+    }
 
     return { success: true };
   } catch (error) {
@@ -59,7 +63,9 @@ async function deleteAlbum(
       },
     });
 
-    revalidatePath("/");
+    for (const path of ALBUM_REVALIDATE_PATHS) {
+      revalidatePath(path);
+    }
 
     return { success: true };
   } catch (error) {
