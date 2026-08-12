@@ -1,4 +1,9 @@
-import { BooksReviewPage } from "@/template/books-review-page";
+import { Suspense } from "react";
+import {
+  BooksReviewHeader,
+  ReviewListSection,
+} from "@/template/books-review-page";
+import { ReviewSkeleton } from "@/template/books-review-page/components/review-skeleton";
 import { BooksReviewSearchParams } from "@/template/books-review-page/types";
 
 export default async function BooksReview({
@@ -15,5 +20,15 @@ export default async function BooksReview({
     ? rawParams.category[0]
     : rawParams.category;
 
-  return <BooksReviewPage title={title} category={category} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <BooksReviewHeader />
+      <Suspense
+        key={`${title ?? ""}-${category ?? ""}`}
+        fallback={<ReviewSkeleton />}
+      >
+        <ReviewListSection title={title} category={category} />
+      </Suspense>
+    </div>
+  );
 }
