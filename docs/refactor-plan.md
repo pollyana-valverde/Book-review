@@ -51,13 +51,43 @@ sessões futuras tenham contexto sem depender do histórico do chat.
   publicada de `@typescript-eslint` suporta TypeScript 7. Revisitar quando
   houver suporte.
 
+## Camadas de servidor (fase 3)
+
+Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
+(fase 4 monta o transporte por cima disso):
+
+- **`*.contract.ts`** — schemas Zod (input e DTO de saída) e os tipos
+  inferidos. Sem `import "server-only"`: o front importa daqui para validar
+  formulários com `zodResolver`.
+- **`*.repository.ts`** — só Prisma. Finders explícitos (`findById`,
+  `findByTitle`, nunca `where: { [key]: value }`), `include` centralizado
+  com `satisfies Prisma.<Model>Include`, e `findMany` já preparado para
+  paginação por cursor (`cursor`/`limit`, busca `limit + 1`) — a UI ainda usa
+  só o default.
+- **`*.mapper.ts`** — converte o shape do Prisma para o DTO do contract.
+- **`*.service.ts`** — regra de negócio: normaliza filtros (`category ===
+  "all"` vira `undefined` aqui, não no componente), lança `AppError`
+  (`src/server/lib/errors.ts`) em vez de devolver `{ success, error }`, e
+  troca o padrão check-then-create por confiar na unique constraint e tratar
+  o `P2002` do Prisma. Nenhum `revalidatePath` aqui.
+- **`src/server/actions/`** — a borda: Server Actions finas que chamam o
+  service, convertem `AppError`/`ZodError` para `{ success, error }` via
+  `src/server/lib/action-result.ts`, e fazem `revalidatePath` usando a lista
+  única `REVALIDATE_PATHS`. Erros que não são `AppError` são logados e viram
+  mensagem genérica — nunca vazam a mensagem do Prisma.
+- **`src/server/db/prisma.ts`** — client singleton (movido de `src/lib/`).
+
+`src/api/` foi apagado por completo. Os tipos globais ambientes `Album` e
+`BookReview` (`src/types/*.d.ts`) também — os componentes agora importam
+`AlbumDTO`/`ReviewDTO` dos contracts.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
 | ---- | ---------------------------------------------------------------- | ----------- |
 | 1    | Correções pontuais (Toaster/CSS duplicados, Suspense, docker-compose, lefthook, nomes) | ✅ Concluída |
 | 2    | Fundação de infraestrutura (ESLint/TypeScript, `env.ts`, `server-only`, scripts de release, porta do Postgres) | ✅ Concluída |
-| 3    | Camadas contract / repository / service / mapper (sem Hono)      | Pendente    |
+| 3    | Camadas contract / repository / service / mapper (sem Hono)      | ✅ Concluída |
 | 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | Pendente    |
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | Pendente    |
 | 6    | Reset de senha e verificação de e-mail (opcionais)                | Pendente    |
