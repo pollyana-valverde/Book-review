@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createReview } from "@/api/actions";
+import { createReview } from "@/server/actions";
 import {
-  ReviewDataValues,
-  reviewDataSchema,
-} from "@/api/actions/book-reviews-actions/schema";
+  type CreateReviewInput,
+  createReviewSchema,
+} from "@/server/modules/reviews/review.contract";
+import type { AlbumDTO } from "@/server/modules/albums/album.contract";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -32,12 +33,12 @@ import { toast } from "sonner";
 import { StarIcon } from "lucide-react";
 
 interface NewReviewFormProps {
-  albumsList: Album[];
+  albumsList: AlbumDTO[];
 }
 
 function NewReviewForm({ albumsList }: NewReviewFormProps) {
-  const form = useForm<ReviewDataValues>({
-    resolver: zodResolver(reviewDataSchema),
+  const form = useForm<CreateReviewInput>({
+    resolver: zodResolver(createReviewSchema),
     defaultValues: {
       title: "",
       author: "",
@@ -59,7 +60,7 @@ function NewReviewForm({ albumsList }: NewReviewFormProps) {
 
   const [hoverRating, setHoverRating] = useState(0);
 
-  async function onSubmit(data: ReviewDataValues) {
+  async function onSubmit(data: CreateReviewInput) {
     const review = await createReview({
       ...data,
     });

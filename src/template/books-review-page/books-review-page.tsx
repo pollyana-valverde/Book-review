@@ -1,14 +1,12 @@
-import { fetchAlbums } from "@/api/services/album-services";
-import { fetchFilteredReview } from "@/api/services/book-reviews-services";
+import * as albumService from "@/server/modules/albums/album.service";
+import * as reviewService from "@/server/modules/reviews/review.service";
 
 import { Text } from "@/components/ui/text";
 import { ReviewList } from "@/template/books-review-page/components/review-list";
 import { SearchSection } from "@/template/books-review-page/components/review-search";
 
-import { ReviewDTO } from "@/template/books-review-page/types";
-
 async function BooksReviewHeader() {
-  const albums = await fetchAlbums();
+  const albums = await albumService.list();
 
   return (
     <>
@@ -29,27 +27,12 @@ async function ReviewListSection({
   title,
   category,
 }: {
-  title?: ReviewDTO["title"];
-  category?: Album["id"];
+  title?: string;
+  category?: string;
 }) {
-  const normalizedTitle = title?.trim() ?? "";
-  const normalizedCategory =
-    category && category !== "all" ? category : undefined;
+  const { items } = await reviewService.list({ title, categoryId: category });
 
-  const review = await fetchFilteredReview(normalizedTitle, normalizedCategory);
-
-  const bookReviews: ReviewDTO[] = review.map((r) => ({
-    id: r.id,
-    title: r.title,
-    author: r.author,
-    description: r.description,
-    rating: r.rating,
-    categoryId: r.categoryId,
-    categoryTitle: r.category.title,
-    updatedAt: r.updatedAt.toISOString(),
-  }));
-
-  return <ReviewList reviewsList={bookReviews} />;
+  return <ReviewList reviewsList={items} />;
 }
 
 export { BooksReviewHeader, ReviewListSection };

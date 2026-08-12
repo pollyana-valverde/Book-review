@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { deleteAlbum } from "@/api/actions";
+import { deleteAlbum } from "@/server/actions";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import type { AlbumWithReviewCountDTO } from "@/server/modules/albums/album.contract";
 
 import {
   Card,
@@ -32,13 +33,7 @@ import { BookOpenIcon, Trash2Icon as DeleteIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface AlbumCardDTO {
-  album: {
-    id: string;
-    title: string;
-    _count: {
-      reviews: number;
-    };
-  };
+  album: AlbumWithReviewCountDTO;
 }
 
 function DeleteAlbumDialog({ id }: { id: string }) {
@@ -91,7 +86,7 @@ function DeleteAlbumDialog({ id }: { id: string }) {
 }
 
 function AlbumCard({ album }: AlbumCardDTO) {
-  const booksInThisAlbum = album._count.reviews;
+  const booksInThisAlbum = album.reviewsCount;
 
   return (
     <Card className="gap-2">

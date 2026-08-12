@@ -1,4 +1,5 @@
-import { fetchReviewById } from "@/api/services/book-reviews-services";
+import * as reviewService from "@/server/modules/reviews/review.service";
+import { NotFoundError } from "@/server/lib/errors";
 import Link from "next/link";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 import { notFound } from "next/navigation";
@@ -22,22 +23,16 @@ async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
     notFound();
   }
 
-  const review = await fetchReviewById(id);
+  let reviewDetail: ReviewDTO;
 
-  if (!review) {
-    notFound();
+  try {
+    reviewDetail = await reviewService.getById(id);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      notFound();
+    }
+    throw error;
   }
-
-  const reviewDetail: ReviewDTO = {
-    id: review.id,
-    title: review.title,
-    author: review.author,
-    description: review.description,
-    rating: review.rating,
-    categoryId: review.categoryId,
-    categoryTitle: review.category.title,
-    updatedAt: review.updatedAt.toISOString(),
-  };
 
   const formattedBookDate = new Date(reviewDetail.updatedAt).toLocaleDateString(
     "pt-BR",

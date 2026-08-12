@@ -1,21 +1,9 @@
-import { fetchTakeReviews } from "@/api/services/book-reviews-services";
-import { ReviewDTO } from "@/template/books-review-page/types";
+import * as reviewService from "@/server/modules/reviews/review.service";
 
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
 async function RecentReviewList() {
-  const reviews = await fetchTakeReviews(4);
-
-  const bookReviews: ReviewDTO[] = reviews.map((r) => ({
-    id: r.id,
-    title: r.title,
-    author: r.author,
-    description: r.description,
-    rating: r.rating,
-    categoryId: r.categoryId,
-    categoryTitle: r.category.title,
-    updatedAt: r.updatedAt.toISOString(),
-  }));
+  const bookReviews = await reviewService.listRecent(4);
 
   const hasReviews = bookReviews.length > 0;
 

@@ -1,8 +1,8 @@
-import { fetchAlbumsWithBookCount } from "@/api/services/album-services";
+import * as albumService from "@/server/modules/albums/album.service";
 import { AlbumCard } from "@/template/albums-page/components/album-card";
 
 async function AlbumList() {
-  const albums = await fetchAlbumsWithBookCount();
+  const albums = await albumService.listWithReviewCount();
   const hasAlbums = albums.length > 0;
 
   if (!hasAlbums) {

@@ -2,11 +2,11 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createAlbum } from "@/api/actions";
+import { createAlbum } from "@/server/actions";
 import {
-  AlbumDataValues,
-  albumDataSchema,
-} from "@/api/actions/album-actions/schema";
+  type CreateAlbumInput,
+  createAlbumSchema,
+} from "@/server/modules/albums/album.contract";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,14 +21,14 @@ import {
 import { toast } from "sonner";
 
 function AlbumForm() {
-  const form = useForm<AlbumDataValues>({
-    resolver: zodResolver(albumDataSchema),
+  const form = useForm<CreateAlbumInput>({
+    resolver: zodResolver(createAlbumSchema),
     defaultValues: {
       title: "",
     },
   });
 
-  async function onSubmit(data: AlbumDataValues) {
+  async function onSubmit(data: CreateAlbumInput) {
     const album = await createAlbum({
       ...data,
     });

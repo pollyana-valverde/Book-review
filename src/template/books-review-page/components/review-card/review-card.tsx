@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { deleteReview } from "@/api/actions";
+import { deleteReview } from "@/server/actions";
 import { ReviewDTO } from "@/template/books-review-page/types";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 

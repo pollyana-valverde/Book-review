@@ -1,5 +1,5 @@
-import { fetchAlbums } from "@/api/services/album-services";
-import { fetchReviews } from "@/api/services/book-reviews-services";
+import * as albumService from "@/server/modules/albums/album.service";
+import * as reviewService from "@/server/modules/reviews/review.service";
 import {
   BookOpenIcon,
   FolderOpenIcon,
@@ -8,7 +8,10 @@ import {
 } from "lucide-react";
 
 async function getResumeData() {
-  const [albums, reviews] = await Promise.all([fetchAlbums(), fetchReviews()]);
+  const [albums, reviews] = await Promise.all([
+    albumService.list(),
+    reviewService.getAll(),
+  ]);
   const currentDate = new Date();
 
   const reviewsInThisMonth = reviews.filter((review) => {
