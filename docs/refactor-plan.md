@@ -45,14 +45,20 @@ sessões futuras tenham contexto sem depender do histórico do chat.
     `eslint-plugin-react`/`eslint-config-next` publicarem suporte oficial a
     TypeScript 7 e ESLint 10 — não fazer upgrade "no escuro" antes disso.
 
+## Dívida técnica
+
+- TypeScript fixado em `~6.0.3` e ESLint em `^9` porque nenhuma versão
+  publicada de `@typescript-eslint` suporta TypeScript 7. Revisitar quando
+  houver suporte.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
 | ---- | ---------------------------------------------------------------- | ----------- |
 | 1    | Correções pontuais (Toaster/CSS duplicados, Suspense, docker-compose, lefthook, nomes) | ✅ Concluída |
 | 2    | Fundação de infraestrutura (ESLint/TypeScript, `env.ts`, `server-only`, scripts de release, porta do Postgres) | ✅ Concluída |
-| 3    | Hono montado em `src/app/api/[[...route]]/route.ts` + camadas contract / routes / service / repository / mapper | Pendente    |
-| 4    | Migração dos Server Components para consumir services diretamente | Pendente    |
+| 3    | Camadas contract / repository / service / mapper (sem Hono)      | Pendente    |
+| 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | Pendente    |
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | Pendente    |
 | 6    | Reset de senha e verificação de e-mail (opcionais)                | Pendente    |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | Pendente    |
