@@ -88,10 +88,12 @@ public/
 pnpm install
 ```
 
-2. Crie o arquivo `.env` na raiz do projeto:
+2. Crie o arquivo `.env` na raiz do projeto (veja `.env.example` para a lista completa de variáveis):
 
 ```env
-DATABASE_URL="postgresql://example:example@localhost:5432/bookreview"
+DATABASE_URL="postgresql://admin:admin@localhost:5433/bookreview"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+POSTGRES_PORT=5433
 ```
 
 3. Suba o banco com Docker (opcional, recomendado):
@@ -100,10 +102,10 @@ DATABASE_URL="postgresql://example:example@localhost:5432/bookreview"
 docker compose up -d
 ```
 
-4. Rode as migrações do Prisma:
+4. Rode as migrações do Prisma em desenvolvimento:
 
 ```bash
-pnpm prisma migrate dev
+pnpm db:migrate:dev
 ```
 
 5. Inicie o projeto:
@@ -127,6 +129,20 @@ http://localhost:3000
 - `pnpm format` Verifica formatação.
 - `pnpm format:fix` Corrige formatação.
 - `pnpm validate:typecheck` Executa checagem de tipos.
+- `pnpm db:migrate:dev` Cria/aplica migrações em desenvolvimento.
+- `pnpm db:migrate` Aplica migrações pendentes (`prisma migrate deploy`).
+- `pnpm db:studio` Abre o Prisma Studio.
+
+### Release e migrações
+
+`pnpm build` **não** roda migrações — ele só gera o Prisma Client e compila o
+Next.js (`prisma generate && next build`). Rodar migração dentro do build é
+perigoso quando há builds paralelos ou múltiplas réplicas disputando a mesma
+migração.
+
+Migração de banco é um passo de release separado: rode `pnpm db:migrate`
+manualmente (ou como um step isolado do pipeline de deploy) antes de colocar a
+nova versão em produção.
 
 ## Validacoes implementadas
 

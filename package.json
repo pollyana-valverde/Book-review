@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "validate:typecheck": "tsc --noEmit --skipLibCheck"
+    "validate:typecheck": "tsc --noEmit --skipLibCheck",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
