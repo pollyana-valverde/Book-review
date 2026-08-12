@@ -20,7 +20,9 @@ const listReviewsQuerySchema = z.object({
   title: z.string().optional(),
   categoryId: z.string().optional(),
   cursor: z.string().optional(),
-  limit: z.number().int().positive().max(100).default(24),
+  // z.coerce: a mesma schema valida tanto chamadas diretas de service (number)
+  // quanto query string HTTP via zValidator (sempre string).
+  limit: z.coerce.number().int().positive().max(100).default(24),
 });
 
 const reviewDTOSchema = z.object({

@@ -22,9 +22,10 @@ async function listWithReviewCount(): Promise<AlbumWithReviewCountDTO[]> {
   return albums.map(toAlbumWithReviewCountDTO);
 }
 
-async function create(data: CreateAlbumInput) {
+async function create(data: CreateAlbumInput): Promise<AlbumDTO> {
   try {
-    await albumRepository.create(data);
+    const album = await albumRepository.create(data);
+    return toAlbumDTO(album);
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

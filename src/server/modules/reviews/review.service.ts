@@ -5,6 +5,7 @@ import { toReviewDTO } from "@/server/modules/reviews/review.mapper";
 import {
   listReviewsQuerySchema,
   type CreateReviewInput,
+  type UpdateReviewInput,
   type ReviewDTO,
 } from "@/server/modules/reviews/review.contract";
 import { ConflictError, NotFoundError } from "@/server/lib/errors";
@@ -57,15 +58,33 @@ async function getById(id: string): Promise<ReviewDTO> {
   return toReviewDTO(review);
 }
 
-async function create(data: CreateReviewInput) {
+async function create(data: CreateReviewInput): Promise<ReviewDTO> {
   try {
-    await reviewRepository.create(data);
+    const review = await reviewRepository.create(data);
+    return toReviewDTO(review);
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
       throw new ConflictError("Você já escreveu uma resenha para este livro.");
+    }
+    throw error;
+  }
+}
+
+async function update(id: string, data: UpdateReviewInput): Promise<ReviewDTO> {
+  try {
+    const review = await reviewRepository.update(id, data);
+    return toReviewDTO(review);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new NotFoundError("Resenha não encontrada.");
+      }
+      if (error.code === "P2002") {
+        throw new ConflictError("Você já escreveu uma resenha para este livro.");
+      }
     }
     throw error;
   }
@@ -85,4 +104,4 @@ async function remove(id: string) {
   }
 }
 
-export { list, listRecent, getAll, getById, create, remove };
+export { list, listRecent, getAll, getById, create, update, remove };

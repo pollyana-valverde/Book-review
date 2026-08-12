@@ -52,7 +52,24 @@ async function create(data: {
   rating: number;
   description: string;
 }) {
-  return prisma.review.create({ data });
+  return prisma.review.create({ data, include: reviewWithCategoryInclude });
+}
+
+async function update(
+  id: string,
+  data: Partial<{
+    title: string;
+    author: string;
+    categoryId: string;
+    rating: number;
+    description: string;
+  }>
+) {
+  return prisma.review.update({
+    where: { id },
+    data,
+    include: reviewWithCategoryInclude,
+  });
 }
 
 async function remove(id: string) {
@@ -66,5 +83,6 @@ export {
   findAll,
   findById,
   create,
+  update,
   remove,
 };
