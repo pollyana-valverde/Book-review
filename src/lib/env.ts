@@ -49,13 +49,31 @@ function parseClientEnv() {
 
 const skipValidation = Boolean(process.env.SKIP_ENV_VALIDATION);
 
-/** Apenas para código de servidor (services, prisma). Nunca importe a partir de um Client Component. */
-const serverEnv = skipValidation
-  ? ({
-      DATABASE_URL: process.env.DATABASE_URL as string,
-      NODE_ENV: (process.env.NODE_ENV as "development" | "production" | "test") ?? "development",
-    } satisfies z.infer<typeof serverEnvSchema>)
-  : parseServerEnv();
+let cachedServerEnv: z.infer<typeof serverEnvSchema> | undefined;
+
+/**
+ * Computa e valida as variáveis de servidor só na primeira leitura (nunca no
+ * carregamento do módulo). Isso é o que torna seguro importar `env` a partir
+ * de um Client Component (ex.: `src/lib/rpc.ts`) para ler só
+ * `NEXT_PUBLIC_APP_URL`: se a validação de `DATABASE_URL` rodasse no
+ * carregamento do módulo, o bundle do cliente quebraria no browser (onde
+ * `DATABASE_URL` nunca existe). `DATABASE_URL`/`NODE_ENV` só são de fato
+ * avaliados quando algo os lê — o que só acontece em código de servidor.
+ */
+function getServerEnv() {
+  if (!cachedServerEnv) {
+    cachedServerEnv = skipValidation
+      ? ({
+          DATABASE_URL: process.env.DATABASE_URL as string,
+          NODE_ENV:
+            (process.env.NODE_ENV as "development" | "production" | "test") ??
+            "development",
+        } satisfies z.infer<typeof serverEnvSchema>)
+      : parseServerEnv();
+  }
+
+  return cachedServerEnv;
+}
 
 /** Seguro para uso em Client Components. */
 const clientEnv = skipValidation
@@ -64,6 +82,14 @@ const clientEnv = skipValidation
     } satisfies z.infer<typeof clientEnvSchema>)
   : parseClientEnv();
 
-const env = { ...serverEnv, ...clientEnv };
+const env = {
+  ...clientEnv,
+  get DATABASE_URL() {
+    return getServerEnv().DATABASE_URL;
+  },
+  get NODE_ENV() {
+    return getServerEnv().NODE_ENV;
+  },
+};
 
-export { env, serverEnv, clientEnv };
+export { env, clientEnv };
