@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: bitnami/postgresql:latest
+    image: postgres:17-alpine
     container_name: bookreview-db
     restart: always
     environment:
@@ -10,14 +10,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - bookreview-pgdata:/bitnami/postgresql
-      - bookreview-initdb:/docker-entrypoint-initdb.d
-      - bookreview-preinitdb:/docker-entrypoint-preinitdb.d
+      - bookreview-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   bookreview-pgdata:
     name: bookreview-pgdata
-  bookreview-initdb:
-    name: bookreview-initdb
-  bookreview-preinitdb:
-    name: bookreview-preinitdb
