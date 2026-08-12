@@ -21,13 +21,37 @@ sessões futuras tenham contexto sem depender do histórico do chat.
 - **Testes**: Vitest nos services, com repositories falsos.
 - **Docs**: OpenAPI via `@hono/zod-openapi`.
 
+## Decisões de infraestrutura (fase 2)
+
+- **TypeScript e ESLint travados em versões estáveis, não nas mais novas.**
+  `typescript@^7` quebrava `pnpm lint` (`TypeError: Cannot read properties of
+  undefined (reading 'Cjs')` em `@typescript-eslint/typescript-estree`), e
+  depois de corrigir isso, `eslint@^10` quebrava de novo
+  (`react/display-name` lançando `contextOrFilename.getFilename is not a
+  function`).
+  - `@typescript-eslint/typescript-estree` (última versão publicada,
+    8.67.0) declara `peerDependencies.typescript: ">=4.8.4 <6.1.0"` — não
+    existe hoje nenhuma versão de `@typescript-eslint` que suporte
+    TypeScript 7.
+  - `eslint-plugin-react` (última versão publicada, 7.37.5, trazida pelo
+    `eslint-config-next@16.3.0`) declara `peerDependencies.eslint` até
+    `^9.7` — ESLint 10 ainda não é suportado pelo plugin.
+  - `prisma@7.9.1` e `@hookform/resolvers` (via `valibot`) só exigem
+    `typescript >=5.4.0` / `>=5`, então travar o TypeScript numa faixa
+    5.x/6.x não quebra nenhuma outra dependência.
+  - **Decisão**: `typescript` fixado em `~6.0.3` (a única faixa 6.x
+    publicada, já que o TypeScript pulou de `6.0.3` direto para `7.0.x`) e
+    `eslint` fixado em `^9`. Reavaliar quando `@typescript-eslint` e
+    `eslint-plugin-react`/`eslint-config-next` publicarem suporte oficial a
+    TypeScript 7 e ESLint 10 — não fazer upgrade "no escuro" antes disso.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
 | ---- | ---------------------------------------------------------------- | ----------- |
 | 1    | Correções pontuais (Toaster/CSS duplicados, Suspense, docker-compose, lefthook, nomes) | ✅ Concluída |
-| 2    | Estrutura base do Hono em `src/app/api/[[...route]]/route.ts`   | Pendente    |
-| 3    | Camadas contract / routes / service / repository / mapper       | Pendente    |
+| 2    | Fundação de infraestrutura (ESLint/TypeScript, `env.ts`, `server-only`, scripts de release, porta do Postgres) | ✅ Concluída |
+| 3    | Hono montado em `src/app/api/[[...route]]/route.ts` + camadas contract / routes / service / repository / mapper | Pendente    |
 | 4    | Migração dos Server Components para consumir services diretamente | Pendente    |
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | Pendente    |
 | 6    | Reset de senha e verificação de e-mail (opcionais)                | Pendente    |
