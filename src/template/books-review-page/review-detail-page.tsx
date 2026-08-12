@@ -1,4 +1,4 @@
-import * as reviewService from "@/server/modules/reviews/review.service";
+import { getReviewById } from "@/server/modules/reviews/review.queries";
 import { NotFoundError } from "@/server/lib/errors";
 import Link from "next/link";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
@@ -26,7 +26,7 @@ async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
   let reviewDetail: ReviewDTO;
 
   try {
-    reviewDetail = await reviewService.getById(id);
+    reviewDetail = await getReviewById(id);
   } catch (error) {
     if (error instanceof NotFoundError) {
       notFound();

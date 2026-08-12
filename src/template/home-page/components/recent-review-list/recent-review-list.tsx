@@ -1,9 +1,9 @@
-import * as reviewService from "@/server/modules/reviews/review.service";
+import { getRecentReviews } from "@/server/modules/reviews/review.queries";
 
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
 async function RecentReviewList() {
-  const bookReviews = await reviewService.listRecent(4);
+  const bookReviews = await getRecentReviews(4);
 
   const hasReviews = bookReviews.length > 0;
 

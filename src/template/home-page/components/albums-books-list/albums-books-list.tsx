@@ -1,4 +1,4 @@
-import * as albumService from "@/server/modules/albums/album.service";
+import { getAlbumsWithReviewCount } from "@/server/modules/albums/album.queries";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
 
 import { Card } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 
 async function AlbumsBooksList() {
-  const albums = await albumService.listWithReviewCount();
+  const albums = await getAlbumsWithReviewCount();
 
   const hasAlbums = albums.length > 0;
 

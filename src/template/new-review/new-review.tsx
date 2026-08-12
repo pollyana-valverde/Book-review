@@ -1,4 +1,4 @@
-import * as albumService from "@/server/modules/albums/album.service";
+import { getAlbums } from "@/server/modules/albums/album.queries";
 
 import { Text } from "@/components/ui/text";
 import { NewReviewForm } from "@/template/new-review/components/new-review-form";
@@ -6,7 +6,7 @@ import { NewReviewForm } from "@/template/new-review/components/new-review-form"
 import { BookOpenIcon } from "lucide-react";
 
 async function NewReviewPage() {
-  const albums = await albumService.list();
+  const albums = await getAlbums();
 
   return (
     <div className="flex flex-col gap-7">

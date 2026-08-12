@@ -1,12 +1,12 @@
-import * as albumService from "@/server/modules/albums/album.service";
-import * as reviewService from "@/server/modules/reviews/review.service";
+import { getAlbums } from "@/server/modules/albums/album.queries";
+import { getReviews } from "@/server/modules/reviews/review.queries";
 
 import { Text } from "@/components/ui/text";
 import { ReviewList } from "@/template/books-review-page/components/review-list";
 import { SearchSection } from "@/template/books-review-page/components/review-search";
 
 async function BooksReviewHeader() {
-  const albums = await albumService.list();
+  const albums = await getAlbums();
 
   return (
     <>
@@ -30,7 +30,7 @@ async function ReviewListSection({
   title?: string;
   category?: string;
 }) {
-  const { items } = await reviewService.list({ title, categoryId: category });
+  const { items } = await getReviews({ title, categoryId: category });
 
   return <ReviewList reviewsList={items} />;
 }
