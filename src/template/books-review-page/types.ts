@@ -1,13 +1,4 @@
-interface ReviewDTO {
-  id: string;
-  title: string;
-  author: string;
-  description: string;
-  rating: number;
-  categoryId: string;
-  categoryTitle: string;
-  updatedAt: string;
-}
+import type { ReviewDTO } from "@/server/modules/reviews/review.contract";
 
 type BooksReviewSearchParams = {
   title?: string | string[];
