@@ -1,6 +1,3 @@
-import "@/styles/globals.css";
-
-import { Toaster } from "sonner";
 import { Navbar, MobileNavbar } from "@/components/layout";
 
 export default function PrivateLayout({
@@ -19,7 +16,6 @@ export default function PrivateLayout({
         {children}
       </main>
       <MobileNavbar />
-      <Toaster position="top-right" />
     </>
   );
 }
