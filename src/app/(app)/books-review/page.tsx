@@ -3,6 +3,7 @@ import {
   BooksReviewHeader,
   ReviewListSection,
 } from "@/template/books-review-page";
+import { HeaderSkeleton } from "@/template/books-review-page/components/header-skeleton";
 import { ReviewSkeleton } from "@/template/books-review-page/components/review-skeleton";
 import { BooksReviewSearchParams } from "@/template/books-review-page/types";
 
@@ -22,7 +23,9 @@ export default async function BooksReview({
 
   return (
     <div className="flex flex-col gap-4">
-      <BooksReviewHeader />
+      <Suspense fallback={<HeaderSkeleton />}>
+        <BooksReviewHeader />
+      </Suspense>
       <Suspense
         key={`${title ?? ""}-${category ?? ""}`}
         fallback={<ReviewSkeleton />}
