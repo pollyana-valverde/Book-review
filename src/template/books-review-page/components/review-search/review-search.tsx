@@ -6,6 +6,7 @@ import {
   pushWithParams,
   setOrDeleteParam,
 } from "@/template/books-review-page/lib";
+import type { AlbumDTO } from "@/server/modules/albums/album.contract";
 
 import { Field } from "@/components/ui/field";
 import {
@@ -25,7 +26,7 @@ import {
 
 import { CircleXIcon, SearchIcon } from "lucide-react";
 
-function SearchSection({ albums }: { albums: Album[] }) {
+function SearchSection({ albums }: { albums: AlbumDTO[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -57,7 +58,7 @@ function SearchSection({ albums }: { albums: Album[] }) {
     pushWithParams(router, pathname, newQuery);
   };
 
-  const handleQueryCategoryChange = (selectedAlbum: Album["id"]) => {
+  const handleQueryCategoryChange = (selectedAlbum: AlbumDTO["id"]) => {
     const newQuery = new URLSearchParams(searchParams.toString());
 
     setOrDeleteParam(newQuery, "category", selectedAlbum);
