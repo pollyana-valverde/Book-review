@@ -81,6 +81,59 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 `BookReview` (`src/types/*.d.ts`) também — os componentes agora importam
 `AlbumDTO`/`ReviewDTO` dos contracts.
 
+## Transporte HTTP com Hono (fase 4)
+
+- **Hono montado em `src/app/api/[[...route]]/route.ts`** via `handle` de
+  `hono/vercel`, exportando `GET/POST/PATCH/PUT/DELETE`. Sem
+  `runtime = "edge"` — o Prisma precisa do runtime Node.
+- **`src/server/api/index.ts`** monta o app raiz (`.basePath("/api")`),
+  registra `app.onError(errorHandler)` e compõe `/health`, `/reviews`
+  (`review.routes.ts`) e `/albums` (`album.routes.ts`) numa única expressão
+  encadeada — é dessa variável (`routes`) que `AppType` é inferido. Um teste
+  de tipo em `src/lib/rpc.type-test.ts` prova essa inferência (ver relatório
+  da fase 4 para a saída).
+- **Rotas são só controller**: validam com `zValidator` + o hook
+  `zodValidationHook` (padroniza o 400 no formato `{ error: { code,
+  message } }`), chamam o service, escolhem status (201 no create, 204 no
+  delete) e disparam `revalidateTag`. Zero regra de negócio.
+- **`app.onError`** traduz `AppError` para `{ error: { code, message } }`
+  com o status certo; erros desconhecidos viram 500 genérico e são
+  logados. O cliente RPC não infere esse formato de erro (limitação do
+  Hono) — todo chamador do RPC precisa checar `res.ok` antes de ler o corpo
+  como sucesso.
+- **Cache por tags**: `src/server/lib/cache-tags.ts` define `reviews`,
+  `review:${id}`, `albums` e `REVALIDATE_NOW` (`{ expire: 0 }` — o Next 16
+  exige um segundo argumento em `revalidateTag`; usamos expiração imediata
+  em vez do `"max"` recomendado porque `"max"` dá stale-while-revalidate e
+  quebraria "a lista atualiza sem reload manual"). A camada de leitura
+  cacheada fica em `src/server/modules/<módulo>/*.queries.ts`
+  (`review.queries.ts`, `album.queries.ts`), envolvendo os services com
+  `unstable_cache` e essas tags — todos os Server Components que liam dos
+  services agora leem daqui. As rotas Hono de mutação e as Server Actions
+  que sobraram chamam `revalidateTag` com a mesma tag.
+- **`src/lib/rpc.ts`** cria o cliente `hc<AppType>()` com
+  `import type { AppType }` (import normal vazaria Prisma/services para o
+  bundle do cliente) e `env.NEXT_PUBLIC_APP_URL` como base. Isso só é seguro
+  porque `src/lib/env.ts` foi ajustado nesta fase: `DATABASE_URL`/`NODE_ENV`
+  viraram getters avaliados só na leitura (lazy), em vez de calculados no
+  carregamento do módulo — senão importar `env` num Client Component (como
+  `rpc.ts`) derrubava o bundle do browser tentando validar `DATABASE_URL`.
+- **Fatia vertical migrada**: `album-form.tsx` foi para o RPC (sem
+  `<Form>/<FormField>` do shadcn — `useForm` + `register` + `Field`/
+  `FieldLabel`/`FieldError`/`Input` puros, erro de servidor em
+  `errors.root`, `router.refresh()` no sucesso para repintar os Server
+  Components após o `revalidateTag`). A Server Action `createAlbum` foi
+  removida por ficar sem chamador; `deleteAlbum` continua como Server
+  Action.
+- **`new-review-form.tsx` continua em Server Action** — a migração dele
+  para RPC fica para a fase 8, junto com o editor Tiptap, para não jogar
+  fora o trabalho quando o formulário for reescrito. As duas abordagens
+  (RPC no álbum, Server Action na resenha) coexistindo é transitório e
+  intencional.
+- **OpenAPI pendente**: a escolha entre `@hono/zod-openapi` (o que o plano
+  original previa) e `hono-openapi` não foi feita nesta fase — fica como um
+  passo próprio dentro da fase 10.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -88,7 +141,7 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 | 1    | Correções pontuais (Toaster/CSS duplicados, Suspense, docker-compose, lefthook, nomes) | ✅ Concluída |
 | 2    | Fundação de infraestrutura (ESLint/TypeScript, `env.ts`, `server-only`, scripts de release, porta do Postgres) | ✅ Concluída |
 | 3    | Camadas contract / repository / service / mapper (sem Hono)      | ✅ Concluída |
-| 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | Pendente    |
+| 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | ✅ Concluída |
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | Pendente    |
 | 6    | Reset de senha e verificação de e-mail (opcionais)                | Pendente    |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | Pendente    |
