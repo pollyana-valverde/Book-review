@@ -2,26 +2,31 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createAlbum } from "@/server/actions";
+import { useRouter } from "next/navigation";
+
+import { rpc } from "@/lib/rpc";
 import {
-  type CreateAlbumInput,
   createAlbumSchema,
+  type CreateAlbumInput,
 } from "@/server/modules/albums/album.contract";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 
 import { toast } from "sonner";
 
+type ApiErrorBody = { error: { code: string; message: string } };
+
 function AlbumForm() {
-  const form = useForm<CreateAlbumInput>({
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateAlbumInput>({
     resolver: zodResolver(createAlbumSchema),
     defaultValues: {
       title: "",
@@ -29,46 +34,40 @@ function AlbumForm() {
   });
 
   async function onSubmit(data: CreateAlbumInput) {
-    const album = await createAlbum({
-      ...data,
-    });
+    const res = await rpc.api.albums.$post({ json: data });
 
-    if (album?.error) {
-      toast.error(album.error);
-      return { success: false };
+    if (!res.ok) {
+      // res.json() aqui é tipado a partir do caminho de sucesso — o RPC do
+      // Hono não infere o formato do `onError` global. O corpo real segue
+      // o contrato documentado em src/server/api/middlewares/error-handler.ts.
+      const body = (await res.json()) as unknown as ApiErrorBody;
+      setError("root", { message: body.error.message });
+      return;
     }
 
     toast.success("Álbum criado com sucesso!");
-
-    form.reset();
-
-    return { success: true };
+    reset();
+    router.refresh();
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem className="flex-1">
-              <FormControl>
-                <Input
-                  id="title"
-                  placeholder="Nome do novo álbum..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="flex gap-2" noValidate>
+      <Field className="flex-1">
+        <FieldLabel htmlFor="title" className="sr-only">
+          Nome do álbum
+        </FieldLabel>
+        <Input
+          id="title"
+          placeholder="Nome do novo álbum..."
+          aria-invalid={!!(errors.title || errors.root)}
+          {...register("title")}
         />
-        <Button type="submit" variant="ghost" size="lg">
-          Criar
-        </Button>
-      </form>
-    </Form>
+        <FieldError errors={[errors.title, errors.root]} />
+      </Field>
+      <Button type="submit" variant="ghost" size="lg" disabled={isSubmitting}>
+        {isSubmitting ? "Criando..." : "Criar"}
+      </Button>
+    </form>
   );
 }
 
