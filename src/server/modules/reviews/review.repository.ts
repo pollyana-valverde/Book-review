@@ -45,12 +45,6 @@ async function findById(id: string) {
   });
 }
 
-async function findByTitle(title: string) {
-  return prisma.review.findFirst({
-    where: { title },
-  });
-}
-
 async function create(data: {
   title: string;
   author: string;
@@ -71,7 +65,6 @@ export {
   findRecent,
   findAll,
   findById,
-  findByTitle,
   create,
   remove,
 };

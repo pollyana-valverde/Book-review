@@ -19,14 +19,6 @@ async function findManyWithReviewCount() {
   });
 }
 
-async function findById(id: string) {
-  return prisma.album.findUnique({ where: { id } });
-}
-
-async function findByTitle(title: string) {
-  return prisma.album.findFirst({ where: { title } });
-}
-
 async function create(data: { title: string }) {
   return prisma.album.create({ data });
 }
@@ -39,8 +31,6 @@ export {
   albumWithReviewCountInclude,
   findMany,
   findManyWithReviewCount,
-  findById,
-  findByTitle,
   create,
   remove,
 };
