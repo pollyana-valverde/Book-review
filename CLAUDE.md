@@ -97,6 +97,18 @@ Action.
 - **Teste de tipo do RPC** (`src/lib/rpc.type-test.ts`) só vale se for
   FALSIFICADO: quebre de propósito, confirme que `tsc` acusa o erro,
   restaure.
+- **Tags de cache com dependência cruzada entre entidades nunca devem ser
+  listadas à mão em cada rota — centralize.** Bug real da fase 10: a
+  contagem de resenhas por coleção (`collection.service.
+  listWithReviewCount`, cacheada sob `collections:${userId}`) lê dados de
+  Review através de uma relação, mas mutação de review só invalidava
+  `reviews:${userId}` — a contagem ficava presa até o servidor reiniciar.
+  Corrigido com `tagsForReviewMutation(userId, reviewId?)` em
+  `src/server/lib/cache-tags.ts`, que toda rota/action de mutação de
+  review chama em vez de montar a lista de tags na mão. Ao criar uma
+  query cacheada nova que lê dados de mais de uma entidade, pergunte
+  sempre: "que mutações em OUTRAS entidades deveriam invalidar isto?" —
+  e centralize a resposta em `cache-tags.ts`, não em cada chamador.
 
 ## Editor rico (Tiptap)
 
@@ -168,8 +180,53 @@ Components depois do `revalidateTag`.
   inclua uma ação (`action={{ label, href }}`) quando não houver um botão
   equivalente já visível na mesma tela.
 
+## Testes (Vitest)
+
+- **Rodar**: `pnpm test` (uma vez), `pnpm test:watch` (modo watch),
+  `pnpm test:coverage` (com relatório de cobertura). Não precisam do
+  Postgres rodando — `docker compose stop` antes de `pnpm test` é a forma
+  de provar isso.
+- **Onde ficam**: `*.test.ts` ao lado do arquivo testado (ex.:
+  `review.service.ts` → `review.service.test.ts`, no mesmo diretório).
+  Escopo desta fase é só a camada de `*.service.ts` (regra de negócio) e
+  `src/server/lib/rich-text.ts` — nada de componente React, nada de
+  end-to-end.
+- **Todo service novo nasce com teste.** Cubra REGRAS (o que decide um
+  resultado diferente: erros lançados, branches, invariantes de
+  ownership), nunca getters triviais (função que só repassa o resultado
+  do repository, sem nenhum `if`) nem mapper (converter shape é fato, não
+  decisão) nem repository (seria testar o Prisma).
+- **Estratégia de dublê**: os services importam repository como módulo
+  inteiro (`import * as reviewRepository from "..."`), então o teste usa
+  `vi.mock(caminhoReal, () => import(caminhoMock))` para trocar esse
+  import por um dublê em memória — não por injeção de dependência
+  explícita (mudaria a assinatura pública de todo service e obrigaria
+  editar todos os chamadores em produção só para viabilizar teste).
+  - `*.repository.fake.ts` — a implementação em memória, tipada contra
+    `typeof <módulo real>` (`import type`, nunca importa o módulo real em
+    runtime — puxaria `src/server/db/prisma.ts` e por tabela
+    `env.DATABASE_URL`). Se o repository real mudar de forma, o dublê
+    para de compilar.
+  - `*.repository.mock.ts` — o módulo-alvo do `vi.mock` (existe só
+    porque a factory do `vi.mock` não pode referenciar variáveis
+    externas livremente; um arquivo de verdade contorna essa restrição
+    de hoisting). Nunca importado por código de produção.
+  - `src/server/test-support/fake-db.ts` +
+    `fake-db-instance.ts` — o "banco" em memória, compartilhado entre os
+    dois dublês (Collection e Review na mesma estrutura, porque a
+    restrição de FK e a contagem de resenhas por coleção atravessam as
+    duas entidades no banco real também).
+  - **A tipagem do dublê só protege se for falsificada**: renomeie ou
+    remova um método do repository real, confirme que `tsc` acusa erro
+    no dublê, restaure. Mesma técnica do teste de tipo do RPC.
+  - **`pnpm test` sozinho não pega dublê desalinhado** — só roda esbuild
+    (sem checagem de tipos). É `pnpm validate:typecheck` que protege
+    contra o dublê ter ficado para trás; por isso o CI roda os dois.
+
 ## Mais contexto
 
 `docs/refactor-plan.md` tem o histórico completo: decisões de domínio e
-infraestrutura, dívida técnica, e o status fase a fase (1 a 9 concluídas;
-10 pendente no momento em que este arquivo foi escrito).
+infraestrutura, dívida técnica, e o status fase a fase (1 a 10
+concluídas; fase 11 — migração `src/template/` → `src/features/`,
+remanejada da fase 9 original — pendente no momento em que este arquivo
+foi escrito).

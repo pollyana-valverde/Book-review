@@ -593,6 +593,82 @@ migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
   idioma, `next-intl` é a opção mais madura para App Router hoje — mas
   isso é uma decisão de produto, não algo a antecipar em código morto.
 
+## Correção de bugs e testes com Vitest (fase 10)
+
+- **Três bugs de uso real corrigidos antes dos testes** (tarefas 0a-0c):
+  1. **Undo/redo do editor não funcionava**: `RichTextEditor` repassava
+     `value` (o `field.value` do react-hook-form, um objeto novo a cada
+     `onUpdate`) para `content` do `useEditor` em TODO render. Isso fazia
+     o `EditorInstanceManager` do `@tiptap/react` chamar
+     `editor.setOptions(...)` a cada tecla — testado isoladamente
+     (`@tiptap/core` puro e depois com React + Controller reais, via
+     jsdom) e essa reconfiguração sozinha não chegou a zerar o histórico
+     na versão instalada (3.30.1), mas é exatamente o anti-padrão que o
+     modelo do Tiptap proíbe ("o editor é a fonte de verdade enquanto
+     montado") e a explicação mais plausível para o sintoma em navegador
+     real. Corrigido capturando `value` uma única vez
+     (`useState(() => value)`, nunca mais lido depois do mount).
+  2. **Editor não limpava e não navegava após salvar**: `reset()` do
+     react-hook-form não alcança o estado interno do Tiptap.
+     `RichTextEditor` ganhou `clearContent()` via `useImperativeHandle`
+     (React 19, sem `forwardRef`); ordem no `onSubmit`:
+     `clearContent()` → `reset()` (nessa ordem, para o `onUpdate` do
+     clear não deixar o form sujo de novo) → toast → `router.push` +
+     `router.refresh()`.
+  3. **Contagem de livros por coleção ficava presa**: mutação de review
+     só invalidava `reviews:${userId}`, nunca `collections:${userId}` —
+     apesar de `collection.service.listWithReviewCount` ler `reviewsCount`
+     através da relação Collection → Review. Nova função
+     `tagsForReviewMutation(userId, reviewId?)` em `cache-tags.ts`
+     centraliza o conjunto completo de tags que toda mutação de review
+     precisa invalidar. Auditado o resto do projeto atrás da mesma classe
+     de dependência cruzada (todo uso de `unstable_cache`) — nenhuma outra
+     encontrada.
+- **Vitest configurado só para services** (`vitest.config.ts`): ambiente
+  `node` (sem DOM), alias `@/` → `src/` (mesmo do tsconfig), e um alias
+  de `server-only` para um stub vazio (`src/test/stubs/server-only.ts`) —
+  o pacote real lança um erro incondicional fora do bundler do Next.
+- **Dublês de repository via `vi.mock`, não injeção de dependência
+  explícita**: os services importam repository como módulo inteiro
+  (`import * as reviewRepository from "..."`), consumido por 3
+  chamadores cada (routes/queries/actions) por módulo — converter para
+  DI explícita mudaria a assinatura pública dos services e obrigaria
+  editar 6 chamadores em produção só para viabilizar teste. `vi.mock`
+  intercepta o import no nível do módulo sem tocar em código de
+  produção. O ponto fraco de um mock genérico (divergir do repository
+  real sem ninguém notar) é resolvido tipando o dublê contra
+  `typeof <módulo real>` — se o repository mudar de forma, o dublê para
+  de compilar. **Achado real durante a implementação**: o dublê guardava
+  `content` como `Prisma.InputJsonValue`, mas o repository real LÊ
+  `Review.content` como `Prisma.JsonValue` (tipos diferentes no Prisma,
+  `InputJsonObject` não é um `JsonValue` válido) — pego na hora pela
+  checagem de tipos contra `typeof ReviewRepository`.
+- **Falsificação do dublê** (mesma técnica do teste de tipo do RPC):
+  renomeado `findAll` → `findAllReviews` no repository real de propósito
+  → `tsc` acusou erro em três lugares (o dublê, o módulo `.mock.ts`, e
+  `review.service.ts`, que usa o mesmo nome) → restaurado, voltou a
+  compilar limpo. **Achado relevante**: `pnpm test` sozinho (esbuild via
+  Vite, sem checagem de tipos) NÃO detectou a quebra — os 25 testes
+  continuaram passando com o dublê já desalinhado do repository real.
+  Só `tsc` (via `pnpm validate:typecheck`) pegou o problema. É por isso
+  que o workflow de CI roda os dois, nessa ordem, e por isso a estratégia
+  de dublê tipado só vale alguma coisa combinada com typecheck em CI —
+  sozinha, no runtime dos testes, não protege contra nada.
+- **Cobertura**: 93.75% statements/lines, 94.54% branches, 80% funções
+  nos três arquivos cobertos (`review.service.ts`, `collection.service.ts`,
+  `rich-text.ts`). Sem limite mínimo configurado — não é meta a perseguir.
+  Gaps deixados de propósito: getters triviais sem nenhum branch
+  (`collection.service.list`, `review.service.listRecent`/`getAll`) e uma
+  linha defensiva em `review.service.update` que o próprio comentário no
+  código diz que "não deveria acontecer" (só seria alcançável com um
+  dublê deliberadamente inconsistente).
+- **CI** (`.github/workflows/ci.yml`): install → lint → typecheck → test
+  → build, em push e pull request. Variáveis de ambiente todas dummy
+  (`SKIP_ENV_VALIDATION=true`) — confirmado localmente, com
+  `docker compose stop`, que os quatro comandos completam sem um Postgres
+  de verdade (as rotas são todas dinâmicas, nenhuma prerenderização
+  estática bate no banco durante o build).
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -607,5 +683,5 @@ migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | ✅ Concluída |
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | ✅ Concluída |
 | 9    | Polimento: acessibilidade, performance de interação, idioma, estados de erro/vazio, metadata | ✅ Concluída |
-| 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | Pendente    |
+| 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | ✅ Concluída |
 | 11   | Migração `src/template/` → `src/features/<entidade>/` (redefinida a partir da fase 9 original) | Pendente    |

@@ -129,6 +129,9 @@ http://localhost:3000
 - `pnpm format` Verifica formatação.
 - `pnpm format:fix` Corrige formatação.
 - `pnpm validate:typecheck` Executa checagem de tipos.
+- `pnpm test` Roda os testes uma vez.
+- `pnpm test:watch` Roda os testes em modo watch.
+- `pnpm test:coverage` Roda os testes com relatório de cobertura.
 - `pnpm db:migrate:dev` Cria/aplica migrações em desenvolvimento.
 - `pnpm db:migrate` Aplica migrações pendentes (`prisma migrate deploy`).
 - `pnpm db:studio` Abre o Prisma Studio.
@@ -154,6 +157,25 @@ nova versão em produção.
   - Nota obrigatória entre 1 e 5.
   - Descrição com máximo de 280 caracteres.
   - Impede duplicidade de resenha por titulo.
+
+## Testes
+
+Testes automatizados (Vitest) cobrem a camada de regra de negócio
+(`src/server/modules/*/*.service.ts` e `src/server/lib/rich-text.ts`) —
+sem componente React, sem end-to-end. Não tocam o Postgres: os
+repositories são substituídos por dublês em memória
+(`*.repository.fake.ts`), tipados contra o repository real para que uma
+mudança de assinatura no repository quebre a compilação do dublê em vez
+de passar em silêncio.
+
+```bash
+pnpm test           # roda uma vez
+pnpm test:watch      # modo watch
+pnpm test:coverage   # com relatório de cobertura
+```
+
+CI (`.github/workflows/ci.yml`) roda lint, typecheck, test e build em
+todo push e pull request.
 
 ## Arquitetura de dados
 
