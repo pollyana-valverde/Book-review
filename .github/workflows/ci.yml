@@ -1,0 +1,47 @@
+name: CI
+
+"on":
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    # Só variáveis dummy — nenhuma credencial real. SKIP_ENV_VALIDATION
+    # (existe desde a fase 2) faz src/lib/env.ts pular a validação Zod e
+    # usar os valores abaixo como estão. Confirmado localmente que
+    # `pnpm build` completa com o Postgres DESLIGADO: as rotas são todas
+    # dinâmicas (nenhuma prerenderização estática bate no banco durante o
+    # build), então DATABASE_URL só precisa existir e ter formato de URL —
+    # não precisa apontar para um banco de verdade.
+    env:
+      SKIP_ENV_VALIDATION: "true"
+      DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      BETTER_AUTH_SECRET: "ci-dummy-secret-not-a-real-credential-000"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm validate:typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
