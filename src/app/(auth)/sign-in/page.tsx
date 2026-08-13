@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
+import Link from "next/link";
 import {
   CardContent,
   CardDescription,
@@ -6,12 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import Link from "next/link";
+import { SignInForm, SocialButtons } from "@/features/auth";
+import { getEnabledSocialProviders } from "@/server/auth/providers";
 
 export default function SignIn() {
+  const providers = getEnabledSocialProviders();
+
   return (
     <>
       <CardHeader className="gap-0">
@@ -20,22 +22,11 @@ export default function SignIn() {
         </CardTitle>
         <CardDescription>Continue de onde parou</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form className="space-y-6">
-          <FieldGroup className="gap-4">
-            <Field className="gap-1">
-              <FieldLabel>Email</FieldLabel>
-              <Input type="email" placeholder="Digite seu email..." />
-            </Field>
-            <Field className="gap-1">
-              <FieldLabel>Senha</FieldLabel>
-              <Input type="password" placeholder="Digite sua senha..." />
-            </Field>
-          </FieldGroup>
-          <Button className="w-full" type="submit">
-            Entrar
-          </Button>
-        </form>
+      <CardContent className="flex flex-col gap-4">
+        <Suspense>
+          <SignInForm />
+        </Suspense>
+        <SocialButtons google={providers.google} github={providers.github} />
       </CardContent>
       <CardFooter className="flex justify-center">
         Não tem conta?{" "}

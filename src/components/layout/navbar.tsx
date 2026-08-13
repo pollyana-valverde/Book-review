@@ -3,18 +3,19 @@ import { LibraryBigIcon } from "lucide-react";
 
 import { NavLink } from "../ui/nav-links";
 import { Text } from "../ui/text";
+import { SignOutButton } from "@/features/auth";
 
 import { NAVLINKS } from "@/utils/nav-links";
 
-function Navbar() {
+function Navbar({ user }: { user: { name: string } }) {
   return (
     <nav
       className={`
-    hidden 
+    hidden
     fixed top-0 left-0 right-0
-    md:flex items-center 
+    md:flex items-center
     bg-white text-muted-foreground border-b border-separate
-    py-2 px-5 mt-2 mb-4 mx-auto w-[99%] 
+    py-2 px-5 mt-2 mb-4 mx-auto w-[99%]
     `}
     >
       <Link href="/" className="flex-1 flex items-center gap-2 text-foreground">
@@ -29,6 +30,13 @@ function Navbar() {
             <Text>{link.label}</Text>
           </NavLink>
         ))}
+
+        <div className="flex items-center gap-2 pl-3 ml-1 border-l">
+          <Text variant="content-1" className="font-medium text-foreground">
+            {user.name}
+          </Text>
+          <SignOutButton />
+        </div>
       </div>
     </nav>
   );
