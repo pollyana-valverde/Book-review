@@ -2,26 +2,26 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db/prisma";
 
-const reviewWithCategoryInclude = {
-  category: { select: { title: true } },
+const reviewWithCollectionInclude = {
+  collection: { select: { title: true } },
 } satisfies Prisma.ReviewInclude;
 
 async function findMany(params: {
   userId: string;
   title?: string;
-  categoryId?: string;
+  collectionId?: string;
   cursor?: string;
   limit: number;
 }) {
-  const { userId, title, categoryId, cursor, limit } = params;
+  const { userId, title, collectionId, cursor, limit } = params;
 
   return prisma.review.findMany({
     where: {
       userId,
       title: title ? { contains: title, mode: "insensitive" } : undefined,
-      categoryId,
+      collectionId,
     },
-    include: reviewWithCategoryInclude,
+    include: reviewWithCollectionInclude,
     orderBy: { updatedAt: "desc" },
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -33,7 +33,7 @@ async function findRecent(userId: string, limit: number) {
     where: { userId },
     orderBy: { updatedAt: "desc" },
     take: limit,
-    include: reviewWithCategoryInclude,
+    include: reviewWithCollectionInclude,
   });
 }
 
@@ -44,19 +44,19 @@ async function findAll(userId: string) {
 async function findById(userId: string, id: string) {
   return prisma.review.findFirst({
     where: { id, userId },
-    include: reviewWithCategoryInclude,
+    include: reviewWithCollectionInclude,
   });
 }
 
 async function create(data: {
   title: string;
   author: string;
-  categoryId: string;
+  collectionId: string;
   rating: number;
   description: string;
   userId: string;
 }) {
-  return prisma.review.create({ data, include: reviewWithCategoryInclude });
+  return prisma.review.create({ data, include: reviewWithCollectionInclude });
 }
 
 /**
@@ -72,7 +72,7 @@ async function update(
   data: Partial<{
     title: string;
     author: string;
-    categoryId: string;
+    collectionId: string;
     rating: number;
     description: string;
   }>
@@ -90,7 +90,7 @@ async function remove(userId: string, id: string) {
 }
 
 export {
-  reviewWithCategoryInclude,
+  reviewWithCollectionInclude,
   findMany,
   findRecent,
   findAll,

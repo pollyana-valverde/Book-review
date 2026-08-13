@@ -59,7 +59,7 @@ async function remove(userId: string, id: string) {
     }
 
     // P2003: violação de foreign key. Com onDelete: Restrict em
-    // Review.category, apagar uma coleção que ainda tem resenhas dentro é
+    // Review.collection, apagar uma coleção que ainda tem resenhas dentro é
     // recusado pelo banco em vez de apagar as resenhas em cascata.
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

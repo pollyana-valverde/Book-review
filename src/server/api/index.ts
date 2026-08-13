@@ -6,14 +6,14 @@ import { auth } from "@/server/auth/auth";
 import { errorHandler } from "@/server/api/middlewares/error-handler";
 import { sessionMiddleware, requireAuth } from "@/server/api/middlewares/session";
 import { reviewRoutes } from "@/server/modules/reviews/review.routes";
-import { albumRoutes } from "@/server/modules/albums/album.routes";
+import { collectionRoutes } from "@/server/modules/collections/collection.routes";
 import { env } from "@/lib/env";
 import type { AppEnv } from "@/server/api/factory";
 
 const app = new OpenAPIHono<AppEnv>().basePath("/api").onError(errorHandler);
 
 // Security scheme documentado no OpenAPI (fase 6): as rotas de review e
-// album agora exigem sessão. O handler do BetterAuth (montado abaixo,
+// collection agora exigem sessão. O handler do BetterAuth (montado abaixo,
 // fora da cadeia .route()) fica de fora do documento de propósito — ver
 // comentário mais adiante.
 app.openAPIRegistry.registerComponent("securitySchemes", "cookieAuth", {
@@ -59,7 +59,7 @@ const routes = app
     return c.json({ user });
   })
   .route("/reviews", reviewRoutes)
-  .route("/albums", albumRoutes);
+  .route("/collections", collectionRoutes);
 
 type AppType = typeof routes;
 
@@ -70,7 +70,7 @@ if (docsEnabled) {
       title: "Book Review API",
       version: "0.1.0",
       description:
-        "API HTTP (Hono) sobre os services de reviews e albums do Book Review. Sem autenticação ainda (fase 5).",
+        "API HTTP (Hono) sobre os services de reviews e collections do Book Review. Sem autenticação ainda (fase 5).",
     },
   });
 

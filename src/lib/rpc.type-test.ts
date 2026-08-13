@@ -14,7 +14,7 @@
  */
 import { rpc } from "@/lib/rpc";
 import type { ReviewDTO } from "@/server/modules/reviews/review.contract";
-import type { AlbumDTO } from "@/server/modules/albums/album.contract";
+import type { CollectionDTO } from "@/server/modules/collections/collection.contract";
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -40,20 +40,20 @@ async function typeTestReviewsList() {
   return { items, nextCursor };
 }
 
-async function typeTestAlbumsList() {
-  const res = await rpc.api.albums.$get();
+async function typeTestCollectionsList() {
+  const res = await rpc.api.collections.$get();
   type Body = Awaited<ReturnType<typeof res.json>>;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- só existe para o tsc avaliar
-  type _AlbumsListResponseIsNotAny = AssertNotAny<IsAny<Body>>;
+  type _CollectionsListResponseIsNotAny = AssertNotAny<IsAny<Body>>;
 
   if (!res.ok) {
     return null;
   }
 
-  const albums: AlbumDTO[] = await res.json();
+  const collections: CollectionDTO[] = await res.json();
 
-  return albums;
+  return collections;
 }
 
-export { typeTestReviewsList, typeTestAlbumsList };
+export { typeTestReviewsList, typeTestCollectionsList };

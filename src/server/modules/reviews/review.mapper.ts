@@ -1,18 +1,18 @@
 import "server-only";
-import type { Album, Review } from "@/generated/prisma/client";
+import type { Collection, Review } from "@/generated/prisma/client";
 import type { ReviewDTO } from "@/server/modules/reviews/review.contract";
 
-type ReviewWithCategory = Review & { category: Pick<Album, "title"> };
+type ReviewWithCollection = Review & { collection: Pick<Collection, "title"> };
 
-function toReviewDTO(review: ReviewWithCategory): ReviewDTO {
+function toReviewDTO(review: ReviewWithCollection): ReviewDTO {
   return {
     id: review.id,
     title: review.title,
     author: review.author,
     description: review.description,
     rating: review.rating,
-    categoryId: review.categoryId,
-    categoryTitle: review.category.title,
+    collectionId: review.collectionId,
+    collectionTitle: review.collection.title,
     updatedAt: review.updatedAt.toISOString(),
   };
 }

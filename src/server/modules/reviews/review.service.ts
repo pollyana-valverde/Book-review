@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import * as reviewRepository from "@/server/modules/reviews/review.repository";
-import * as albumRepository from "@/server/modules/albums/album.repository";
+import * as collectionRepository from "@/server/modules/collections/collection.repository";
 import { toReviewDTO } from "@/server/modules/reviews/review.mapper";
 import {
   listReviewsQuerySchema,
@@ -15,27 +15,27 @@ import { ConflictError, NotFoundError } from "@/server/lib/errors";
 // sessão sozinhos — quem tem a sessão é a borda (rotas/actions). Isso
 // mantém os services testáveis sem precisar simular request/cookies.
 
-function normalizeCategoryId(categoryId?: string) {
-  return categoryId && categoryId !== "all" ? categoryId : undefined;
+function normalizeCollectionId(collectionId?: string) {
+  return collectionId && collectionId !== "all" ? collectionId : undefined;
 }
 
 async function list(
   userId: string,
   rawQuery: {
     title?: string;
-    categoryId?: string;
+    collectionId?: string;
     cursor?: string;
     limit?: number;
   }
 ): Promise<{ items: ReviewDTO[]; nextCursor: string | null }> {
   const query = listReviewsQuerySchema.parse(rawQuery);
   const title = query.title?.trim() || undefined;
-  const categoryId = normalizeCategoryId(query.categoryId);
+  const collectionId = normalizeCollectionId(query.collectionId);
 
   const reviews = await reviewRepository.findMany({
     userId,
     title,
-    categoryId,
+    collectionId,
     cursor: query.cursor,
     limit: query.limit,
   });
@@ -71,12 +71,12 @@ async function create(
   userId: string,
   data: CreateReviewInput
 ): Promise<ReviewDTO> {
-  // Sem isso, alguém consegue colocar uma resenha dentro do álbum de outra
-  // pessoa só sabendo o id do álbum.
-  const album = await albumRepository.findById(userId, data.categoryId);
+  // Sem isso, alguém consegue colocar uma resenha dentro da coleção de
+  // outra pessoa só sabendo o id da coleção.
+  const collection = await collectionRepository.findById(userId, data.collectionId);
 
-  if (!album) {
-    throw new NotFoundError("Álbum não encontrado.");
+  if (!collection) {
+    throw new NotFoundError("Coleção não encontrada.");
   }
 
   try {
@@ -98,11 +98,11 @@ async function update(
   id: string,
   data: UpdateReviewInput
 ): Promise<ReviewDTO> {
-  if (data.categoryId) {
-    const album = await albumRepository.findById(userId, data.categoryId);
+  if (data.collectionId) {
+    const collection = await collectionRepository.findById(userId, data.collectionId);
 
-    if (!album) {
-      throw new NotFoundError("Álbum não encontrado.");
+    if (!collection) {
+      throw new NotFoundError("Coleção não encontrada.");
     }
   }
 

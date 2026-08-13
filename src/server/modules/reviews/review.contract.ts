@@ -3,7 +3,7 @@ import z from "zod";
 const createReviewSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
   author: z.string().min(1, "O autor é obrigatório"),
-  categoryId: z.string().min(1, "O álbum é obrigatório"),
+  collectionId: z.string().min(1, "A coleção é obrigatória"),
   rating: z
     .number()
     .min(1, "A avaliação é obrigatória")
@@ -18,7 +18,7 @@ const updateReviewSchema = createReviewSchema.partial();
 
 const listReviewsQuerySchema = z.object({
   title: z.string().optional(),
-  categoryId: z.string().optional(),
+  collectionId: z.string().optional(),
   cursor: z.string().optional(),
   // z.coerce: a mesma schema valida tanto chamadas diretas de service (number)
   // quanto query string HTTP via zValidator (sempre string).
@@ -31,8 +31,8 @@ const reviewDTOSchema = z.object({
   author: z.string(),
   description: z.string(),
   rating: z.number(),
-  categoryId: z.string(),
-  categoryTitle: z.string(),
+  collectionId: z.string(),
+  collectionTitle: z.string(),
   updatedAt: z.string(),
 });
 
