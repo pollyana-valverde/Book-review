@@ -129,8 +129,47 @@ Action.
 de uma mutação via RPC, chame `router.refresh()` para repintar os Server
 Components depois do `revalidateTag`.
 
+## Padrões de UI (fase 9)
+
+- **Seleção única (rating, coleção, e futuros casos parecidos) usa
+  `radiogroup`**, não `onClick` em ícone/badge. `src/components/ui/
+  radio-group.tsx` (wrapper sobre o primitivo `RadioGroup` do pacote
+  `radix-ui`, já instalado — mesmo padrão de `select.tsx`/
+  `alert-dialog.tsx`) dá de graça `role="radiogroup"`/`role="radio"`,
+  `aria-checked`, roving tabindex (Tab entra/sai do grupo uma vez, setas
+  movem E selecionam) e foco visível. Para reaproveitar um visual
+  existente (badge, ícone), use `RadioGroupItem asChild` envolvendo o
+  componente — não reimplemente a interação do zero.
+- **Todo elemento clicável só com ícone precisa ser um `<button>` real**,
+  nunca um `<svg>`/`<div>` com `onClick`. Um SVG ou div com `onClick` não
+  é focável nem responde a Enter/Espaço — bug real encontrado na fase 9
+  (gatilho de deletar e botão de limpar busca). Sempre `aria-label`
+  descritivo, e se o elemento só aparece com `opacity-0 group-hover:
+  opacity-100`, adicione `focus-visible:opacity-100` também — senão o
+  foco de teclado chega num elemento invisível.
+- **Busca com filtro na URL: `router.replace` (nunca `push`) com `scroll:
+  false`**, input não-controlado (`defaultValue` + `ref`, não `value`
+  lido de volta do `searchParams`) para não travar a digitação, e
+  debounce curto (~300ms) antes de navegar. `useTransition` para um
+  indicador sutil de carregamento.
+- **Confirmação antes de ação destrutiva usa `alert-dialog`**
+  (`src/components/ui/alert-dialog.tsx`), nunca `window.confirm` nem
+  exclusão direta no clique.
+- **Cores hardcoded (`bg-white`, `text-red-700`, etc.) quebram o tema
+  escuro.** Use os tokens (`bg-background`, `text-destructive`,
+  `dark:hover:bg-destructive/20`) definidos em `src/styles/globals.css`.
+- **`error.tsx`/`loading.tsx` por segmento de rota**: mensagem de erro
+  sempre genérica em português (nunca `error.message` na tela, só
+  `console.error`), com botão que chama `reset()`. `loading.tsx`
+  reaproveita os componentes `*-skeleton` já existentes em vez de criar
+  um novo por rota.
+- **Estados vazios usam `src/components/ui/empty-state.tsx`** (ícone +
+  título + descrição + ação opcional), não `<h2>`/`<p>` soltos. Só
+  inclua uma ação (`action={{ label, href }}`) quando não houver um botão
+  equivalente já visível na mesma tela.
+
 ## Mais contexto
 
 `docs/refactor-plan.md` tem o histórico completo: decisões de domínio e
-infraestrutura, dívida técnica, e o status fase a fase (1 a 8 concluídas;
-9 e 10 pendentes no momento em que este arquivo foi escrito).
+infraestrutura, dívida técnica, e o status fase a fase (1 a 9 concluídas;
+10 pendente no momento em que este arquivo foi escrito).

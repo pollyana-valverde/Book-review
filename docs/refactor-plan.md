@@ -522,6 +522,77 @@ redefinir a fase 9 para esse escopo, não abrir uma fase não numerada — a
 migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
 (fase 10), que já estava planejada e não deveria perder a posição.
 
+## Polimento: acessibilidade, interação, idioma, erros (fase 9)
+
+- **Pendência da fase 8 fechada**: `PATCH /api/reviews/:id` já tratava
+  corretamente os três casos de risco (content válido regenera
+  contentText/excerpt; nó fora da lista rejeitado; PATCH sem content não
+  toca content/contentText/excerpt, porque `review.service.ts::update` só
+  monta esses três campos no patch quando `data.content` existe). Nenhum
+  código mudou — só testado e documentado no relatório da fase 9.
+- **Rating e seleção de coleção viraram `radiogroup`** de verdade
+  (`src/components/ui/radio-group.tsx`, wrapper sobre o primitivo
+  `RadioGroup` do pacote `radix-ui` já instalado — mesmo padrão de
+  `select.tsx`). Radix dá de graça `role="radiogroup"`/`role="radio"`,
+  `aria-checked`, roving tabindex (Tab entra/sai do grupo uma vez, setas
+  movem E selecionam) e foco visível — não foi reimplementado nada disso
+  à mão. A seleção de coleção usa `RadioGroupItem asChild` envolvendo o
+  `Badge` existente, preservando a cor por coleção.
+- **Busca com debounce próprio, não `use-debounce`**: a lógica inteira é
+  um `useRef` guardando o `setTimeout` pendente, limpo a cada tecla e no
+  unmount — não justificava uma dependência para ~10 linhas. Input do
+  título virou não-controlado (`defaultValue` + `ref`), lido direto do
+  DOM no debounce/submit em vez de re-renderizar a partir do
+  `searchParams` a cada tecla — é isso que elimina o lag, não o debounce
+  em si. `router.replace` (não `push`) com `scroll: false`;
+  `useTransition` alimenta um indicador sutil (spinner no lugar da lupa).
+- **Paginação por cursor conectada**: os repositories já suportavam desde
+  a fase 3; a UI descartava o `nextCursor`. `review-list.tsx` virou client
+  component com estado local acumulando páginas via RPC
+  (`rpc.api.reviews.$get`), mesmos filtros + cursor. Estados de
+  carregando/fim da lista/erro cobertos.
+- **Idioma**: nenhum texto em inglês deveria sobrar (`Read More` → `Ler
+  mais`, `Select a collection`/`Collections`/`Search for a book...` →
+  traduzidos, `Dashboard` → `Painel` inclusive o caso especial do label
+  curto na navbar mobile). Não foi introduzida lib de i18n — ver
+  recomendação abaixo.
+- **`error.tsx` por segmento** (`(app)/error.tsx`, `(auth)/error.tsx`,
+  `global-error.tsx` para o layout raiz), sempre com mensagem genérica em
+  português — `error.message` nunca aparece na tela, só `console.error`.
+  **`loading.tsx`** completado nos segmentos que ainda bloqueavam a
+  navegação sem feedback (o único gap real de verdade era
+  `new-review/page.tsx`, que fazia dois `await` em sequência sem nenhum
+  Suspense interno; os outros ganharam `loading.tsx` por consistência,
+  reaproveitando os skeletons já existentes).
+- **`src/components/ui/empty-state.tsx`**: um componente único (ícone +
+  título + descrição + ação opcional) substituindo o `<h2>`/`<p>` cru
+  repetido em quatro lugares. Ação oferecida onde faz sentido
+  ("Escrever resenha", "Criar coleção"); omitida onde já existe um botão
+  equivalente visível na mesma página (a lista de coleções vazia na
+  própria página `/collections`, que já tem "Nova Coleção" logo acima).
+- **Confirmação de exclusão via `alert-dialog`**: já existia desde as
+  fases 6/7 em `review-card.tsx`/`collection-card.tsx` — conferido, não
+  precisou de mudança.
+- **`metadata` por página** + `title.template` no layout raiz (`"%s | Book
+  Review"`). `generateMetadata` na página de detalhe da resenha usa só
+  título e autor — nunca `content`/`excerpt`/`rating` (vazaria em preview
+  de link) — e devolve título genérico sem tocar o banco quando não há
+  sessão. `robots: { index: false, follow: false }` porque é conteúdo
+  pessoal do usuário.
+- **Revisão de acessibilidade geral encontrou bugs reais, não só
+  polimento cosmético**: o gatilho de deletar (review/coleção) era um
+  `<svg>` puro com `onClick` — não focável, não operável por teclado, e
+  `opacity-0` até `:hover` (então um usuário de teclado nunca via o foco
+  chegar nele). Virou `<button>` real. O botão de limpar busca tinha o
+  mesmo problema (`<div role="group">` com `onClick`) — trocado pelo
+  `InputGroupButton` que já existia em `input-group.tsx` e não era usado
+  ali. `navbar.tsx`/`mobile-navbar.tsx` tinham `bg-white` hardcoded
+  (quebrava no tema escuro) — virou `bg-background`.
+- **Recomendação sobre i18n**: não introduzida porque o app é monolíngue
+  por decisão explícita desta fase. Se o produto vier a precisar de outro
+  idioma, `next-intl` é a opção mais madura para App Router hoje — mas
+  isso é uma decisão de produto, não algo a antecipar em código morto.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -535,6 +606,6 @@ migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
 | 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | ✅ Concluída |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | ✅ Concluída |
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | ✅ Concluída |
-| 9    | Polimento: acessibilidade, performance de interação, idioma, estados de erro/vazio, metadata | Pendente    |
+| 9    | Polimento: acessibilidade, performance de interação, idioma, estados de erro/vazio, metadata | ✅ Concluída |
 | 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | Pendente    |
 | 11   | Migração `src/template/` → `src/features/<entidade>/` (redefinida a partir da fase 9 original) | Pendente    |
