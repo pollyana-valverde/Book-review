@@ -1,6 +1,7 @@
 import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import * as reviewRepository from "@/server/modules/reviews/review.repository";
+import * as albumRepository from "@/server/modules/albums/album.repository";
 import { toReviewDTO } from "@/server/modules/reviews/review.mapper";
 import {
   listReviewsQuerySchema,
@@ -10,21 +11,29 @@ import {
 } from "@/server/modules/reviews/review.contract";
 import { ConflictError, NotFoundError } from "@/server/lib/errors";
 
+// Services recebem userId como primeiro parâmetro em vez de buscar a
+// sessão sozinhos — quem tem a sessão é a borda (rotas/actions). Isso
+// mantém os services testáveis sem precisar simular request/cookies.
+
 function normalizeCategoryId(categoryId?: string) {
   return categoryId && categoryId !== "all" ? categoryId : undefined;
 }
 
-async function list(rawQuery: {
-  title?: string;
-  categoryId?: string;
-  cursor?: string;
-  limit?: number;
-}): Promise<{ items: ReviewDTO[]; nextCursor: string | null }> {
+async function list(
+  userId: string,
+  rawQuery: {
+    title?: string;
+    categoryId?: string;
+    cursor?: string;
+    limit?: number;
+  }
+): Promise<{ items: ReviewDTO[]; nextCursor: string | null }> {
   const query = listReviewsQuerySchema.parse(rawQuery);
   const title = query.title?.trim() || undefined;
   const categoryId = normalizeCategoryId(query.categoryId);
 
   const reviews = await reviewRepository.findMany({
+    userId,
     title,
     categoryId,
     cursor: query.cursor,
@@ -39,17 +48,17 @@ async function list(rawQuery: {
   return { items, nextCursor };
 }
 
-async function listRecent(limit: number): Promise<ReviewDTO[]> {
-  const reviews = await reviewRepository.findRecent(limit);
+async function listRecent(userId: string, limit: number): Promise<ReviewDTO[]> {
+  const reviews = await reviewRepository.findRecent(userId, limit);
   return reviews.map(toReviewDTO);
 }
 
-async function getAll() {
-  return reviewRepository.findAll();
+async function getAll(userId: string) {
+  return reviewRepository.findAll(userId);
 }
 
-async function getById(id: string): Promise<ReviewDTO> {
-  const review = await reviewRepository.findById(id);
+async function getById(userId: string, id: string): Promise<ReviewDTO> {
+  const review = await reviewRepository.findById(userId, id);
 
   if (!review) {
     throw new NotFoundError("Resenha não encontrada.");
@@ -58,9 +67,20 @@ async function getById(id: string): Promise<ReviewDTO> {
   return toReviewDTO(review);
 }
 
-async function create(data: CreateReviewInput): Promise<ReviewDTO> {
+async function create(
+  userId: string,
+  data: CreateReviewInput
+): Promise<ReviewDTO> {
+  // Sem isso, alguém consegue colocar uma resenha dentro do álbum de outra
+  // pessoa só sabendo o id do álbum.
+  const album = await albumRepository.findById(userId, data.categoryId);
+
+  if (!album) {
+    throw new NotFoundError("Álbum não encontrado.");
+  }
+
   try {
-    const review = await reviewRepository.create(data);
+    const review = await reviewRepository.create({ ...data, userId });
     return toReviewDTO(review);
   } catch (error) {
     if (
@@ -73,34 +93,56 @@ async function create(data: CreateReviewInput): Promise<ReviewDTO> {
   }
 }
 
-async function update(id: string, data: UpdateReviewInput): Promise<ReviewDTO> {
-  try {
-    const review = await reviewRepository.update(id, data);
-    return toReviewDTO(review);
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        throw new NotFoundError("Resenha não encontrada.");
-      }
-      if (error.code === "P2002") {
-        throw new ConflictError("Você já escreveu uma resenha para este livro.");
-      }
-    }
-    throw error;
-  }
-}
+async function update(
+  userId: string,
+  id: string,
+  data: UpdateReviewInput
+): Promise<ReviewDTO> {
+  if (data.categoryId) {
+    const album = await albumRepository.findById(userId, data.categoryId);
 
-async function remove(id: string) {
+    if (!album) {
+      throw new NotFoundError("Álbum não encontrado.");
+    }
+  }
+
   try {
-    await reviewRepository.remove(id);
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
+    const { count } = await reviewRepository.update(userId, id, data);
+
+    if (count === 0) {
       throw new NotFoundError("Resenha não encontrada.");
     }
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new ConflictError("Você já escreveu uma resenha para este livro.");
+    }
+
     throw error;
+  }
+
+  const review = await reviewRepository.findById(userId, id);
+
+  // Não deveria acontecer (acabamos de confirmar count === 1 acima), mas o
+  // tipo de findById é nulável.
+  if (!review) {
+    throw new NotFoundError("Resenha não encontrada.");
+  }
+
+  return toReviewDTO(review);
+}
+
+async function remove(userId: string, id: string) {
+  const { count } = await reviewRepository.remove(userId, id);
+
+  if (count === 0) {
+    throw new NotFoundError("Resenha não encontrada.");
   }
 }
 

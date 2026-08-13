@@ -7,15 +7,17 @@ const reviewWithCategoryInclude = {
 } satisfies Prisma.ReviewInclude;
 
 async function findMany(params: {
+  userId: string;
   title?: string;
   categoryId?: string;
   cursor?: string;
   limit: number;
 }) {
-  const { title, categoryId, cursor, limit } = params;
+  const { userId, title, categoryId, cursor, limit } = params;
 
   return prisma.review.findMany({
     where: {
+      userId,
       title: title ? { contains: title, mode: "insensitive" } : undefined,
       categoryId,
     },
@@ -26,21 +28,22 @@ async function findMany(params: {
   });
 }
 
-async function findRecent(limit: number) {
+async function findRecent(userId: string, limit: number) {
   return prisma.review.findMany({
+    where: { userId },
     orderBy: { updatedAt: "desc" },
     take: limit,
     include: reviewWithCategoryInclude,
   });
 }
 
-async function findAll() {
-  return prisma.review.findMany();
+async function findAll(userId: string) {
+  return prisma.review.findMany({ where: { userId } });
 }
 
-async function findById(id: string) {
-  return prisma.review.findUnique({
-    where: { id },
+async function findById(userId: string, id: string) {
+  return prisma.review.findFirst({
+    where: { id, userId },
     include: reviewWithCategoryInclude,
   });
 }
@@ -51,11 +54,20 @@ async function create(data: {
   categoryId: string;
   rating: number;
   description: string;
+  userId: string;
 }) {
   return prisma.review.create({ data, include: reviewWithCategoryInclude });
 }
 
+/**
+ * `updateMany`/`deleteMany` com `where: { id, userId }` de propósito (não
+ * `update`/`delete`, que exigem where único): se `count` voltar 0, o
+ * chamador não sabe dizer se o id não existe ou se é de outro usuário —
+ * exatamente o que queremos, para nunca vazar essa distinção (ver
+ * review.service.ts).
+ */
 async function update(
+  userId: string,
   id: string,
   data: Partial<{
     title: string;
@@ -65,15 +77,16 @@ async function update(
     description: string;
   }>
 ) {
-  return prisma.review.update({
-    where: { id },
+  return prisma.review.updateMany({
+    where: { id, userId },
     data,
-    include: reviewWithCategoryInclude,
   });
 }
 
-async function remove(id: string) {
-  return prisma.review.delete({ where: { id } });
+async function remove(userId: string, id: string) {
+  return prisma.review.deleteMany({
+    where: { id, userId },
+  });
 }
 
 export {
