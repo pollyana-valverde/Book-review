@@ -118,27 +118,36 @@ function NewReviewForm({ collectionsList }: NewReviewFormProps) {
           control={control}
           name="collectionId"
           render={({ field }) => (
-            <div className="flex flex-wrap gap-2" id="collectionId">
+            <RadioGroup
+              id="collectionId"
+              aria-label="Coleção"
+              aria-invalid={!!errors.collectionId}
+              value={field.value}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
+            >
               {collectionsList?.map((collection) => (
-                <Badge
-                  style={getCollectionBadgeColor(collection.id || collection.title)}
-                  className={cn(
-                    "border cursor-pointer",
-                    selectedCollection === collection.id
-                      ? "ring-2 ring-offset-2 ring-current"
-                      : ""
-                  )}
-                  size="lg"
+                <RadioGroupItem
+                  value={collection.id}
                   key={collection.id}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    field.onChange(collection.id);
-                  }}
+                  aria-label={collection.title}
+                  asChild
                 >
-                  {collection.title}
-                </Badge>
+                  <Badge
+                    style={getCollectionBadgeColor(collection.id || collection.title)}
+                    className={cn(
+                      "border cursor-pointer",
+                      selectedCollection === collection.id
+                        ? "ring-2 ring-offset-2 ring-current"
+                        : ""
+                    )}
+                    size="lg"
+                  >
+                    {collection.title}
+                  </Badge>
+                </RadioGroupItem>
               ))}
-            </div>
+            </RadioGroup>
           )}
         />
         <FieldError errors={[errors.collectionId]} />
