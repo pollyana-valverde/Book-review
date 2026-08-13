@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { RichTextEditor } from "@/components/editor/rich-text-editor";
 
 import { toast } from "sonner";
@@ -156,22 +157,34 @@ function NewReviewForm({ collectionsList }: NewReviewFormProps) {
           control={control}
           name="rating"
           render={({ field }) => (
-            <div className="flex gap-2" id="rating">
-              {[1, 2, 3, 4, 5].map((rating, index) => (
-                <StarIcon
+            <RadioGroup
+              id="rating"
+              aria-label="Nota"
+              aria-invalid={!!errors.rating}
+              value={field.value ? String(field.value) : undefined}
+              onValueChange={(value) => field.onChange(Number(value))}
+              onBlur={field.onBlur}
+              className="gap-2"
+            >
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <RadioGroupItem
+                  value={String(rating)}
+                  key={rating}
+                  aria-label={`${rating} ${rating === 1 ? "estrela" : "estrelas"}`}
                   onMouseEnter={() => setHoverRating(rating)}
                   onMouseLeave={() => setHoverRating(0)}
-                  onClick={() => field.onChange(rating)}
-                  className={cn(
-                    "text-border w-5 h-5 hover:text-amber-400 hover:fill-amber-400 transition-colors",
-                    selectedRating >= rating || hoverRating >= rating
-                      ? "text-amber-400 fill-amber-400"
-                      : ""
-                  )}
-                  key={index}
-                />
+                >
+                  <StarIcon
+                    className={cn(
+                      "text-border w-5 h-5 hover:text-amber-400 hover:fill-amber-400 transition-colors",
+                      selectedRating >= rating || hoverRating >= rating
+                        ? "text-amber-400 fill-amber-400"
+                        : ""
+                    )}
+                  />
+                </RadioGroupItem>
               ))}
-            </div>
+            </RadioGroup>
           )}
         />
         <FieldError errors={[errors.rating]} />
