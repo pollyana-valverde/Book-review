@@ -8,10 +8,11 @@ import {
 } from "@/template/books-review-page/lib";
 import type { CollectionDTO } from "@/server/modules/collections/collection.contract";
 
-import { Field } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
 import {
@@ -112,12 +113,15 @@ function SearchSection({ collections }: { collections: CollectionDTO[] }) {
   return (
     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
       <Field className="flex-1">
+        <FieldLabel htmlFor="review-search-title" className="sr-only">
+          Buscar por título
+        </FieldLabel>
         <InputGroup>
           <InputGroupInput
             ref={inputRef}
             defaultValue={searchQueryTitle}
             onChange={handleQueryTitleChange}
-            id="inline-start-input"
+            id="review-search-title"
             placeholder="Buscar um livro..."
           />
           <InputGroupAddon align="inline-start">
@@ -129,12 +133,14 @@ function SearchSection({ collections }: { collections: CollectionDTO[] }) {
           </InputGroupAddon>
 
           {hasQuery && (
-            <InputGroupAddon
-              align="inline-end"
-              onClick={resetSearch}
-              className="cursor-pointer"
-            >
-              <CircleXIcon aria-label="Limpar busca" />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                type="button"
+                aria-label="Limpar busca"
+                onClick={resetSearch}
+              >
+                <CircleXIcon />
+              </InputGroupButton>
             </InputGroupAddon>
           )}
         </InputGroup>
@@ -144,7 +150,7 @@ function SearchSection({ collections }: { collections: CollectionDTO[] }) {
         onValueChange={handleQueryCollectionChange}
         value={searchQueryCollection || "all"}
       >
-        <SelectTrigger className="w-full md:max-w-56">
+        <SelectTrigger className="w-full md:max-w-56" aria-label="Filtrar por coleção">
           <SelectValue placeholder="Selecione uma coleção" />
         </SelectTrigger>
         <SelectContent>

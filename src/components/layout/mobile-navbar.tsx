@@ -11,7 +11,7 @@ function MobileNavbar({ user }: { user: { name: string } }) {
     md:hidden
     fixed bottom-0 left-0 right-0
     flex gap-2 items-center justify-around
-    bg-white text-muted-foreground border-t border-separate
+    bg-background text-muted-foreground border-t border-separate
     py-2 px-1 mx-auto w-full
     `}
     >

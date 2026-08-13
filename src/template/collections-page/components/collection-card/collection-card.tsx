@@ -57,7 +57,13 @@ function DeleteCollectionDialog({ id }: { id: string }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <DeleteIcon className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-all hover:text-red-700 hover:bg-red-100" />
+        <button
+          type="button"
+          aria-label="Deletar coleção"
+          className="p-1 rounded-sm text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <DeleteIcon />
+        </button>
       </AlertDialogTrigger>
       <AlertDialogContent size="sm">
         <AlertDialogHeader>

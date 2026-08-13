@@ -14,7 +14,7 @@ function Navbar({ user }: { user: { name: string } }) {
     hidden
     fixed top-0 left-0 right-0
     md:flex items-center
-    bg-white text-muted-foreground border-b border-separate
+    bg-background text-muted-foreground border-b border-separate
     py-2 px-5 mt-2 mb-4 mx-auto w-[99%]
     `}
     >
