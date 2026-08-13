@@ -2,7 +2,9 @@ import "server-only";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { prisma } from "@/server/db/prisma";
+import { auth } from "@/server/auth/auth";
 import { errorHandler } from "@/server/api/middlewares/error-handler";
+import { sessionMiddleware, requireAuth } from "@/server/api/middlewares/session";
 import { reviewRoutes } from "@/server/modules/reviews/review.routes";
 import { albumRoutes } from "@/server/modules/albums/album.routes";
 import { env } from "@/lib/env";
@@ -13,6 +15,14 @@ const app = new OpenAPIHono<AppEnv>().basePath("/api").onError(errorHandler);
 // A doc e a UI de referência só existem fora de produção: uma API que vai
 // ficar autenticada na fase 5 não deve expor o próprio mapa publicamente.
 const docsEnabled = env.NODE_ENV !== "production";
+
+// Handler do BetterAuth: NÃO passa pelo OpenAPIHono (é `.on()` com o
+// Request cru, não `createRoute`/`.openapi()`) e por isso não entra no
+// documento OpenAPI. Fora da expressão encadeada de propósito — não é
+// `.route()`, não precisa compor o AppType, e não queremos essas rotas no
+// cliente RPC (o BetterAuth tem o próprio client, ver
+// src/features/auth/lib/auth-client.ts).
+app.on(["POST", "GET"], "/auth/*", (c) => auth.handler(c.req.raw));
 
 // Armadilha do RPC do Hono: os `.route()` PRECISAM ficar encadeados nesta
 // única expressão, atribuída a uma variável (`routes`), e é dela que o
@@ -28,6 +38,13 @@ const routes = app
       console.error(error);
       return c.json({ status: "error", database: "down" }, 503);
     }
+  })
+  // Rota de exemplo provando sessionMiddleware/requireAuth. Não é
+  // `createRoute` de propósito — é só um smoke test para a fase 6 construir
+  // em cima, não um endpoint documentado.
+  .get("/me", sessionMiddleware, requireAuth, (c) => {
+    const user = c.get("user")!;
+    return c.json({ user });
   })
   .route("/reviews", reviewRoutes)
   .route("/albums", albumRoutes);
