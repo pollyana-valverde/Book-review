@@ -110,7 +110,7 @@ function ReviewCard({ review }: { review: ReviewDTO }) {
 
         <CardDescription className="line-clamp-2 col-span-full">
           <Text as="p" variant="content-1" className="text-muted-foreground">
-            {review.description}
+            {review.excerpt}
           </Text>
         </CardDescription>
       </CardHeader>

@@ -4,6 +4,7 @@ import { NotFoundError } from "@/server/lib/errors";
 import Link from "next/link";
 import { getCollectionBadgeColor } from "@/lib/collection-badge-color";
 import { notFound } from "next/navigation";
+import { RichTextContent } from "@/components/editor/rich-text-content";
 
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
@@ -94,12 +95,10 @@ async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
         </CardHeader>
 
         <CardContent>
-          <Text
-            as="p"
+          <RichTextContent
+            content={reviewDetail.content}
             className="text-muted-foreground leading-normal md:leading-relaxed"
-          >
-            {reviewDetail.description}
-          </Text>
+          />
         </CardContent>
       </Card>
     </div>
