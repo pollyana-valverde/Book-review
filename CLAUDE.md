@@ -98,6 +98,27 @@ Action.
   FALSIFICADO: quebre de propósito, confirme que `tsc` acusa o erro,
   restaure.
 
+## Editor rico (Tiptap)
+
+- **JSON é a fonte de verdade.** `Review.content` guarda o documento
+  Tiptap/ProseMirror como `Json`. Nunca salve HTML vindo do cliente: é
+  vetor de XSS e perde a capacidade de reeditar sem parse.
+- **`contentText` (texto puro, para busca) e `excerpt` (resumo para os
+  cards) são SEMPRE derivados no servidor** a partir de `content` — o
+  cliente nunca os envia, e mesmo que envie, o service ignora (os schemas
+  de entrada não declaram esses campos).
+- **`src/components/editor/extensions.ts` é compartilhado entre cliente e
+  servidor de propósito** (sem `server-only`, sem import de servidor): é o
+  que garante que validação (`src/server/lib/rich-text.ts`), renderização
+  estática (`rich-text-content.tsx`) e o editor (`rich-text-editor.tsx`)
+  usem exatamente o mesmo conjunto de nós/marcas.
+- **A validação de verdade não é Zod.** O contract só confirma que
+  `content` parece um documento (`type: "doc"` + `content` opcional). Quem
+  valida de fato é `sanitizeRichText` (`src/server/lib/rich-text.ts`),
+  reconstruindo a árvore com `Node.fromJSON(schema, json)` + `.check()`
+  contra o schema derivado de `extensions.ts` — nós fora da lista não
+  sobrevivem.
+
 ## Padrão de formulário
 
 `useForm` direto do react-hook-form + `zodResolver` sobre o schema do
@@ -111,5 +132,5 @@ Components depois do `revalidateTag`.
 ## Mais contexto
 
 `docs/refactor-plan.md` tem o histórico completo: decisões de domínio e
-infraestrutura, dívida técnica, e o status fase a fase (1 a 6 concluídas;
-7 a 10 pendentes no momento em que este arquivo foi escrito).
+infraestrutura, dívida técnica, e o status fase a fase (1 a 8 concluídas;
+9 e 10 pendentes no momento em que este arquivo foi escrito).

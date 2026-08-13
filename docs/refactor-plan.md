@@ -429,6 +429,88 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
   do outro. Sem esse resultado, a fase pararia antes da renomeação (regra
   do relatório).
 
+## Editor rico com Tiptap (fase 8)
+
+- **Versão instalada: Tiptap 3.30.1.** Confirmado na doc oficial (Context7)
+  antes de escrever código, não de memória — a v3 mudou API em relação à
+  v2: `undoRedo` (não mais `history`) dentro do StarterKit, listas movidas
+  para `@tiptap/extension-list`, `underline`/`link` agora inclusos por
+  padrão no StarterKit, e existe um renderizador estático dedicado
+  (`@tiptap/static-renderer`, ver abaixo) que não existia na v2.
+  `@tiptap/core` precisou entrar como dependência direta (antes só vinha
+  como transitiva de `@tiptap/react`) porque `getSchema` é importado
+  direto dele em `src/server/lib/rich-text.ts`.
+- **JSON como fonte de verdade**: `Review.content` (Json) é o documento
+  Tiptap/ProseMirror; `contentText` (texto puro, para busca) e `excerpt`
+  (resumo para os cards) são DERIVADOS no servidor a cada create/update —
+  nunca aceitos do cliente. `description` foi removida.
+- **Migração por expand → backfill → contract**
+  (`prisma/migrations/20260814000000_add_rich_text_content_to_reviews/
+  migration.sql`), pelo mesmo motivo de sempre: a migração que o Prisma
+  geraria (`DROP COLUMN description` + três `ADD COLUMN ... NOT NULL` sem
+  default, tudo num único `ALTER TABLE`) falha contra qualquer tabela com
+  linhas. Backfill: `description` vira um documento de um parágrafo com um
+  nó de texto; quando `trim(description) = ''`, vira um parágrafo SEM nó
+  de texto (`{"type":"doc","content":[{"type":"paragraph"}]}`) — um nó de
+  texto vazio é inválido no ProseMirror e quebraria a renderização.
+  Testado contra 5 linhas reais (uma delas só espaços, inserida direto via
+  SQL para simular dado legado, e uma com >180 caracteres) — ver relatório
+  da fase 8 para a evidência antes/depois.
+- **`src/components/editor/extensions.ts` é o contrato entre cliente e
+  servidor**: StarterKit (heading limitado a níveis 2 e 3) + Placeholder,
+  sem `server-only` nem import de servidor. É importado tanto por
+  `rich-text-editor.tsx` (cliente, `useEditor`) quanto por
+  `src/server/lib/rich-text.ts` (`getSchema`, sanitização) e
+  `rich-text-content.tsx` (renderização estática) — os três usam
+  exatamente o mesmo conjunto de nós/marcas, de propósito.
+- **A sanitização de verdade não é Zod**: `review.contract.ts` só confirma
+  que `content` parece um documento (`type: "doc"` + `content` opcional,
+  `.loose()` para permitir `attrs` do ProseMirror). Quem valida de fato é
+  `src/server/lib/rich-text.ts::sanitizeRichText`, reconstruindo a árvore
+  com `Node.fromJSON(schema, json)` + `.check()` contra o schema derivado
+  de `extensions.ts` — nós/marcas fora da lista (ex.: `{"type":"script"}`)
+  não sobrevivem à reconstrução e viram `ValidationError` (422). Limite de
+  ~100KB no JSON serializado ANTES de qualquer parse. Testado com um nó
+  desconhecido e com payload sobredimensionado — os dois rejeitados (ver
+  relatório da fase 8).
+- **Busca estendida para `contentText`**: `review.repository.ts::findMany`
+  passou a buscar por título OU `contentText` (antes só título), já que
+  agora existe texto puro derivado do conteúdo. **Dívida técnica nova**:
+  não há índice em `content_text` — o filtro usa `ILIKE` (`contains`), que
+  faz varredura completa da tabela e fica lento com volume. Não criado
+  nesta fase; candidato a índice trigram/GIN numa fase de manutenção
+  futura.
+- **`contentText` não é exposto no DTO**: nenhum componente do front
+  precisa dele (é só para o `WHERE` do repository) — `reviewDTOSchema`
+  expõe `content` e `excerpt`, não `contentText`.
+- **Renderização estática, não HTML**: a página de detalhe usa
+  `renderToReactElement` (`@tiptap/static-renderer/pm/react`, pacote
+  adicional além dos pedidos originalmente — não estava na lista de
+  instalação, mas é onde vive o renderizador estático da v3, confirmado na
+  doc oficial) para converter o JSON salvo direto em elementos React, sem
+  passar por uma string HTML em nenhum momento. Isso elimina de vez a
+  classe de risco de `dangerouslySetInnerHTML` — não foi cogitado usar
+  `generateHTML` porque exigiria sanitizar HTML manualmente depois, um
+  passo a mais e uma superfície de risco que o caminho React não tem.
+- **`new-review-form.tsx` migrado para o padrão RPC** (`useForm` direto,
+  `register` nos inputs nativos, `Controller` no editor/rating/coleção,
+  `Field`/`FieldLabel`/`FieldError`/`Input`, erro de servidor em
+  `errors.root`) — o último formulário que ainda estava no padrão antigo
+  (`<Form>/<FormField>` do shadcn + Server Action). `createReview` (Server
+  Action) removida por ficar sem chamador, mesmo padrão de `createAlbum`
+  na fase 4; `deleteReview` continua como Server Action. Acessibilidade do
+  rating (`onClick` em ícone) e da seleção de coleção (`onClick` em badge)
+  NÃO foi mexida de propósito — isso é fase 9, misturar as duas coisas
+  tornaria o diff difícil de revisar.
+- **Enviar `contentText`/`excerpt` no payload não tem efeito**: os
+  schemas de entrada (`createReviewSchema`/`updateReviewSchema`) não
+  declaram esses campos, então o Zod os descarta ao fazer `parse`; o
+  service também nunca olha para eles no `data` recebido — só usa o que
+  `sanitizeRichText`/`toPlainText`/`toExcerpt` derivam de `content`.
+  Testado enviando os dois campos com valores falsos junto de um `content`
+  válido: a resposta e o banco mostram os valores derivados do `content`
+  real, não os enviados.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -441,6 +523,6 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | ✅ Concluída |
 | 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | ✅ Concluída |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | ✅ Concluída |
-| 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | Pendente    |
+| 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | ✅ Concluída |
 | 9    | Migração `src/template/` → `src/features/<entidade>/`           | Pendente    |
 | 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | Pendente    |
