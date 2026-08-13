@@ -18,7 +18,9 @@ model Review {
   author       String
   collectionId String @map("collection_id")
   rating       Int    @default(1)
-  description  String
+  content      Json
+  contentText  String @map("content_text")
+  excerpt      String
 
   userId String @map("user_id")
 
