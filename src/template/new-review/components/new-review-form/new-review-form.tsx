@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createReview } from "@/server/actions";
+import { useRouter } from "next/navigation";
+import { rpc } from "@/lib/rpc";
+import { readRpcError } from "@/lib/rpc-error";
 import {
   type CreateReviewInput,
   createReviewSchema,
@@ -18,15 +20,8 @@ import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
 
 import { toast } from "sonner";
 
@@ -36,208 +31,181 @@ interface NewReviewFormProps {
   collectionsList: CollectionDTO[];
 }
 
+const emptyContent: CreateReviewInput["content"] = {
+  type: "doc",
+  content: [{ type: "paragraph" }],
+};
+
 function NewReviewForm({ collectionsList }: NewReviewFormProps) {
-  const form = useForm<CreateReviewInput>({
+  const router = useRouter();
+  const {
+    register,
+    control,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateReviewInput>({
     resolver: zodResolver(createReviewSchema),
     defaultValues: {
       title: "",
       author: "",
       collectionId: "",
       rating: 0,
-      description: "",
+      content: emptyContent,
     },
   });
 
-  const selectedCollection = useWatch({
-    control: form.control,
-    name: "collectionId",
-  });
-
-  const selectedRating = useWatch({
-    control: form.control,
-    name: "rating",
-  });
+  const selectedCollection = useWatch({ control, name: "collectionId" });
+  const selectedRating = useWatch({ control, name: "rating" });
 
   const [hoverRating, setHoverRating] = useState(0);
 
   async function onSubmit(data: CreateReviewInput) {
-    const review = await createReview({
-      ...data,
-    });
+    const res = await rpc.api.reviews.$post({ json: data });
 
-    if (review?.error) {
-      toast.error(review.error);
-      return { success: false };
+    if (!res.ok) {
+      const error = await readRpcError(res);
+      setError("root", { message: error.message });
+      return;
     }
 
     toast.success("Resenha salva com sucesso!");
-
-    form.reset();
-
-    return { success: true };
+    reset();
+    router.refresh();
   }
 
   return (
-    <Form {...form}>
-      <form
-        className="flex flex-col gap-7"
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel htmlFor="title" className="text-muted-foreground">
-                  Título do livro
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    id="title"
-                    placeholder="Ex: O senhor dos anéis"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+    <form
+      className="flex flex-col gap-7"
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor="title" className="text-muted-foreground">
+            Título do livro
+          </FieldLabel>
+          <Input
+            id="title"
+            placeholder="Ex: O senhor dos anéis"
+            aria-invalid={!!errors.title}
+            {...register("title")}
           />
+          <FieldError errors={[errors.title]} />
+        </Field>
 
-          <FormField
-            control={form.control}
-            name="author"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel htmlFor="author" className="text-muted-foreground">
-                  Autor
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    id="author"
-                    placeholder="Ex: J.R.R. Tolkien"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        <Field>
+          <FieldLabel htmlFor="author" className="text-muted-foreground">
+            Autor
+          </FieldLabel>
+          <Input
+            id="author"
+            placeholder="Ex: J.R.R. Tolkien"
+            aria-invalid={!!errors.author}
+            {...register("author")}
           />
-        </div>
+          <FieldError errors={[errors.author]} />
+        </Field>
+      </div>
 
-        <FormField
-          control={form.control}
+      <Field>
+        <FieldLabel htmlFor="collectionId" className="text-muted-foreground">
+          Coleção
+        </FieldLabel>
+        <Controller
+          control={control}
           name="collectionId"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="collectionId" className="text-muted-foreground">
-                Coleção
-              </FormLabel>
-              <FormControl>
-                <div className="flex flex-wrap gap-2">
-                  {collectionsList?.map((collection) => (
-                    <Badge
-                      style={getCollectionBadgeColor(collection.id || collection.title)}
-                      className={cn(
-                        "border cursor-pointer",
-                        selectedCollection === collection.id
-                          ? "ring-2 ring-offset-2 ring-current"
-                          : ""
-                      )}
-                      size="lg"
-                      key={collection.id}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        field.onChange(collection.id);
-                      }}
-                    >
-                      {collection.title}
-                    </Badge>
-                  ))}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+            <div className="flex flex-wrap gap-2" id="collectionId">
+              {collectionsList?.map((collection) => (
+                <Badge
+                  style={getCollectionBadgeColor(collection.id || collection.title)}
+                  className={cn(
+                    "border cursor-pointer",
+                    selectedCollection === collection.id
+                      ? "ring-2 ring-offset-2 ring-current"
+                      : ""
+                  )}
+                  size="lg"
+                  key={collection.id}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    field.onChange(collection.id);
+                  }}
+                >
+                  {collection.title}
+                </Badge>
+              ))}
+            </div>
           )}
         />
+        <FieldError errors={[errors.collectionId]} />
+      </Field>
 
-        <FormField
-          control={form.control}
+      <Field>
+        <FieldLabel htmlFor="rating" className="text-muted-foreground">
+          Nota
+          {selectedRating > 0 && (
+            <Text variant="content-1" className="text-foreground font-bold">
+              {selectedRating}/5
+            </Text>
+          )}
+        </FieldLabel>
+        <Controller
+          control={control}
           name="rating"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="rating" className="text-muted-foreground">
-                Nota
-                {selectedRating > 0 && (
-                  <Text
-                    variant="content-1"
-                    className="text-foreground font-bold"
-                  >
-                    {selectedRating}/5
-                  </Text>
-                )}
-              </FormLabel>
-              <FormControl>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((rating, index) => (
-                    <StarIcon
-                      onMouseEnter={() => setHoverRating(rating)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => field.onChange(rating)}
-                      className={cn(
-                        "text-border w-5 h-5 hover:text-amber-400 hover:fill-amber-400 transition-colors",
-                        selectedRating >= rating || hoverRating >= rating
-                          ? "text-amber-400 fill-amber-400"
-                          : ""
-                      )}
-                      key={index}
-                    />
-                  ))}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel
-                htmlFor="description"
-                className="text-muted-foreground"
-              >
-                Resenha
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  className="resize-none min-h-55"
-                  id="description"
-                  placeholder="O que você achou deste livro?"
-                  {...field}
+            <div className="flex gap-2" id="rating">
+              {[1, 2, 3, 4, 5].map((rating, index) => (
+                <StarIcon
+                  onMouseEnter={() => setHoverRating(rating)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => field.onChange(rating)}
+                  className={cn(
+                    "text-border w-5 h-5 hover:text-amber-400 hover:fill-amber-400 transition-colors",
+                    selectedRating >= rating || hoverRating >= rating
+                      ? "text-amber-400 fill-amber-400"
+                      : ""
+                  )}
+                  key={index}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+              ))}
+            </div>
           )}
         />
+        <FieldError errors={[errors.rating]} />
+      </Field>
 
-        <div className="flex gap-2 ">
-          <Button
-            size="lg"
-            type="submit"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? "Salvando..." : "Salvar resenha"}
-          </Button>
-          <Button size="lg" type="reset" variant="outline" asChild>
-            <Link href="/books-review">Cancelar</Link>
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <Field>
+        <FieldLabel htmlFor="content" className="text-muted-foreground">
+          Resenha
+        </FieldLabel>
+        <Controller
+          control={control}
+          name="content"
+          render={({ field }) => (
+            <RichTextEditor
+              id="content"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              aria-invalid={!!errors.content}
+            />
+          )}
+        />
+        <FieldError errors={[errors.content, errors.root]} />
+      </Field>
+
+      <div className="flex gap-2">
+        <Button size="lg" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Salvando..." : "Salvar resenha"}
+        </Button>
+        <Button size="lg" type="reset" variant="outline" asChild>
+          <Link href="/books-review">Cancelar</Link>
+        </Button>
+      </div>
+    </form>
   );
 }
 

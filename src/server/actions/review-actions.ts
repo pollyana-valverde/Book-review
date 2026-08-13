@@ -2,10 +2,6 @@
 
 import { revalidateTag } from "next/cache";
 import * as reviewService from "@/server/modules/reviews/review.service";
-import {
-  createReviewSchema,
-  type CreateReviewInput,
-} from "@/server/modules/reviews/review.contract";
 import { toActionResult, type ActionResult } from "@/server/lib/action-result";
 import {
   reviewsTag,
@@ -14,23 +10,11 @@ import {
 } from "@/server/lib/cache-tags";
 import { requireSession } from "@/server/auth/session";
 
-async function createReview(data: CreateReviewInput): Promise<ActionResult> {
-  // Fora do try/catch de propósito: ver o comentário equivalente em
-  // collection-actions.ts sobre requireSession() e redirect().
-  const { user } = await requireSession();
-
-  try {
-    const parsedData = createReviewSchema.parse(data);
-    await reviewService.create(user.id, parsedData);
-
-    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
-
-    return { success: true };
-  } catch (error) {
-    return toActionResult(error);
-  }
-}
-
+// `createReview` foi removida: new-review-form.tsx migrou para o RPC do
+// Hono nesta fase (fase 8, junto com o editor Tiptap) — ver o comentário
+// equivalente em collection-actions.ts sobre requireSession() e redirect()
+// para o motivo de deleteReview continuar chamando requireSession() fora
+// do try/catch.
 async function deleteReview(id: string): Promise<ActionResult> {
   const { user } = await requireSession();
 
@@ -46,4 +30,4 @@ async function deleteReview(id: string): Promise<ActionResult> {
   }
 }
 
-export { createReview, deleteReview };
+export { deleteReview };
