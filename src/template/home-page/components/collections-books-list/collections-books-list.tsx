@@ -5,6 +5,9 @@ import { getSession } from "@/server/auth/session";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
+
+import { FolderOpenIcon } from "lucide-react";
 
 async function CollectionsBooksList() {
   const { user } = (await getSession())!;
@@ -14,12 +17,12 @@ async function CollectionsBooksList() {
 
   if (!hasCollections) {
     return (
-      <div className="py-10">
-        <h2 className="text-2xl font-semibold">Nenhuma coleção encontrada</h2>
-        <p className="text-muted-foreground mt-2">
-          Crie uma coleção para organizar suas resenhas de livros.
-        </p>
-      </div>
+      <EmptyState
+        icon={FolderOpenIcon}
+        title="Nenhuma coleção encontrada"
+        description="Crie uma coleção para organizar suas resenhas de livros."
+        action={{ label: "Criar coleção", href: "/collections" }}
+      />
     );
   }
 

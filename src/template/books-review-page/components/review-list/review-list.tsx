@@ -8,8 +8,9 @@ import { readRpcError } from "@/lib/rpc-error";
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
+import { EmptyState } from "@/components/ui/empty-state";
 
-import { Loader2Icon } from "lucide-react";
+import { BookOpenIcon, Loader2Icon } from "lucide-react";
 
 interface ReviewListProps {
   reviewsList: ReviewDTO[];
@@ -62,13 +63,12 @@ function ReviewList({
 
   if (!hasReviews) {
     return (
-      <div className="text-center py-10">
-        <h2 className="text-2xl font-semibold">Nenhuma resenha encontrada</h2>
-        <p className="text-muted-foreground mt-2">
-          Tente ajustar sua pesquisa ou filtro para encontrar o que você está
-          procurando.
-        </p>
-      </div>
+      <EmptyState
+        icon={BookOpenIcon}
+        title="Nenhuma resenha encontrada"
+        description="Tente ajustar sua pesquisa ou filtro para encontrar o que você está procurando."
+        action={{ label: "Escrever resenha", href: "/new-review" }}
+      />
     );
   }
 

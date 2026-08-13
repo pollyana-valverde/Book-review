@@ -1,6 +1,9 @@
 import { getCollectionsWithReviewCount } from "@/server/modules/collections/collection.queries";
 import { CollectionCard } from "@/template/collections-page/components/collection-card";
 import { getSession } from "@/server/auth/session";
+import { EmptyState } from "@/components/ui/empty-state";
+
+import { FolderOpenIcon } from "lucide-react";
 
 async function CollectionList() {
   const { user } = (await getSession())!;
@@ -9,12 +12,11 @@ async function CollectionList() {
 
   if (!hasCollections) {
     return (
-      <div className="text-center py-10">
-        <h2 className="text-2xl font-semibold">Nenhuma coleção encontrada</h2>
-        <p className="text-muted-foreground mt-2">
-          Crie uma coleção para organizar suas resenhas de livros.
-        </p>
-      </div>
+      <EmptyState
+        icon={FolderOpenIcon}
+        title="Nenhuma coleção encontrada"
+        description="Use o botão acima para criar sua primeira coleção e organizar suas resenhas de livros."
+      />
     );
   }
 

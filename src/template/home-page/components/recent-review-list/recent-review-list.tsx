@@ -2,6 +2,9 @@ import { getRecentReviews } from "@/server/modules/reviews/review.queries";
 import { getSession } from "@/server/auth/session";
 
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
+import { EmptyState } from "@/components/ui/empty-state";
+
+import { BookOpenIcon } from "lucide-react";
 
 async function RecentReviewList() {
   const { user } = (await getSession())!;
@@ -11,12 +14,12 @@ async function RecentReviewList() {
 
   if (!hasReviews) {
     return (
-      <div className="py-10">
-        <h2 className="text-2xl font-semibold">Nenhuma resenha encontrada</h2>
-        <p className="text-muted-foreground mt-2">
-          Crie resenhas para seus livros favoritos e elas aparecerão aqui.
-        </p>
-      </div>
+      <EmptyState
+        icon={BookOpenIcon}
+        title="Nenhuma resenha encontrada"
+        description="Crie resenhas para seus livros favoritos e elas aparecerão aqui."
+        action={{ label: "Escrever resenha", href: "/new-review" }}
+      />
     );
   }
 
