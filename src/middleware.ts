@@ -8,7 +8,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
@@ -23,10 +23,8 @@ function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-const config = {
+export const config = {
   matcher: [
     "/((?!api|sign-in|sign-up|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
-
-export { middleware, config };
