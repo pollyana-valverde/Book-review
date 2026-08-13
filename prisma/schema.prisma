@@ -14,28 +14,40 @@ datasource db {
 
 model Review {
   id          String @id @default(uuid())
-  title       String @unique
+  title       String
   author      String
   categoryId  String
   rating      Int    @default(1)
   description String
 
+  userId String @map("user_id")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  category Album @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category Album @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  user     User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, title])
+  @@index([userId, updatedAt(sort: Desc)])
+  @@index([categoryId])
   @@map("reviews")
 }
 
 model Album {
   id      String   @id @default(uuid())
-  title   String   @unique
+  title   String
   reviews Review[]
+
+  userId String @map("user_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, title])
+  @@index([userId])
   @@map("albums")
 }
 
@@ -49,6 +61,8 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  albums        Album[]
+  reviews       Review[]
 
   @@unique([email])
   @@map("user")
