@@ -294,6 +294,91 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
     `BETTER_AUTH_SECRET` de 8 caracteres — `pnpm build` falha com mensagem
     apontando exatamente essa variável.
 
+## Ownership: userId em Album/Review (fase 6)
+
+- **Estado do banco antes de migrar**: verificado antes de escrever
+  qualquer migração — `albums`, `reviews` e `user` estavam **vazios**
+  (0 linhas) neste ambiente de desenvolvimento. Mesmo assim, a migração foi
+  escrita para rodar de forma segura contra um banco COM dados (é isso que
+  a torna reutilizável em produção depois), não só contra o vazio local.
+- **Estratégia de migração** (`prisma/migrations/
+  20260813010000_add_ownership_to_albums_reviews/migration.sql`), em três
+  passos (expand → backfill → contract), porque `ADD COLUMN ... NOT NULL`
+  direto falha em qualquer tabela com linhas existentes:
+  1. `ADD COLUMN user_id TEXT` (nullable);
+  2. `UPDATE ... SET user_id = COALESCE(<dono via GUC>, <usuário mais
+     antigo>) WHERE user_id IS NULL`;
+  3. só então `ALTER COLUMN user_id SET NOT NULL`.
+  - **Critério de dono do backfill**: por padrão, o usuário mais antigo
+    (`ORDER BY "createdAt" ASC LIMIT 1`) — o único critério que uma
+    migração SQL estática consegue expressar sem depender de nada externo.
+    SQL de migração não lê variáveis de ambiente do processo Node
+    (`SEED_OWNER_EMAIL` não existe do ponto de vista do Postgres); o
+    equivalente dentro do banco é a GUC de sessão `app.seed_owner_email` —
+    um operador que queira um dono específico roda
+    `SET app.seed_owner_email = 'dono@example.com';` na mesma sessão antes
+    de aplicar a migração. Sem essa GUC, cai no fallback. Testado
+    isoladamente (tabelas temporárias, dentro de uma transação com
+    `ROLLBACK`) nos dois cenários — sem GUC e com GUC — antes de aplicar
+    a migração de verdade.
+  - Índices únicos globais antigos (`albums_title_key`, `reviews_title_key`
+    — o bug de multi-tenancy: o primeiro a criar "Ficção" travava todo
+    mundo) removidos; substituídos por `@@unique([userId, title])`.
+  - Confirmado com `prisma migrate diff --exit-code` que o banco após a
+    migração bate exatamente com o schema ("No difference detected").
+- **`onDelete` de `Review.category` mudou de `Cascade` para `Restrict`**:
+  apagar um álbum que ainda tem resenhas dentro agora é recusado pelo
+  banco (constraint de foreign key, código Prisma `P2003`) em vez de
+  apagar as resenhas junto silenciosamente. `album.service.remove` traduz
+  esse erro para `ConflictError` ("Este álbum tem resenhas. Mova ou apague
+  as resenhas antes.") — a UI existente (`album-card.tsx`) já mostra esse
+  texto via `toast.error()`, porque o encanamento genérico
+  `AppError → toActionResult → { error }` já existia desde a fase 3/4;
+  nenhuma mudança de UI foi necessária.
+- **Repositories**: toda função recebe `userId` e filtra por ele.
+  Update/delete por id usam `updateMany`/`deleteMany` com
+  `where: { id, userId }` — se `count` vier 0, o service trata como
+  `NotFoundError`, nunca `ForbiddenError`, para não revelar a existência de
+  um recurso alheio (confirmado no teste 2 e 3 da tarefa 8: 404, não 403).
+- **Services**: `userId` é sempre o primeiro parâmetro; nenhum service
+  busca sessão sozinho. `review.service.create`/`update` valida que
+  `categoryId` pertence ao mesmo `userId` antes de gravar (senão, um id de
+  álbum alheio simplesmente lançaria `NotFoundError` — testado na tarefa 8,
+  teste 4).
+- **Cache por usuário — a parte crítica**: `src/server/lib/cache-tags.ts`
+  agora exige `userId` (`reviews:${userId}`, `review:${userId}:${id}`,
+  `albums:${userId}`) — sem isso a tag por si só não evita nada, porque
+  quem vaza dado entre contas é a CHAVE do `unstable_cache`, não a tag.
+  Por isso `src/server/modules/*/*.queries.ts` foram reescritas: cada
+  função de leitura agora recebe `userId` e embrulha `unstable_cache`
+  DENTRO de uma função chamada com esse `userId` em mãos (`keyParts`
+  inclui `userId` explicitamente), em vez do padrão anterior de um wrapper
+  único criado uma vez no carregamento do módulo. Provado com o teste 5 da
+  tarefa 8 (ver seção de testes) — não foi só inspeção de código.
+- **Armadilha nova do OpenAPIHono**: `.use("*", sessionMiddleware,
+  requireAuth)` encadeado no meio da cadeia `.openapi(...)` degrada o tipo
+  de volta para `Hono` puro — `.openapi()` some do tipo da variável
+  seguinte (mesma classe de bug das "três armadilhas" da fase 4, um caso
+  novo). Resolvido usando o campo `middleware` do próprio `createRoute()`
+  em cada rota, em vez de `.use()` encadeado — mantém a inferência de
+  `AppType` intacta. `src/lib/rpc.type-test.ts` foi falsificado de novo
+  depois da mudança e voltou a passar limpo.
+- **OpenAPI**: security scheme `cookieAuth` (apiKey em cookie) registrado
+  uma vez em `src/server/api/index.ts`; toda rota de review/album declara
+  `security: [{ cookieAuth: [] }]` e documenta a resposta `401`. O handler
+  do BetterAuth continua fora do documento (não é `createRoute`).
+- **Server Actions remanescentes** (`deleteAlbum`, `createReview`,
+  `deleteReview`) chamam `requireSession()` FORA do `try/catch` de
+  propósito — `requireSession()` usa `redirect()` do Next por baixo, que
+  lança um erro especial (`NEXT_REDIRECT`) que precisa atravessar sem ser
+  capturado; um `catch` genérico ao redor transformaria o redirect num
+  resultado de erro comum.
+- **Teste de isolamento entre contas**: os sete cenários da tarefa 8
+  passaram, incluindo o de cache (usuário A popula o cache de
+  `/books-review`, usuário B carrega a mesma rota na mesma instância do
+  servidor logo em seguida e não vê nada de A — testado nos dois sentidos).
+  Ver relatório da fase 6 para a evidência completa.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -304,7 +389,7 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 | 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | ✅ Concluída |
 | 4.5  | OpenAPI com `@hono/zod-openapi` (`createRoute`, `/api/doc`, `/api/reference`) | ✅ Concluída |
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | ✅ Concluída |
-| 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | Pendente    |
+| 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | ✅ Concluída |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | Pendente    |
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | Pendente    |
 | 9    | Migração `src/template/` → `src/features/<entidade>/`           | Pendente    |
