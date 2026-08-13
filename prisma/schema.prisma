@@ -13,28 +13,28 @@ datasource db {
 }
 
 model Review {
-  id          String @id @default(uuid())
-  title       String
-  author      String
-  categoryId  String
-  rating      Int    @default(1)
-  description String
+  id           String @id @default(uuid())
+  title        String
+  author       String
+  collectionId String @map("collection_id")
+  rating       Int    @default(1)
+  description  String
 
   userId String @map("user_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  category Album @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  user     User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, title])
   @@index([userId, updatedAt(sort: Desc)])
-  @@index([categoryId])
+  @@index([collectionId])
   @@map("reviews")
 }
 
-model Album {
+model Collection {
   id      String   @id @default(uuid())
   title   String
   reviews Review[]
@@ -48,7 +48,7 @@ model Album {
 
   @@unique([userId, title])
   @@index([userId])
-  @@map("albums")
+  @@map("collections")
 }
 
 model User {
@@ -61,7 +61,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
-  albums        Album[]
+  collections   Collection[]
   reviews       Review[]
 
   @@unique([email])
