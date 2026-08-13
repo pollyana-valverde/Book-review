@@ -2,20 +2,21 @@ import "server-only";
 
 /**
  * Tags de cache (`unstable_cache` / `revalidateTag`) para os dados de
- * reviews e albums. Ainda não são por usuário — a fase 6 (ownership) deve
- * receber um `userId` aqui como prefixo (ex.: `${userId}:reviews`) em vez de
- * inventar esse conceito agora.
+ * reviews e albums — por USUÁRIO desde a fase 6 (ownership). Uma tag sem
+ * `userId` faz o cache de um usuário vazar para outro: quem carrega a
+ * página primeiro popularia a entrada que todo mundo depois leria. Por
+ * isso `userId` é obrigatório aqui, não opcional.
  */
-function reviewsTag() {
-  return "reviews";
+function reviewsTag(userId: string) {
+  return `reviews:${userId}`;
 }
 
-function reviewTag(id: string) {
-  return `review:${id}`;
+function reviewTag(userId: string, id: string) {
+  return `review:${userId}:${id}`;
 }
 
-function albumsTag() {
-  return "albums";
+function albumsTag(userId: string) {
+  return `albums:${userId}`;
 }
 
 /**
