@@ -157,7 +157,7 @@ nova versão em produção.
 
 ## Arquitetura de dados
 
-- As operações de escrita usam Server Actions em `src/api/actions`.
+- As operações de escrita usam Server Actions em `src/server/actions`.
 - As consultas sao feitas no servidor com Prisma.
 - O cliente usa React Hook Form + Zod para validação e UX de formulário.
 
