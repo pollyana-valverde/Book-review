@@ -5,6 +5,20 @@ const serverEnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
+  BETTER_AUTH_SECRET: z
+    .string()
+    .min(32, "BETTER_AUTH_SECRET deve ter pelo menos 32 caracteres."),
+  BETTER_AUTH_URL: z
+    .url("BETTER_AUTH_URL deve ser uma URL válida.")
+    .optional(),
+  // Credenciais OAuth são opcionais: o app precisa subir e funcionar com
+  // e-mail/senha mesmo sem elas. Cada provedor social só é registrado em
+  // src/server/auth/auth.ts quando SEU PAR (id + secret) existe por
+  // completo — ver src/server/auth/providers.ts.
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
 });
 
 const clientEnvSchema = z.object({
@@ -21,6 +35,12 @@ function parseServerEnv() {
   const parsed = serverEnvSchema.safeParse({
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
   });
 
   if (!parsed.success) {
@@ -68,6 +88,12 @@ function getServerEnv() {
           NODE_ENV:
             (process.env.NODE_ENV as "development" | "production" | "test") ??
             "development",
+          BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET as string,
+          BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+          GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+          GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+          GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+          GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
         } satisfies z.infer<typeof serverEnvSchema>)
       : parseServerEnv();
   }
@@ -89,6 +115,24 @@ const env = {
   },
   get NODE_ENV() {
     return getServerEnv().NODE_ENV;
+  },
+  get BETTER_AUTH_SECRET() {
+    return getServerEnv().BETTER_AUTH_SECRET;
+  },
+  get BETTER_AUTH_URL() {
+    return getServerEnv().BETTER_AUTH_URL;
+  },
+  get GOOGLE_CLIENT_ID() {
+    return getServerEnv().GOOGLE_CLIENT_ID;
+  },
+  get GOOGLE_CLIENT_SECRET() {
+    return getServerEnv().GOOGLE_CLIENT_SECRET;
+  },
+  get GITHUB_CLIENT_ID() {
+    return getServerEnv().GITHUB_CLIENT_ID;
+  },
+  get GITHUB_CLIENT_SECRET() {
+    return getServerEnv().GITHUB_CLIENT_SECRET;
   },
 };
 
