@@ -33,12 +33,19 @@ async function ReviewListSection({
   collection?: string;
 }) {
   const { user } = (await getSession())!;
-  const { items } = await getReviews(user.id, {
+  const { items, nextCursor } = await getReviews(user.id, {
     title,
     collectionId: collection,
   });
 
-  return <ReviewList reviewsList={items} />;
+  return (
+    <ReviewList
+      reviewsList={items}
+      nextCursor={nextCursor}
+      title={title}
+      collectionId={collection}
+    />
+  );
 }
 
 export { BooksReviewHeader, ReviewListSection };
