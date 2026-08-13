@@ -10,6 +10,7 @@ import {
   type ReviewDTO,
 } from "@/server/modules/reviews/review.contract";
 import { ConflictError, NotFoundError } from "@/server/lib/errors";
+import { sanitizeRichText, toPlainText, toExcerpt } from "@/server/lib/rich-text";
 
 // Services recebem userId como primeiro parâmetro em vez de buscar a
 // sessão sozinhos — quem tem a sessão é a borda (rotas/actions). Isso
@@ -79,8 +80,24 @@ async function create(
     throw new NotFoundError("Coleção não encontrada.");
   }
 
+  // sanitizeRichText é a validação de verdade (Zod só confirmou o
+  // formato estrutural em review.contract.ts); contentText/excerpt são
+  // SEMPRE derivados aqui, nunca aceitos do cliente.
+  const content = sanitizeRichText(data.content);
+  const contentText = toPlainText(content);
+  const excerpt = toExcerpt(contentText);
+
   try {
-    const review = await reviewRepository.create({ ...data, userId });
+    const review = await reviewRepository.create({
+      title: data.title,
+      author: data.author,
+      collectionId: data.collectionId,
+      rating: data.rating,
+      content: content as Prisma.InputJsonValue,
+      contentText,
+      excerpt,
+      userId,
+    });
     return toReviewDTO(review);
   } catch (error) {
     if (
@@ -106,8 +123,20 @@ async function update(
     }
   }
 
+  const { content: rawContent, ...rest } = data;
+  const patch: Parameters<typeof reviewRepository.update>[2] = { ...rest };
+
+  if (rawContent) {
+    const content = sanitizeRichText(rawContent);
+    const contentText = toPlainText(content);
+
+    patch.content = content as Prisma.InputJsonValue;
+    patch.contentText = contentText;
+    patch.excerpt = toExcerpt(contentText);
+  }
+
   try {
-    const { count } = await reviewRepository.update(userId, id, data);
+    const { count } = await reviewRepository.update(userId, id, patch);
 
     if (count === 0) {
       throw new NotFoundError("Resenha não encontrada.");

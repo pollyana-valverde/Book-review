@@ -18,8 +18,19 @@ async function findMany(params: {
   return prisma.review.findMany({
     where: {
       userId,
-      title: title ? { contains: title, mode: "insensitive" } : undefined,
       collectionId,
+      // Busca por título OU pelo texto puro derivado do conteúdo — ver
+      // nota de dívida técnica no relatório da fase 8: sem índice em
+      // content_text, o ILIKE (`contains`) faz um scan completo e fica
+      // lento com volume.
+      ...(title
+        ? {
+            OR: [
+              { title: { contains: title, mode: "insensitive" } },
+              { contentText: { contains: title, mode: "insensitive" } },
+            ],
+          }
+        : {}),
     },
     include: reviewWithCollectionInclude,
     orderBy: { updatedAt: "desc" },
@@ -53,7 +64,9 @@ async function create(data: {
   author: string;
   collectionId: string;
   rating: number;
-  description: string;
+  content: Prisma.InputJsonValue;
+  contentText: string;
+  excerpt: string;
   userId: string;
 }) {
   return prisma.review.create({ data, include: reviewWithCollectionInclude });
@@ -74,7 +87,9 @@ async function update(
     author: string;
     collectionId: string;
     rating: number;
-    description: string;
+    content: Prisma.InputJsonValue;
+    contentText: string;
+    excerpt: string;
   }>
 ) {
   return prisma.review.updateMany({

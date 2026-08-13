@@ -9,7 +9,10 @@ function toReviewDTO(review: ReviewWithCollection): ReviewDTO {
     id: review.id,
     title: review.title,
     author: review.author,
-    description: review.description,
+    // review.content já passou por sanitizeRichText antes de ser
+    // persistido (review.service.ts) — seguro devolver como está.
+    content: review.content as ReviewDTO["content"],
+    excerpt: review.excerpt,
     rating: review.rating,
     collectionId: review.collectionId,
     collectionTitle: review.collection.title,
