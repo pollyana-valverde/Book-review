@@ -130,7 +130,7 @@ function ReviewCard({ review }: { review: ReviewDTO }) {
         </div>
         <Button asChild variant="link" className="p-0 hover:pl-2">
           <Link href={`/books-review/${review.id}`} className="text-primary">
-            Read More &rarr;
+            Ler mais &rarr;
           </Link>
         </Button>
       </CardFooter>

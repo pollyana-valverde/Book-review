@@ -11,7 +11,7 @@ async function HomePageContent() {
     <div className="flex flex-col gap-7">
       <div>
         <Text as="h1" variant="heading-1">
-          Dashboard
+          Painel
         </Text>
         <Text as="p" className="text-muted-foreground">
           Visão geral das suas resenhas

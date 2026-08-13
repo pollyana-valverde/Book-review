@@ -7,7 +7,7 @@ import {
 
 const NAVLINKS = [
   {
-    label: "Dashboard",
+    label: "Painel",
     href: "/",
     icon: LayoutDashboardIcon,
   },

@@ -21,7 +21,7 @@ export default function NotFound() {
         <Button asChild size="lg">
           <Link href="/">
             <LayoutDashboardIcon size={20} />
-            Voltar para Dashboard
+            Voltar para o Painel
           </Link>
         </Button>
       </div>
