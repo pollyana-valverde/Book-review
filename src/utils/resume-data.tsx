@@ -1,4 +1,4 @@
-import { getAlbums } from "@/server/modules/albums/album.queries";
+import { getCollections } from "@/server/modules/collections/collection.queries";
 import { getAllReviews } from "@/server/modules/reviews/review.queries";
 import { getSession } from "@/server/auth/session";
 import {
@@ -10,8 +10,8 @@ import {
 
 async function getResumeData() {
   const { user } = (await getSession())!;
-  const [albums, reviews] = await Promise.all([
-    getAlbums(user.id),
+  const [collections, reviews] = await Promise.all([
+    getCollections(user.id),
     getAllReviews(user.id),
   ]);
   const currentDate = new Date();
@@ -42,8 +42,8 @@ async function getResumeData() {
       },
     },
     {
-      total: albums.length,
-      label: "Albums",
+      total: collections.length,
+      label: "Coleções",
       iconComponent: {
         icon: FolderOpenIcon,
         color: "bg-purple-50 text-purple-500",

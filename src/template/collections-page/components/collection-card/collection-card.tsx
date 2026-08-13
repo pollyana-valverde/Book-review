@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { deleteAlbum } from "@/server/actions";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
-import type { AlbumWithReviewCountDTO } from "@/server/modules/albums/album.contract";
+import { deleteCollection } from "@/server/actions";
+import { getCollectionBadgeColor } from "@/lib/collection-badge-color";
+import type { CollectionWithReviewCountDTO } from "@/server/modules/collections/collection.contract";
 
 import {
   Card,
@@ -32,25 +32,25 @@ import { Button } from "@/components/ui/button";
 import { BookOpenIcon, Trash2Icon as DeleteIcon } from "lucide-react";
 import { toast } from "sonner";
 
-interface AlbumCardDTO {
-  album: AlbumWithReviewCountDTO;
+interface CollectionCardDTO {
+  collection: CollectionWithReviewCountDTO;
 }
 
-function DeleteAlbumDialog({ id }: { id: string }) {
+function DeleteCollectionDialog({ id }: { id: string }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete() {
     setIsDeleting(true);
 
-    const deletedAlbum = await deleteAlbum(id);
+    const deletedCollection = await deleteCollection(id);
 
-    if (deletedAlbum.error) {
-      toast.error(deletedAlbum.error);
+    if (deletedCollection.error) {
+      toast.error(deletedCollection.error);
       setIsDeleting(false);
       return;
     }
 
-    toast.success("Álbum deletado com sucesso!");
+    toast.success("Coleção deletada com sucesso!");
     setIsDeleting(false);
   }
 
@@ -64,9 +64,9 @@ function DeleteAlbumDialog({ id }: { id: string }) {
           <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
             <DeleteIcon />
           </AlertDialogMedia>
-          <AlertDialogTitle>Deletar Álbum?</AlertDialogTitle>
+          <AlertDialogTitle>Deletar Coleção?</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja deletar este álbum? Esta ação não pode ser
+            Tem certeza que deseja deletar esta coleção? Esta ação não pode ser
             desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -85,26 +85,26 @@ function DeleteAlbumDialog({ id }: { id: string }) {
   );
 }
 
-function AlbumCard({ album }: AlbumCardDTO) {
-  const booksInThisAlbum = album.reviewsCount;
+function CollectionCard({ collection }: CollectionCardDTO) {
+  const booksInThisCollection = collection.reviewsCount;
 
   return (
     <Card className="gap-2">
       <CardHeader className="gap-3">
         <CardTitle className="flex justify-between items-start gap-4 w-full">
-          <Badge style={getAlbumBadgeColor(album.id || album.title)} size="lg">
-            {album.title}
+          <Badge style={getCollectionBadgeColor(collection.id || collection.title)} size="lg">
+            {collection.title}
           </Badge>
-          <DeleteAlbumDialog id={album.id} />
+          <DeleteCollectionDialog id={collection.id} />
         </CardTitle>
 
         <CardDescription className="flex gap-1.5 items-center">
           <BookOpenIcon className="w-4 h-4" />
           <Text as="p" variant="content-1" className="text-muted-foreground">
-            {booksInThisAlbum >= 1 && booksInThisAlbum}{" "}
-            {booksInThisAlbum > 1 && "livros"}
-            {booksInThisAlbum === 1 && "livro"}
-            {booksInThisAlbum === 0 && "Nenhum livro"}
+            {booksInThisCollection >= 1 && booksInThisCollection}{" "}
+            {booksInThisCollection > 1 && "livros"}
+            {booksInThisCollection === 1 && "livro"}
+            {booksInThisCollection === 0 && "Nenhum livro"}
           </Text>
         </CardDescription>
       </CardHeader>
@@ -112,7 +112,7 @@ function AlbumCard({ album }: AlbumCardDTO) {
       <CardFooter>
         <Button asChild variant="link" className="p-0 hover:pl-2">
           <Link
-            href={`/books-review?title=&&category=${encodeURIComponent(album.id)}`}
+            href={`/books-review?title=&&collection=${encodeURIComponent(collection.id)}`}
           >
             Ver resenhas &rarr;
           </Link>
@@ -122,4 +122,4 @@ function AlbumCard({ album }: AlbumCardDTO) {
   );
 }
 
-export { AlbumCard };
+export { CollectionCard };

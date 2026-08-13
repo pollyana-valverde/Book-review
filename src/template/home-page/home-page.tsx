@@ -4,7 +4,7 @@ import { HomeSkeleton } from "./components/home-skeleton";
 import { Text } from "@/components/ui/text";
 import { RecentReviewList } from "@/template/home-page/components/recent-review-list";
 import { ResumeList } from "@/template/home-page/components/resume-list";
-import { AlbumsBooksList } from "@/template/home-page/components/albums-books-list";
+import { CollectionsBooksList } from "@/template/home-page/components/collections-books-list";
 
 async function HomePageContent() {
   return (
@@ -30,9 +30,9 @@ async function HomePageContent() {
 
         <div className="space-y-3">
           <Text as="h3" variant="heading-3">
-            Álbuns
+            Coleções
           </Text>
-          <AlbumsBooksList />
+          <CollectionsBooksList />
         </div>
       </div>
     </div>

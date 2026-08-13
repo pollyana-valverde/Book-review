@@ -6,7 +6,7 @@ import {
   pushWithParams,
   setOrDeleteParam,
 } from "@/template/books-review-page/lib";
-import type { AlbumDTO } from "@/server/modules/albums/album.contract";
+import type { CollectionDTO } from "@/server/modules/collections/collection.contract";
 
 import { Field } from "@/components/ui/field";
 import {
@@ -26,12 +26,12 @@ import {
 
 import { CircleXIcon, SearchIcon } from "lucide-react";
 
-function SearchSection({ albums }: { albums: AlbumDTO[] }) {
+function SearchSection({ collections }: { collections: CollectionDTO[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchQueryTitle = searchParams.get("title") || "";
-  const searchQueryCategory = searchParams.get("category") || "";
+  const searchQueryCollection = searchParams.get("collection") || "";
 
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLFormElement>) => {
@@ -40,11 +40,11 @@ function SearchSection({ albums }: { albums: AlbumDTO[] }) {
       const newQuery = new URLSearchParams(searchParams.toString());
 
       setOrDeleteParam(newQuery, "title", searchQueryTitle);
-      setOrDeleteParam(newQuery, "category", searchQueryCategory);
+      setOrDeleteParam(newQuery, "collection", searchQueryCollection);
 
       pushWithParams(router, pathname, newQuery);
     },
-    [pathname, router, searchParams, searchQueryCategory, searchQueryTitle]
+    [pathname, router, searchParams, searchQueryCollection, searchQueryTitle]
   );
 
   const handleQueryTitleChange = (
@@ -58,10 +58,10 @@ function SearchSection({ albums }: { albums: AlbumDTO[] }) {
     pushWithParams(router, pathname, newQuery);
   };
 
-  const handleQueryCategoryChange = (selectedAlbum: AlbumDTO["id"]) => {
+  const handleQueryCollectionChange = (selectedCollection: CollectionDTO["id"]) => {
     const newQuery = new URLSearchParams(searchParams.toString());
 
-    setOrDeleteParam(newQuery, "category", selectedAlbum);
+    setOrDeleteParam(newQuery, "collection", selectedCollection);
 
     pushWithParams(router, pathname, newQuery);
   };
@@ -99,19 +99,19 @@ function SearchSection({ albums }: { albums: AlbumDTO[] }) {
       </Field>
 
       <Select
-        onValueChange={handleQueryCategoryChange}
-        value={searchQueryCategory || "all"}
+        onValueChange={handleQueryCollectionChange}
+        value={searchQueryCollection || "all"}
       >
         <SelectTrigger className="w-full md:max-w-56">
-          <SelectValue placeholder="Select a category" />
+          <SelectValue placeholder="Select a collection" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectLabel>Categories</SelectLabel>
+            <SelectLabel>Collections</SelectLabel>
             <SelectItem value="all">Todas</SelectItem>
-            {albums.map((album) => (
-              <SelectItem key={album.id} value={album.id}>
-                {album.title}
+            {collections.map((collection) => (
+              <SelectItem key={collection.id} value={collection.id}>
+                {collection.title}
               </SelectItem>
             ))}
           </SelectGroup>

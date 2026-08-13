@@ -7,9 +7,9 @@ import { useRouter } from "next/navigation";
 import { rpc } from "@/lib/rpc";
 import { readRpcError } from "@/lib/rpc-error";
 import {
-  createAlbumSchema,
-  type CreateAlbumInput,
-} from "@/server/modules/albums/album.contract";
+  createCollectionSchema,
+  type CreateCollectionInput,
+} from "@/server/modules/collections/collection.contract";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 
 import { toast } from "sonner";
 
-function AlbumForm() {
+function CollectionForm() {
   const router = useRouter();
   const {
     register,
@@ -25,15 +25,15 @@ function AlbumForm() {
     setError,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CreateAlbumInput>({
-    resolver: zodResolver(createAlbumSchema),
+  } = useForm<CreateCollectionInput>({
+    resolver: zodResolver(createCollectionSchema),
     defaultValues: {
       title: "",
     },
   });
 
-  async function onSubmit(data: CreateAlbumInput) {
-    const res = await rpc.api.albums.$post({ json: data });
+  async function onSubmit(data: CreateCollectionInput) {
+    const res = await rpc.api.collections.$post({ json: data });
 
     if (!res.ok) {
       const error = await readRpcError(res);
@@ -41,7 +41,7 @@ function AlbumForm() {
       return;
     }
 
-    toast.success("Álbum criado com sucesso!");
+    toast.success("Coleção criada com sucesso!");
     reset();
     router.refresh();
   }
@@ -50,11 +50,11 @@ function AlbumForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="flex gap-2" noValidate>
       <Field className="flex-1">
         <FieldLabel htmlFor="title" className="sr-only">
-          Nome do álbum
+          Nome da coleção
         </FieldLabel>
         <Input
           id="title"
-          placeholder="Nome do novo álbum..."
+          placeholder="Nome da nova coleção..."
           aria-invalid={!!(errors.title || errors.root)}
           {...register("title")}
         />
@@ -67,4 +67,4 @@ function AlbumForm() {
   );
 }
 
-export { AlbumForm };
+export { CollectionForm };

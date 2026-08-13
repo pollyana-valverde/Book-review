@@ -17,9 +17,9 @@ export default async function BooksReview({
   const title = Array.isArray(rawParams.title)
     ? rawParams.title[0]
     : rawParams.title;
-  const category = Array.isArray(rawParams.category)
-    ? rawParams.category[0]
-    : rawParams.category;
+  const collection = Array.isArray(rawParams.collection)
+    ? rawParams.collection[0]
+    : rawParams.collection;
 
   return (
     <div className="flex flex-col gap-4">
@@ -27,10 +27,10 @@ export default async function BooksReview({
         <BooksReviewHeader />
       </Suspense>
       <Suspense
-        key={`${title ?? ""}-${category ?? ""}`}
+        key={`${title ?? ""}-${collection ?? ""}`}
         fallback={<ReviewSkeleton />}
       >
-        <ReviewListSection title={title} category={category} />
+        <ReviewListSection title={title} collection={collection} />
       </Suspense>
     </div>
   );

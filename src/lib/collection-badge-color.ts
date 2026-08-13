@@ -1,4 +1,4 @@
-function getAlbumHash(seed: string) {
+function getCollectionHash(seed: string) {
   let hash = 0;
 
   for (let i = 0; i < seed.length; i += 1) {
@@ -8,8 +8,8 @@ function getAlbumHash(seed: string) {
   return hash;
 }
 
-function getAlbumBadgeColor(seed: string) {
-  const hue = getAlbumHash(seed) % 360;
+function getCollectionBadgeColor(seed: string) {
+  const hue = getCollectionHash(seed) % 360;
 
   return {
     backgroundColor: `hsl(${hue} 100% 96%)`,
@@ -18,4 +18,4 @@ function getAlbumBadgeColor(seed: string) {
   };
 }
 
-export { getAlbumBadgeColor };
+export { getCollectionBadgeColor };

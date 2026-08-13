@@ -1,4 +1,4 @@
-import { getAlbums } from "@/server/modules/albums/album.queries";
+import { getCollections } from "@/server/modules/collections/collection.queries";
 import { getReviews } from "@/server/modules/reviews/review.queries";
 import { getSession } from "@/server/auth/session";
 
@@ -8,7 +8,7 @@ import { SearchSection } from "@/template/books-review-page/components/review-se
 
 async function BooksReviewHeader() {
   const { user } = (await getSession())!;
-  const albums = await getAlbums(user.id);
+  const collections = await getCollections(user.id);
 
   return (
     <>
@@ -20,20 +20,23 @@ async function BooksReviewHeader() {
           Todas as suas resenhas de livros
         </Text>
       </div>
-      <SearchSection albums={albums} />
+      <SearchSection collections={collections} />
     </>
   );
 }
 
 async function ReviewListSection({
   title,
-  category,
+  collection,
 }: {
   title?: string;
-  category?: string;
+  collection?: string;
 }) {
   const { user } = (await getSession())!;
-  const { items } = await getReviews(user.id, { title, categoryId: category });
+  const { items } = await getReviews(user.id, {
+    title,
+    collectionId: collection,
+  });
 
   return <ReviewList reviewsList={items} />;
 }

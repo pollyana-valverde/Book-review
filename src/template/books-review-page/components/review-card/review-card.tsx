@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { deleteReview } from "@/server/actions";
 import { ReviewDTO } from "@/template/books-review-page/types";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import { getCollectionBadgeColor } from "@/lib/collection-badge-color";
 
 import {
   Card,
@@ -101,10 +101,10 @@ function ReviewCard({ review }: { review: ReviewDTO }) {
 
         <CardAction className="flex flex-wrap gap-1">
           <Badge
-            key={review.categoryId}
-            style={getAlbumBadgeColor(review.categoryId)}
+            key={review.collectionId}
+            style={getCollectionBadgeColor(review.collectionId)}
           >
-            {review.categoryTitle}
+            {review.collectionTitle}
           </Badge>
         </CardAction>
 

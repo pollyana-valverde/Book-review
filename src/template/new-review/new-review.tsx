@@ -1,4 +1,4 @@
-import { getAlbums } from "@/server/modules/albums/album.queries";
+import { getCollections } from "@/server/modules/collections/collection.queries";
 import { getSession } from "@/server/auth/session";
 
 import { Text } from "@/components/ui/text";
@@ -8,7 +8,7 @@ import { BookOpenIcon } from "lucide-react";
 
 async function NewReviewPage() {
   const { user } = (await getSession())!;
-  const albums = await getAlbums(user.id);
+  const collections = await getCollections(user.id);
 
   return (
     <div className="flex flex-col gap-7">
@@ -26,7 +26,7 @@ async function NewReviewPage() {
         </div>
       </div>
 
-      <NewReviewForm albumsList={albums} />
+      <NewReviewForm collectionsList={collections} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-function AlbumSkeleton() {
+function CollectionSkeleton() {
   return (
     <div className="animate-pulse flex flex-col gap-8">
       <div className="flex justify-between items-end">
@@ -20,4 +20,4 @@ function AlbumSkeleton() {
   );
 }
 
-export { AlbumSkeleton };
+export { CollectionSkeleton };

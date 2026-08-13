@@ -8,11 +8,11 @@ import {
   type CreateReviewInput,
   createReviewSchema,
 } from "@/server/modules/reviews/review.contract";
-import type { AlbumDTO } from "@/server/modules/albums/album.contract";
+import type { CollectionDTO } from "@/server/modules/collections/collection.contract";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import { getCollectionBadgeColor } from "@/lib/collection-badge-color";
 
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
@@ -33,24 +33,24 @@ import { toast } from "sonner";
 import { StarIcon } from "lucide-react";
 
 interface NewReviewFormProps {
-  albumsList: AlbumDTO[];
+  collectionsList: CollectionDTO[];
 }
 
-function NewReviewForm({ albumsList }: NewReviewFormProps) {
+function NewReviewForm({ collectionsList }: NewReviewFormProps) {
   const form = useForm<CreateReviewInput>({
     resolver: zodResolver(createReviewSchema),
     defaultValues: {
       title: "",
       author: "",
-      categoryId: "",
+      collectionId: "",
       rating: 0,
       description: "",
     },
   });
 
-  const selectedAlbum = useWatch({
+  const selectedCollection = useWatch({
     control: form.control,
-    name: "categoryId",
+    name: "collectionId",
   });
 
   const selectedRating = useWatch({
@@ -127,31 +127,31 @@ function NewReviewForm({ albumsList }: NewReviewFormProps) {
 
         <FormField
           control={form.control}
-          name="categoryId"
+          name="collectionId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="categoryId" className="text-muted-foreground">
-                Álbum
+              <FormLabel htmlFor="collectionId" className="text-muted-foreground">
+                Coleção
               </FormLabel>
               <FormControl>
                 <div className="flex flex-wrap gap-2">
-                  {albumsList?.map((album) => (
+                  {collectionsList?.map((collection) => (
                     <Badge
-                      style={getAlbumBadgeColor(album.id || album.title)}
+                      style={getCollectionBadgeColor(collection.id || collection.title)}
                       className={cn(
                         "border cursor-pointer",
-                        selectedAlbum === album.id
+                        selectedCollection === collection.id
                           ? "ring-2 ring-offset-2 ring-current"
                           : ""
                       )}
                       size="lg"
-                      key={album.id}
+                      key={collection.id}
                       onClick={(event) => {
                         event.preventDefault();
-                        field.onChange(album.id);
+                        field.onChange(collection.id);
                       }}
                     >
-                      {album.title}
+                      {collection.title}
                     </Badge>
                   ))}
                 </div>

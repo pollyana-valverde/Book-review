@@ -2,7 +2,7 @@ import { getReviewById } from "@/server/modules/reviews/review.queries";
 import { getSession } from "@/server/auth/session";
 import { NotFoundError } from "@/server/lib/errors";
 import Link from "next/link";
-import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import { getCollectionBadgeColor } from "@/lib/collection-badge-color";
 import { notFound } from "next/navigation";
 
 import { Text } from "@/components/ui/text";
@@ -79,10 +79,10 @@ async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
 
           <CardAction className="flex flex-wrap gap-3">
             <Badge
-              key={reviewDetail.categoryId}
-              style={getAlbumBadgeColor(reviewDetail.categoryId)}
+              key={reviewDetail.collectionId}
+              style={getCollectionBadgeColor(reviewDetail.collectionId)}
             >
-              {reviewDetail.categoryTitle}
+              {reviewDetail.collectionTitle}
             </Badge>
 
             <div className="flex gap-0.5 items-center">{bookStars}</div>
