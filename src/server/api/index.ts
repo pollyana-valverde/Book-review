@@ -12,6 +12,18 @@ import type { AppEnv } from "@/server/api/factory";
 
 const app = new OpenAPIHono<AppEnv>().basePath("/api").onError(errorHandler);
 
+// Security scheme documentado no OpenAPI (fase 6): as rotas de review e
+// album agora exigem sessão. O handler do BetterAuth (montado abaixo,
+// fora da cadeia .route()) fica de fora do documento de propósito — ver
+// comentário mais adiante.
+app.openAPIRegistry.registerComponent("securitySchemes", "cookieAuth", {
+  type: "apiKey",
+  in: "cookie",
+  name: "better-auth.session_token",
+  description:
+    "Cookie de sessão HttpOnly do BetterAuth. Obtido via POST /api/auth/sign-in/email (ou login social) — não pode ser lido/setado por JavaScript no cliente.",
+});
+
 // A doc e a UI de referência só existem fora de produção: uma API que vai
 // ficar autenticada na fase 5 não deve expor o próprio mapa publicamente.
 const docsEnabled = env.NODE_ENV !== "production";

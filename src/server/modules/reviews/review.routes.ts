@@ -31,6 +31,7 @@ const listRoute = createRoute({
   tags: ["Reviews"],
   summary: "Lista resenhas",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   request: { query: listReviewsQueryOpenApiSchema },
   responses: {
     200: {
@@ -40,6 +41,10 @@ const listRoute = createRoute({
     400: {
       content: { "application/json": { schema: errorSchema } },
       description: "Query inválida",
+    },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -54,6 +59,7 @@ const getByIdRoute = createRoute({
   tags: ["Reviews"],
   summary: "Busca uma resenha por id",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   request: { params: reviewIdParamSchema },
   responses: {
     200: {
@@ -63,6 +69,10 @@ const getByIdRoute = createRoute({
     404: {
       content: { "application/json": { schema: errorSchema } },
       description: "Resenha não encontrada",
+    },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -77,6 +87,7 @@ const createReviewRoute = createRoute({
   tags: ["Reviews"],
   summary: "Cria uma resenha",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   request: {
     body: { content: { "application/json": { schema: createReviewBodySchema } } },
   },
@@ -93,6 +104,10 @@ const createReviewRoute = createRoute({
       content: { "application/json": { schema: errorSchema } },
       description: "Já existe uma resenha para este livro",
     },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
+    },
     500: {
       content: { "application/json": { schema: errorSchema } },
       description: "Erro interno",
@@ -106,6 +121,7 @@ const updateReviewRoute = createRoute({
   tags: ["Reviews"],
   summary: "Atualiza uma resenha",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   request: {
     params: reviewIdParamSchema,
     body: { content: { "application/json": { schema: updateReviewBodySchema } } },
@@ -127,6 +143,10 @@ const updateReviewRoute = createRoute({
       content: { "application/json": { schema: errorSchema } },
       description: "Já existe uma resenha para este livro",
     },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
+    },
     500: {
       content: { "application/json": { schema: errorSchema } },
       description: "Erro interno",
@@ -140,12 +160,17 @@ const removeReviewRoute = createRoute({
   tags: ["Reviews"],
   summary: "Remove uma resenha",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   request: { params: reviewIdParamSchema },
   responses: {
     204: { description: "Resenha removida" },
     404: {
       content: { "application/json": { schema: errorSchema } },
       description: "Resenha não encontrada",
+    },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },

@@ -29,10 +29,15 @@ const listRoute = createRoute({
   tags: ["Albums"],
   summary: "Lista álbuns",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   responses: {
     200: {
       content: { "application/json": { schema: albumsListResponseSchema } },
       description: "Lista de álbuns",
+    },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
@@ -47,6 +52,7 @@ const createAlbumRoute = createRoute({
   tags: ["Albums"],
   summary: "Cria um álbum",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   request: {
     body: { content: { "application/json": { schema: createAlbumBodySchema } } },
   },
@@ -63,6 +69,10 @@ const createAlbumRoute = createRoute({
       content: { "application/json": { schema: errorSchema } },
       description: "Já existe um álbum com este título",
     },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
+    },
     500: {
       content: { "application/json": { schema: errorSchema } },
       description: "Erro interno",
@@ -76,12 +86,17 @@ const removeAlbumRoute = createRoute({
   tags: ["Albums"],
   summary: "Remove um álbum",
   middleware: authMiddleware,
+  security: [{ cookieAuth: [] }],
   request: { params: albumIdParamSchema },
   responses: {
     204: { description: "Álbum removido" },
     404: {
       content: { "application/json": { schema: errorSchema } },
       description: "Álbum não encontrado",
+    },
+    401: {
+      content: { "application/json": { schema: errorSchema } },
+      description: "Não autenticado",
     },
     500: {
       content: { "application/json": { schema: errorSchema } },
