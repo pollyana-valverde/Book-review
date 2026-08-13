@@ -511,6 +511,17 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
   válido: a resposta e o banco mostram os valores derivados do `content`
   real, não os enviados.
 
+## Redefinição da fase 9 (era migração de pastas, virou polimento)
+
+A fase 9 original era só "migração `src/template/` → `src/features/`". O
+usuário pediu, sob o nome "fase 9", um escopo diferente: acessibilidade
+(rating e seleção de coleção como `radiogroup`), performance de interação
+(debounce na busca), idioma consistente, paginação, estados de erro/vazio e
+`metadata`. Confirmado explicitamente com o usuário que a intenção era
+redefinir a fase 9 para esse escopo, não abrir uma fase não numerada — a
+migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
+(fase 10), que já estava planejada e não deveria perder a posição.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -524,5 +535,6 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 | 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | ✅ Concluída |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | ✅ Concluída |
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | ✅ Concluída |
-| 9    | Migração `src/template/` → `src/features/<entidade>/`           | Pendente    |
+| 9    | Polimento: acessibilidade, performance de interação, idioma, estados de erro/vazio, metadata | Pendente    |
 | 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | Pendente    |
+| 11   | Migração `src/template/` → `src/features/<entidade>/` (redefinida a partir da fase 9 original) | Pendente    |
