@@ -16,7 +16,7 @@ import { requireSession } from "@/server/auth/session";
 
 async function createReview(data: CreateReviewInput): Promise<ActionResult> {
   // Fora do try/catch de propósito: ver o comentário equivalente em
-  // album-actions.ts sobre requireSession() e redirect().
+  // collection-actions.ts sobre requireSession() e redirect().
   const { user } = await requireSession();
 
   try {

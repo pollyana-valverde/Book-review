@@ -2,36 +2,36 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db/prisma";
 
-const albumWithReviewCountInclude = {
+const collectionWithReviewCountInclude = {
   _count: { select: { reviews: true } },
-} satisfies Prisma.AlbumInclude;
+} satisfies Prisma.CollectionInclude;
 
 async function findMany(userId: string) {
-  return prisma.album.findMany({
+  return prisma.collection.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
   });
 }
 
 async function findManyWithReviewCount(userId: string) {
-  return prisma.album.findMany({
+  return prisma.collection.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    include: albumWithReviewCountInclude,
+    include: collectionWithReviewCountInclude,
   });
 }
 
 /**
  * Usado pelo review.service para validar, antes de criar uma resenha, que
- * o álbum informado pertence ao mesmo usuário — sem isso alguém consegue
- * colocar uma resenha dentro do álbum de outra pessoa.
+ * a coleção informada pertence ao mesmo usuário — sem isso alguém consegue
+ * colocar uma resenha dentro da coleção de outra pessoa.
  */
 async function findById(userId: string, id: string) {
-  return prisma.album.findFirst({ where: { id, userId } });
+  return prisma.collection.findFirst({ where: { id, userId } });
 }
 
 async function create(data: { title: string; userId: string }) {
-  return prisma.album.create({ data });
+  return prisma.collection.create({ data });
 }
 
 /**
@@ -39,11 +39,11 @@ async function create(data: { title: string; userId: string }) {
  * equivalente em review.repository.ts.
  */
 async function remove(userId: string, id: string) {
-  return prisma.album.deleteMany({ where: { id, userId } });
+  return prisma.collection.deleteMany({ where: { id, userId } });
 }
 
 export {
-  albumWithReviewCountInclude,
+  collectionWithReviewCountInclude,
   findMany,
   findManyWithReviewCount,
   findById,

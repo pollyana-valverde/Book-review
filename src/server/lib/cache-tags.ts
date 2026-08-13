@@ -2,8 +2,8 @@ import "server-only";
 
 /**
  * Tags de cache (`unstable_cache` / `revalidateTag`) para os dados de
- * reviews e albums — por USUÁRIO desde a fase 6 (ownership). Uma tag sem
- * `userId` faz o cache de um usuário vazar para outro: quem carrega a
+ * reviews e collections — por USUÁRIO desde a fase 6 (ownership). Uma tag
+ * sem `userId` faz o cache de um usuário vazar para outro: quem carrega a
  * página primeiro popularia a entrada que todo mundo depois leria. Por
  * isso `userId` é obrigatório aqui, não opcional.
  */
@@ -15,8 +15,8 @@ function reviewTag(userId: string, id: string) {
   return `review:${userId}:${id}`;
 }
 
-function albumsTag(userId: string) {
-  return `albums:${userId}`;
+function collectionsTag(userId: string) {
+  return `collections:${userId}`;
 }
 
 /**
@@ -38,4 +38,4 @@ function albumsTag(userId: string) {
  */
 const REVALIDATE_NOW = { expire: 0 } as const;
 
-export { reviewsTag, reviewTag, albumsTag, REVALIDATE_NOW };
+export { reviewsTag, reviewTag, collectionsTag, REVALIDATE_NOW };
