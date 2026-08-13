@@ -41,7 +41,3 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
-
-# gerados automaticamente pelo Next 16 em `pnpm dev`
-/AGENTS.md
-/CLAUDE.md
