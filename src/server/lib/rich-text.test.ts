@@ -113,4 +113,12 @@ describe("toExcerpt", () => {
       "linha um linha dois linha três"
     );
   });
+
+  it("sem espaço para cortar (uma palavra só maior que o limite), corta cru", () => {
+    const oneLongWord = "a".repeat(200);
+
+    const excerpt = toExcerpt(oneLongWord, 50);
+
+    expect(excerpt).toBe(`${"a".repeat(50)}…`);
+  });
 });

@@ -8,6 +8,7 @@ vi.mock("@/server/modules/reviews/review.repository", () =>
 );
 
 import * as collectionService from "@/server/modules/collections/collection.service";
+import * as collectionRepository from "@/server/modules/collections/collection.repository";
 import * as reviewService from "@/server/modules/reviews/review.service";
 import { resetFakeDb } from "@/server/test-support/fake-db-instance";
 import { validContent } from "@/server/test-support/fixtures";
@@ -35,6 +36,15 @@ describe("collection.service.create", () => {
     await expect(
       collectionService.create(USER_B, { title: "Ficção" })
     ).resolves.toMatchObject({ title: "Ficção" });
+  });
+
+  it("propaga sem alterar um erro do repository que não é P2002", async () => {
+    const boom = new Error("falha de conexão simulada");
+    vi.spyOn(collectionRepository, "create").mockRejectedValueOnce(boom);
+
+    await expect(
+      collectionService.create(USER_A, { title: "Ficção" })
+    ).rejects.toBe(boom);
   });
 });
 
@@ -66,6 +76,14 @@ describe("collection.service.remove", () => {
     await expect(collectionService.remove(USER_B, collection.id)).rejects.toBeInstanceOf(
       NotFoundError
     );
+  });
+
+  it("propaga sem alterar um erro do repository que não é P2003", async () => {
+    const collection = await collectionService.create(USER_A, { title: "Ficção" });
+    const boom = new Error("falha de conexão simulada");
+    vi.spyOn(collectionRepository, "remove").mockRejectedValueOnce(boom);
+
+    await expect(collectionService.remove(USER_A, collection.id)).rejects.toBe(boom);
   });
 });
 

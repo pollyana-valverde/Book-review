@@ -8,6 +8,7 @@ vi.mock("@/server/modules/collections/collection.repository", () =>
 );
 
 import * as reviewService from "@/server/modules/reviews/review.service";
+import * as reviewRepository from "@/server/modules/reviews/review.repository";
 import * as collectionService from "@/server/modules/collections/collection.service";
 import { fakeDb, resetFakeDb } from "@/server/test-support/fake-db-instance";
 import { validContent } from "@/server/test-support/fixtures";
@@ -124,6 +125,22 @@ describe("review.service.create", () => {
       })
     ).rejects.toBeInstanceOf(ValidationError);
   });
+
+  it("propaga sem alterar um erro do repository que não é P2002", async () => {
+    const collection = await seedCollection(USER_A);
+    const boom = new Error("falha de conexão simulada");
+    vi.spyOn(reviewRepository, "create").mockRejectedValueOnce(boom);
+
+    await expect(
+      reviewService.create(USER_A, {
+        title: "Duna",
+        author: "Frank Herbert",
+        collectionId: collection.id,
+        rating: 5,
+        content: validContent(),
+      })
+    ).rejects.toBe(boom);
+  });
 });
 
 describe("review.service.update", () => {
@@ -145,6 +162,93 @@ describe("review.service.update", () => {
     const stored = fakeDb.reviews.find((r) => r.id === created.id);
     expect(stored?.contentText).toBe("texto original");
   });
+
+  it("com content novo, sanitiza e regenera contentText/excerpt", async () => {
+    const collection = await seedCollection(USER_A);
+    const created = await reviewService.create(USER_A, {
+      title: "Duna",
+      author: "Frank Herbert",
+      collectionId: collection.id,
+      rating: 5,
+      content: validContent("texto original"),
+    });
+
+    const updated = await reviewService.update(USER_A, created.id, {
+      content: validContent("texto atualizado"),
+    });
+
+    expect(updated.excerpt).toBe("texto atualizado");
+  });
+
+  it("com collectionId que não pertence ao usuário dá NotFoundError", async () => {
+    const collection = await seedCollection(USER_A);
+    const created = await reviewService.create(USER_A, {
+      title: "Duna",
+      author: "Frank Herbert",
+      collectionId: collection.id,
+      rating: 5,
+      content: validContent(),
+    });
+    const collectionOfB = await seedCollection(USER_B);
+
+    await expect(
+      reviewService.update(USER_A, created.id, { collectionId: collectionOfB.id })
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("de resenha inexistente/de outro usuário dá NotFoundError", async () => {
+    const collection = await seedCollection(USER_A);
+    const created = await reviewService.create(USER_A, {
+      title: "Duna",
+      author: "Frank Herbert",
+      collectionId: collection.id,
+      rating: 5,
+      content: validContent(),
+    });
+
+    await expect(
+      reviewService.update(USER_B, created.id, { rating: 1 })
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("para um título que já existe em outra resenha do mesmo usuário dá ConflictError", async () => {
+    const collection = await seedCollection(USER_A);
+    await reviewService.create(USER_A, {
+      title: "Duna",
+      author: "Frank Herbert",
+      collectionId: collection.id,
+      rating: 5,
+      content: validContent(),
+    });
+    const other = await reviewService.create(USER_A, {
+      title: "Fundação",
+      author: "Isaac Asimov",
+      collectionId: collection.id,
+      rating: 4,
+      content: validContent(),
+    });
+
+    await expect(
+      reviewService.update(USER_A, other.id, { title: "Duna" })
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("propaga sem alterar um erro do repository que não é P2002/NotFoundError", async () => {
+    const collection = await seedCollection(USER_A);
+    const created = await reviewService.create(USER_A, {
+      title: "Duna",
+      author: "Frank Herbert",
+      collectionId: collection.id,
+      rating: 5,
+      content: validContent(),
+    });
+    const boom = new Error("falha de conexão simulada");
+    vi.spyOn(reviewRepository, "update").mockRejectedValueOnce(boom);
+
+    await expect(
+      reviewService.update(USER_A, created.id, { rating: 2 })
+    ).rejects.toBe(boom);
+  });
 });
 
 describe("review.service.getById", () => {
@@ -161,6 +265,22 @@ describe("review.service.getById", () => {
     await expect(reviewService.getById(USER_B, created.id)).rejects.toBeInstanceOf(
       NotFoundError
     );
+  });
+
+  it("devolve a resenha quando pertence ao usuário", async () => {
+    const collection = await seedCollection(USER_A);
+    const created = await reviewService.create(USER_A, {
+      title: "Duna",
+      author: "Frank Herbert",
+      collectionId: collection.id,
+      rating: 5,
+      content: validContent("texto"),
+    });
+
+    await expect(reviewService.getById(USER_A, created.id)).resolves.toMatchObject({
+      id: created.id,
+      title: "Duna",
+    });
   });
 });
 
