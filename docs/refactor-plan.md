@@ -136,9 +136,7 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
   fora o trabalho quando o formulário for reescrito. As duas abordagens
   (RPC no álbum, Server Action na resenha) coexistindo é transitório e
   intencional.
-- **OpenAPI pendente**: a escolha entre `@hono/zod-openapi` (o que o plano
-  original previa) e `hono-openapi` não foi feita nesta fase — fica como um
-  passo próprio dentro da fase 10.
+- **OpenAPI**: decidido na fase 4.5 — ver seção própria abaixo.
 - **Verificação pós-fase (fase 4.5, tarefa 0a)**: `DATABASE_URL="" pnpm
   build` continua falhando com mensagem clara mesmo com os getters lazy de
   `src/lib/env.ts`. Motivo: `src/server/db/prisma.ts` lê `env.DATABASE_URL`
@@ -148,6 +146,47 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
   primeiro acesso real, e esse acesso acontece de qualquer forma durante o
   build. Não foi necessário separar `env.server.ts`/`env.client.ts`.
 
+## OpenAPI com @hono/zod-openapi (fase 4.5)
+
+- **Decisão**: `@hono/zod-openapi` (versão instalada: **1.5.2**). É a
+  mesma lib que o plano original (linha "Docs" no topo deste documento) já
+  prevesse — a preocupação histórica de que ela dependesse de uma versão de
+  `@asteasolutions/zod-to-openapi` presa ao Zod 3 **não se aplica mais**:
+  1.5.2 declara `peerDependencies.zod: "^4.0.0"` e usa
+  `@asteasolutions/zod-to-openapi@^8.5.0`, que por sua vez também declara
+  `peerDependencies.zod: "^4.0.0"`. Confirmado com `npm view` antes de
+  instalar qualquer coisa, e validado com uma prova de conceito (uma rota,
+  um schema Zod 4, `app.doc31()` gerando OpenAPI 3.1 válido) antes de tocar
+  no app real. Nenhum downgrade de Zod foi necessário.
+  - `hono-openapi` (a alternativa) não foi avaliada a fundo — não houve
+    motivo para procurar alternativa depois que a verificação de
+    compatibilidade deu certo de primeira.
+- **Onde vivem os metadados OpenAPI**: `src/server/modules/<módulo>/
+  <módulo>.openapi.ts` (`review.openapi.ts`, `album.openapi.ts`). Os
+  `*.contract.ts` continuam em Zod puro, sem nenhum import de
+  `@hono/zod-openapi` — o front os importa para validar formulários com
+  `zodResolver`, e a extensão `.openapi()` não pode ir junto no bundle do
+  cliente. Verificado (runtime e tipos) que chamar `.openapi()` num schema
+  criado com `import z from "zod"` funciona desde que
+  `import "@hono/zod-openapi"` (efeito colateral, sem binding) tenha
+  rodado antes em algum ponto do processo — é o que cada `*.openapi.ts` faz
+  no próprio topo, sem depender da ordem de import de quem o consome.
+  Path params (`{id}`) e o schema de erro compartilhado
+  (`src/server/api/lib/error-schema.ts`) seguem a mesma regra: ficam fora
+  dos contracts.
+- **Documentação**: `GET /api/doc` (OpenAPI 3.1 via `app.doc31()`) e
+  `GET /api/reference` (Scalar, `@scalar/hono-api-reference`). Os dois só
+  respondem quando `NODE_ENV !== "production"` — em produção devolvem 404.
+  Testado com `next build && next start` (o `next dev` ignora
+  `NODE_ENV` custom e sempre roda como development, então não serve para
+  testar esse gate). Sem security schemes ainda — cookie de sessão é fase 5.
+- **RPC (`AppType`) preservado**: `OpenAPIHono` estende `Hono`, então as
+  três armadilhas da fase 4 (`.route()` encadeado, tipo inferido de uma
+  variável, `.openapi()`/rotas encadeadas dentro de cada módulo) continuam
+  valendo. `src/lib/rpc.type-test.ts` foi falsificado de novo depois da
+  migração (trocada uma propriedade por um nome inexistente) e o `tsc`
+  acusou o erro esperado; restaurado, voltou a passar limpo.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -156,9 +195,10 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 | 2    | Fundação de infraestrutura (ESLint/TypeScript, `env.ts`, `server-only`, scripts de release, porta do Postgres) | ✅ Concluída |
 | 3    | Camadas contract / repository / service / mapper (sem Hono)      | ✅ Concluída |
 | 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | ✅ Concluída |
+| 4.5  | OpenAPI com `@hono/zod-openapi` (`createRoute`, `/api/doc`, `/api/reference`) | ✅ Concluída |
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | Pendente    |
 | 6    | Reset de senha e verificação de e-mail (opcionais)                | Pendente    |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | Pendente    |
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | Pendente    |
 | 9    | Migração `src/template/` → `src/features/<entidade>/`           | Pendente    |
-| 10   | Testes (Vitest) e documentação OpenAPI                           | Pendente    |
+| 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | Pendente    |
