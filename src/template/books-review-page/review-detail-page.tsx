@@ -1,4 +1,5 @@
 import { getReviewById } from "@/server/modules/reviews/review.queries";
+import { getSession } from "@/server/auth/session";
 import { NotFoundError } from "@/server/lib/errors";
 import Link from "next/link";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
@@ -23,10 +24,12 @@ async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
     notFound();
   }
 
+  const { user } = (await getSession())!;
+
   let reviewDetail: ReviewDTO;
 
   try {
-    reviewDetail = await getReviewById(id);
+    reviewDetail = await getReviewById(user.id, id);
   } catch (error) {
     if (error instanceof NotFoundError) {
       notFound();

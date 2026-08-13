@@ -1,5 +1,6 @@
 import { getAlbums } from "@/server/modules/albums/album.queries";
 import { getAllReviews } from "@/server/modules/reviews/review.queries";
+import { getSession } from "@/server/auth/session";
 import {
   BookOpenIcon,
   FolderOpenIcon,
@@ -8,7 +9,11 @@ import {
 } from "lucide-react";
 
 async function getResumeData() {
-  const [albums, reviews] = await Promise.all([getAlbums(), getAllReviews()]);
+  const { user } = (await getSession())!;
+  const [albums, reviews] = await Promise.all([
+    getAlbums(user.id),
+    getAllReviews(user.id),
+  ]);
   const currentDate = new Date();
 
   const reviewsInThisMonth = reviews.filter((review) => {

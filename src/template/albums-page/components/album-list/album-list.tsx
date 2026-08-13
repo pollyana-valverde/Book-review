@@ -1,8 +1,10 @@
 import { getAlbumsWithReviewCount } from "@/server/modules/albums/album.queries";
 import { AlbumCard } from "@/template/albums-page/components/album-card";
+import { getSession } from "@/server/auth/session";
 
 async function AlbumList() {
-  const albums = await getAlbumsWithReviewCount();
+  const { user } = (await getSession())!;
+  const albums = await getAlbumsWithReviewCount(user.id);
   const hasAlbums = albums.length > 0;
 
   if (!hasAlbums) {

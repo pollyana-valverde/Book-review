@@ -1,4 +1,5 @@
 import { getAlbums } from "@/server/modules/albums/album.queries";
+import { getSession } from "@/server/auth/session";
 
 import { Text } from "@/components/ui/text";
 import { NewReviewForm } from "@/template/new-review/components/new-review-form";
@@ -6,7 +7,8 @@ import { NewReviewForm } from "@/template/new-review/components/new-review-form"
 import { BookOpenIcon } from "lucide-react";
 
 async function NewReviewPage() {
-  const albums = await getAlbums();
+  const { user } = (await getSession())!;
+  const albums = await getAlbums(user.id);
 
   return (
     <div className="flex flex-col gap-7">

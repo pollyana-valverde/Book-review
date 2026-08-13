@@ -1,9 +1,11 @@
 import { getRecentReviews } from "@/server/modules/reviews/review.queries";
+import { getSession } from "@/server/auth/session";
 
 import { ReviewCard } from "@/template/books-review-page/components/review-card";
 
 async function RecentReviewList() {
-  const bookReviews = await getRecentReviews(4);
+  const { user } = (await getSession())!;
+  const bookReviews = await getRecentReviews(user.id, 4);
 
   const hasReviews = bookReviews.length > 0;
 

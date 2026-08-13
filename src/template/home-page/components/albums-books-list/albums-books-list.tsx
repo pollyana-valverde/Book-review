@@ -1,12 +1,14 @@
 import { getAlbumsWithReviewCount } from "@/server/modules/albums/album.queries";
 import { getAlbumBadgeColor } from "@/lib/album-badge-color";
+import { getSession } from "@/server/auth/session";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 
 async function AlbumsBooksList() {
-  const albums = await getAlbumsWithReviewCount();
+  const { user } = (await getSession())!;
+  const albums = await getAlbumsWithReviewCount(user.id);
 
   const hasAlbums = albums.length > 0;
 
