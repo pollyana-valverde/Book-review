@@ -13,8 +13,9 @@ sessões futuras tenham contexto sem depender do histórico do chat.
   NUNCA chamam a própria API por HTTP. Mutações do cliente vão por Hono RPC
   (`hc`).
 - **Auth**: BetterAuth com email+senha, Google e GitHub. Reset de senha e
-  verificação de e-mail são OPCIONAIS (opt-in do usuário, como segunda
-  etapa; não bloqueiam o primeiro login).
+  verificação de e-mail foram REMOVIDOS do escopo (decisão do usuário na
+  fase 5, não "opcionais" como este documento dizia antes) — ver seção
+  própria da fase 5 e "Dívida técnica".
 - **Editor**: Tiptap, JSON como fonte de verdade, com `contentText` e
   `excerpt` derivados no servidor.
 - **Front**: `src/template/` vira `src/features/<entidade>/`.
@@ -66,6 +67,19 @@ sessões futuras tenham contexto sem depender do histórico do chat.
   recuperação de conta se esquecerem a senha — só login social ou pedir
   para um admin recriar a conta manualmente no banco. Isso precisa ser
   endereçado antes do app ter usuários reais fora de teste.
+- `src/middleware.ts` usa a convenção `middleware`, marcada como deprecated
+  pelo Next 16 em favor de `proxy` (aviso no build: `The "middleware" file
+  convention is deprecated. Please use "proxy" instead.`). Mantido como
+  `middleware.ts` porque foi o nome pedido explicitamente na fase 5; migrar
+  para a convenção `proxy` é candidato a uma fase de manutenção.
+- **Cadastro por e-mail expõe se o e-mail já existe** (fase 5, tarefa 8):
+  `POST /api/auth/sign-up/email` com um e-mail já cadastrado responde `422`
+  com `{"code":"USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"}` — comportamento
+  padrão do BetterAuth, não alterado por decisão explícita (ver seção da
+  fase 5). É um oráculo de existência de conta; mitigar exigiria
+  interceptar essa resposta e mascarar, o que tem custo de UX (usuário
+  não saberia por que o cadastro "falhou" silenciosamente). Decisão de
+  manter ou mascarar fica para revisão futura do usuário.
 
 ## Camadas de servidor (fase 3)
 
@@ -197,6 +211,85 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
   migração (trocada uma propriedade por um nome inexistente) e o `tsc`
   acusou o erro esperado; restaurado, voltou a passar limpo.
 
+## Autenticação com BetterAuth (fase 5)
+
+- **Escopo**: usuário, sessão, cadastro/login por e-mail+senha, login social
+  (Google, GitHub condicionais), logout. `userId`/ownership em Album e
+  Review, filtro por dono e autorização nos services ficam para a fase 6 —
+  o banco já tem as tabelas de auth, mas os dados de domínio continuam sem
+  dono nesta fase.
+- **Verificação de e-mail e reset de senha foram REMOVIDOS do escopo**
+  (decisão do usuário, não "opcionais" como a primeira versão deste plano
+  dizia). Nenhum `sendResetPassword`/`sendVerificationEmail` foi
+  configurado, nenhum provedor de e-mail foi instalado. O campo
+  `emailVerified` existe na tabela `user` porque é parte do modelo base do
+  BetterAuth (não dá pra tirar), mas nunca é checado — `requireEmailVerification`
+  não foi setado, então nunca bloqueia login.
+- **Schema gerado pela CLI oficial** (`pnpm dlx @better-auth/cli generate`),
+  não escrito à mão — os nomes de campo (`session.token`, `account.providerId`
+  etc.) são contratuais com a lib. Diff revisado antes de migrar: só
+  adicionou `User`/`Session`/`Account`/`Verification`, nenhuma mudança em
+  `Album`/`Review`, nenhuma relação nova com eles.
+- **Providers sociais são condicionais em runtime, não em código**:
+  `src/server/auth/providers.ts` só considera um provedor "configurado"
+  quando SEU PAR completo (client id + secret) existe em `env`. O mesmo
+  helper decide o que `src/server/auth/auth.ts` registra em
+  `socialProviders` e o que a página de sign-in/sign-up passa como prop
+  para `SocialButtons` — um botão que leva a um provedor mal configurado é
+  pior que nenhum botão. Testado de ponta a ponta com as duas variáveis
+  vazias (cenário real deste ambiente, sem credenciais OAuth): o app sobe,
+  cadastro/login por e-mail funcionam, nenhum botão social aparece.
+- **Basta bater o `basePath`**: `auth.ts` usa `basePath: "/api/auth"`, e o
+  handler é montado em `src/server/api/index.ts` com
+  `app.on(["POST","GET"], "/auth/*", (c) => auth.handler(c.req.raw))` —
+  FORA da expressão encadeada dos `.route()` de propósito (não é
+  `createRoute`, não deve compor `AppType`, não deve aparecer no cliente
+  RPC nem no `/api/doc`). Confirmado com curl: `/api/doc` só lista as 4
+  rotas de reviews/albums, nunca `/api/auth/*` nem `/api/me`.
+- **`Set-Cookie` atravessa `handle()` de `hono/vercel` intacto** — testado
+  explicitamente via curl em `POST /api/auth/sign-up/email`: chegam os dois
+  cookies (`better-auth.session_token` e `better-auth.session_data`, esse
+  por causa do `cookieCache` com maxAge de 5 min). Esse era o ponto do
+  integração com maior risco de falhar em silêncio e não falhou.
+- **`AppEnv.Variables`** deixou de ser `Record<string, never>` e ganhou
+  `user`/`session` (nulável). `src/server/api/middlewares/session.ts` tem
+  `sessionMiddleware` (só popula) e `requireAuth` (lança `UnauthorizedError`
+  se não há usuário) — nenhum dos dois é global; aplicados só em
+  `GET /api/me`, a rota de exemplo que prova o mecanismo. Rotas de
+  review/album não os usam ainda.
+- **Duas camadas de proteção, propósitos diferentes**:
+  `src/middleware.ts` é checagem OTIMISTA (só olha se existe cookie via
+  `getSessionCookie`, sem bater no banco) para evitar flash de tela
+  protegida — nunca usa Prisma, roda em runtime restrito. A verificação
+  REAL é `src/server/auth/session.ts::requireSession()`, chamada por
+  `src/app/(app)/layout.tsx`, que de fato busca a sessão
+  (`auth.api.getSession`, envolvida em `cache()` do React porque várias
+  Server Components pedem a sessão na mesma renderização). O middleware
+  seta `callbackUrl` com o pathname exato da requisição; o backstop do
+  layout (caso raro: cookie existe mas sessão não é mais válida) redireciona
+  para `/sign-in` sem `callbackUrl`, por não ter acesso fácil ao pathname a
+  partir de um layout compartilhado.
+- **Formulários no padrão da fase 4** (`useForm` direto, `register`,
+  `Field`/`FieldLabel`/`FieldError`/`Input` puros, `errors.root` para erro
+  de servidor, `autoComplete` correto). `readRpcError` (tarefa 0) não se
+  aplica aqui — os formulários de auth usam `authClient` do BetterAuth
+  (`{ data, error }`), não o RPC do Hono.
+- **Segurança (tarefa 8)**:
+  - Rate limit nativo do BetterAuth (`rateLimit: { enabled: true }` —
+    por padrão só liga em produção; forçado para cobrir outros ambientes
+    também). Testado: 3 tentativas de login com senha errada passam, a
+    partir da 4ª a API responde `429`.
+  - Login com senha errada: o BetterAuth já responde de forma genérica por
+    padrão (`INVALID_EMAIL_OR_PASSWORD`, sem distinguir "senha errada" de
+    "e-mail não existe"); o front força uma mensagem fixa
+    ("E-mail ou senha incorretos.") de qualquer forma, ignorando o texto
+    que vier da API.
+  - Cadastro com e-mail duplicado: **não** é genérico por padrão — ver
+    "Dívida técnica".
+  - `BETTER_AUTH_SECRET` com `.min(32)` no Zod schema; testado com
+    `BETTER_AUTH_SECRET` de 8 caracteres — `pnpm build` falha com mensagem
+    apontando exatamente essa variável.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -206,8 +299,8 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 | 3    | Camadas contract / repository / service / mapper (sem Hono)      | ✅ Concluída |
 | 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | ✅ Concluída |
 | 4.5  | OpenAPI com `@hono/zod-openapi` (`createRoute`, `/api/doc`, `/api/reference`) | ✅ Concluída |
-| 5    | BetterAuth (email+senha, Google, GitHub)                         | Pendente    |
-| 6    | Reset de senha e verificação de e-mail (opcionais)                | Pendente    |
+| 5    | BetterAuth (email+senha, Google, GitHub)                         | ✅ Concluída |
+| 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | Pendente    |
 | 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | Pendente    |
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | Pendente    |
 | 9    | Migração `src/template/` → `src/features/<entidade>/`           | Pendente    |
