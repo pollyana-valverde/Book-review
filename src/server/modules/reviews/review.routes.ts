@@ -11,7 +11,7 @@ import {
   listReviewsQueryOpenApiSchema,
 } from "@/server/modules/reviews/review.openapi";
 import { errorSchema } from "@/server/api/lib/error-schema";
-import { reviewsTag, reviewTag, REVALIDATE_NOW } from "@/server/lib/cache-tags";
+import { tagsForReviewMutation, REVALIDATE_NOW } from "@/server/lib/cache-tags";
 import { zodValidationHook } from "@/server/api/lib/validation-hook";
 import {
   sessionMiddleware,
@@ -197,7 +197,9 @@ const reviewRoutes = new OpenAPIHono<AppEnv>({ defaultHook: zodValidationHook })
     const data = c.req.valid("json");
     const review = await reviewService.create(user.id, data);
 
-    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
+    for (const tag of tagsForReviewMutation(user.id)) {
+      revalidateTag(tag, REVALIDATE_NOW);
+    }
 
     return c.json(review, 201);
   })
@@ -207,8 +209,9 @@ const reviewRoutes = new OpenAPIHono<AppEnv>({ defaultHook: zodValidationHook })
     const data = c.req.valid("json");
     const review = await reviewService.update(user.id, id, data);
 
-    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
-    revalidateTag(reviewTag(user.id, id), REVALIDATE_NOW);
+    for (const tag of tagsForReviewMutation(user.id, id)) {
+      revalidateTag(tag, REVALIDATE_NOW);
+    }
 
     return c.json(review);
   })
@@ -217,8 +220,9 @@ const reviewRoutes = new OpenAPIHono<AppEnv>({ defaultHook: zodValidationHook })
     const { id } = c.req.valid("param");
     await reviewService.remove(user.id, id);
 
-    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
-    revalidateTag(reviewTag(user.id, id), REVALIDATE_NOW);
+    for (const tag of tagsForReviewMutation(user.id, id)) {
+      revalidateTag(tag, REVALIDATE_NOW);
+    }
 
     return c.body(null, 204);
   });

@@ -3,11 +3,7 @@
 import { revalidateTag } from "next/cache";
 import * as reviewService from "@/server/modules/reviews/review.service";
 import { toActionResult, type ActionResult } from "@/server/lib/action-result";
-import {
-  reviewsTag,
-  reviewTag,
-  REVALIDATE_NOW,
-} from "@/server/lib/cache-tags";
+import { tagsForReviewMutation, REVALIDATE_NOW } from "@/server/lib/cache-tags";
 import { requireSession } from "@/server/auth/session";
 
 // `createReview` foi removida: new-review-form.tsx migrou para o RPC do
@@ -21,8 +17,9 @@ async function deleteReview(id: string): Promise<ActionResult> {
   try {
     await reviewService.remove(user.id, id);
 
-    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
-    revalidateTag(reviewTag(user.id, id), REVALIDATE_NOW);
+    for (const tag of tagsForReviewMutation(user.id, id)) {
+      revalidateTag(tag, REVALIDATE_NOW);
+    }
 
     return { success: true };
   } catch (error) {
