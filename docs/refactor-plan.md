@@ -50,6 +50,12 @@ sessões futuras tenham contexto sem depender do histórico do chat.
 - TypeScript fixado em `~6.0.3` e ESLint em `^9` porque nenhuma versão
   publicada de `@typescript-eslint` suporta TypeScript 7. Revisitar quando
   houver suporte.
+- `unstable_cache` (usado em `*.queries.ts` desde a fase 4) está deprecated
+  no Next 16 em favor da diretiva `"use cache"` / Cache Components — a
+  própria doc do pacote (`node_modules/next/dist/docs/.../unstable_cache.md`)
+  já avisa isso. Continua funcionando e foi o que a fase 4 pediu
+  explicitamente; migrar para `"use cache"`/`cacheTag` é candidato a uma
+  fase de manutenção futura, não decidido ainda.
 
 ## Camadas de servidor (fase 3)
 
@@ -133,6 +139,14 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 - **OpenAPI pendente**: a escolha entre `@hono/zod-openapi` (o que o plano
   original previa) e `hono-openapi` não foi feita nesta fase — fica como um
   passo próprio dentro da fase 10.
+- **Verificação pós-fase (fase 4.5, tarefa 0a)**: `DATABASE_URL="" pnpm
+  build` continua falhando com mensagem clara mesmo com os getters lazy de
+  `src/lib/env.ts`. Motivo: `src/server/db/prisma.ts` lê `env.DATABASE_URL`
+  no topo do módulo (`new PrismaPg({ connectionString: env.DATABASE_URL
+  })`), e toda rota coletada no build — incluindo `/api/[[...route]]` — 
+  importa esse módulo transitivamente. O getter só adia a validação para o
+  primeiro acesso real, e esse acesso acontece de qualquer forma durante o
+  build. Não foi necessário separar `env.server.ts`/`env.client.ts`.
 
 ## Fases
 
