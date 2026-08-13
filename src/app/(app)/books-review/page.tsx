@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import {
   BooksReviewHeader,
   ReviewListSection,
@@ -6,6 +7,10 @@ import {
 import { HeaderSkeleton } from "@/template/books-review-page/components/header-skeleton";
 import { ReviewSkeleton } from "@/template/books-review-page/components/review-skeleton";
 import { BooksReviewSearchParams } from "@/template/books-review-page/types";
+
+export const metadata: Metadata = {
+  title: "Resenhas",
+};
 
 export default async function BooksReview({
   searchParams,

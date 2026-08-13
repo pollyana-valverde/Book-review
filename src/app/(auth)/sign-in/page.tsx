@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   CardContent,
@@ -10,6 +11,10 @@ import {
 import { Text } from "@/components/ui/text";
 import { SignInForm, SocialButtons } from "@/features/auth";
 import { getEnabledSocialProviders } from "@/server/auth/providers";
+
+export const metadata: Metadata = {
+  title: "Entrar",
+};
 
 export default function SignIn() {
   const providers = getEnabledSocialProviders();
