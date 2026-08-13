@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useImperativeHandle } from "react";
 import { useEditor, EditorContent, type JSONContent } from "@tiptap/react";
 import { extensions } from "@/components/editor/extensions";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
 import { cn } from "@/lib/utils";
+
+interface RichTextEditorHandle {
+  /**
+   * Limpa o documento do editor. `reset()` do react-hook-form NÃO alcança
+   * o estado interno do Tiptap (o editor para de ouvir `value` depois do
+   * mount — ver comentário abaixo) — por isso precisa ser chamado
+   * explicitamente depois de salvar com sucesso.
+   */
+  clearContent: () => void;
+}
 
 interface RichTextEditorProps {
   value?: JSONContent;
@@ -12,6 +22,7 @@ interface RichTextEditorProps {
   onBlur?: () => void;
   "aria-invalid"?: boolean;
   id?: string;
+  ref?: React.Ref<RichTextEditorHandle>;
 }
 
 function RichTextEditor({
@@ -20,6 +31,7 @@ function RichTextEditor({
   onBlur,
   "aria-invalid": ariaInvalid,
   id,
+  ref,
 }: RichTextEditorProps) {
   // Enquanto o editor está montado, ELE é a fonte de verdade do documento
   // (histórico de undo/redo incluído) — `value` só serve para semear o
@@ -58,6 +70,16 @@ function RichTextEditor({
     },
   });
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      clearContent: () => {
+        editor?.commands.clearContent(true);
+      },
+    }),
+    [editor]
+  );
+
   return (
     <div
       data-invalid={ariaInvalid ? "true" : "false"}
@@ -74,3 +96,4 @@ function RichTextEditor({
 }
 
 export { RichTextEditor };
+export type { RichTextEditorHandle };

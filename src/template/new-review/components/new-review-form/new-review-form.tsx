@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import {
+  RichTextEditor,
+  type RichTextEditorHandle,
+} from "@/components/editor/rich-text-editor";
 
 import { toast } from "sonner";
 
@@ -61,6 +64,7 @@ function NewReviewForm({ collectionsList }: NewReviewFormProps) {
   const selectedRating = useWatch({ control, name: "rating" });
 
   const [hoverRating, setHoverRating] = useState(0);
+  const editorRef = useRef<RichTextEditorHandle>(null);
 
   async function onSubmit(data: CreateReviewInput) {
     const res = await rpc.api.reviews.$post({ json: data });
@@ -71,14 +75,25 @@ function NewReviewForm({ collectionsList }: NewReviewFormProps) {
       return;
     }
 
-    toast.success("Resenha salva com sucesso!");
+    // Ordem importa: limpar o editor e resetar o formulário ANTES de
+    // navegar — navegar primeiro arriscaria atualizar estado num
+    // componente já desmontado. reset() por último, depois do
+    // clearContent(): reset() estabelece a baseline final de "não sujo"
+    // do formulário, então o onUpdate disparado pelo clearContent() (que
+    // por sua vez chama field.onChange) não deixa o formulário marcado
+    // como sujo de novo — reset() sempre vence por rodar depois.
+    editorRef.current?.clearContent();
     reset();
+
+    toast.success("Resenha salva com sucesso!");
+    router.push("/books-review");
     router.refresh();
   }
 
   return (
     <form
       className="flex flex-col gap-7"
+      // eslint-disable-next-line react-hooks/refs -- falso positivo: handleSubmit(onSubmit) devolve um handler novo; onSubmit (que lê editorRef.current) só roda no evento de submit, nunca durante o render.
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
@@ -208,6 +223,7 @@ function NewReviewForm({ collectionsList }: NewReviewFormProps) {
           name="content"
           render={({ field }) => (
             <RichTextEditor
+              ref={editorRef}
               id="content"
               value={field.value}
               onChange={field.onChange}
