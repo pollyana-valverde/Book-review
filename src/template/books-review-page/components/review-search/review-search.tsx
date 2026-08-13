@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  pushWithParams,
+  replaceWithParams,
   setOrDeleteParam,
 } from "@/template/books-review-page/lib";
 import type { CollectionDTO } from "@/server/modules/collections/collection.contract";
@@ -24,7 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { CircleXIcon, SearchIcon } from "lucide-react";
+import { CircleXIcon, Loader2Icon, SearchIcon } from "lucide-react";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 function SearchSection({ collections }: { collections: CollectionDTO[] }) {
   const router = useRouter();
@@ -33,42 +35,77 @@ function SearchSection({ collections }: { collections: CollectionDTO[] }) {
   const searchQueryTitle = searchParams.get("title") || "";
   const searchQueryCollection = searchParams.get("collection") || "";
 
-  const handleSearch = useCallback(
-    (event: React.ChangeEvent<HTMLFormElement>) => {
-      event.preventDefault();
+  const [isPending, startTransition] = useTransition();
+  const [hasQuery, setHasQuery] = useState(!!searchQueryTitle);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Sem timeout pendente ao desmontar, senão uma navegação dispara depois
+  // do componente já ter saído da tela.
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
+  const applyTitleFilter = useCallback(
+    (title: string) => {
       const newQuery = new URLSearchParams(searchParams.toString());
+      setOrDeleteParam(newQuery, "title", title);
 
-      setOrDeleteParam(newQuery, "title", searchQueryTitle);
-      setOrDeleteParam(newQuery, "collection", searchQueryCollection);
-
-      pushWithParams(router, pathname, newQuery);
+      startTransition(() => {
+        replaceWithParams(router, pathname, newQuery);
+      });
     },
-    [pathname, router, searchParams, searchQueryCollection, searchQueryTitle]
+    [pathname, router, searchParams]
   );
 
   const handleQueryTitleChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const newQuery = new URLSearchParams(searchParams.toString());
-    const queryTitle = event.target.value;
+    const value = event.target.value;
+    setHasQuery(!!value);
 
-    setOrDeleteParam(newQuery, "title", queryTitle);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      applyTitleFilter(value);
+    }, SEARCH_DEBOUNCE_MS);
+  };
 
-    pushWithParams(router, pathname, newQuery);
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    // Enter no formulário aplica na hora, sem esperar o debounce.
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    applyTitleFilter(inputRef.current?.value ?? "");
   };
 
   const handleQueryCollectionChange = (selectedCollection: CollectionDTO["id"]) => {
     const newQuery = new URLSearchParams(searchParams.toString());
-
     setOrDeleteParam(newQuery, "collection", selectedCollection);
 
-    pushWithParams(router, pathname, newQuery);
+    startTransition(() => {
+      replaceWithParams(router, pathname, newQuery);
+    });
   };
 
   const resetSearch = () => {
-    router.push(pathname, {
-      scroll: false,
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    setHasQuery(false);
+
+    startTransition(() => {
+      router.replace(pathname, { scroll: false });
     });
   };
 
@@ -77,22 +114,27 @@ function SearchSection({ collections }: { collections: CollectionDTO[] }) {
       <Field className="flex-1">
         <InputGroup>
           <InputGroupInput
-            value={searchQueryTitle}
+            ref={inputRef}
+            defaultValue={searchQueryTitle}
             onChange={handleQueryTitleChange}
             id="inline-start-input"
-            placeholder="Search for a book..."
+            placeholder="Buscar um livro..."
           />
           <InputGroupAddon align="inline-start">
-            <SearchIcon className="text-muted-foreground" />
+            {isPending ? (
+              <Loader2Icon className="text-muted-foreground animate-spin" />
+            ) : (
+              <SearchIcon className="text-muted-foreground" />
+            )}
           </InputGroupAddon>
 
-          {searchQueryTitle && (
+          {hasQuery && (
             <InputGroupAddon
               align="inline-end"
               onClick={resetSearch}
               className="cursor-pointer"
             >
-              <CircleXIcon />
+              <CircleXIcon aria-label="Limpar busca" />
             </InputGroupAddon>
           )}
         </InputGroup>
@@ -103,11 +145,11 @@ function SearchSection({ collections }: { collections: CollectionDTO[] }) {
         value={searchQueryCollection || "all"}
       >
         <SelectTrigger className="w-full md:max-w-56">
-          <SelectValue placeholder="Select a collection" />
+          <SelectValue placeholder="Selecione uma coleção" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectLabel>Collections</SelectLabel>
+            <SelectLabel>Coleções</SelectLabel>
             <SelectItem value="all">Todas</SelectItem>
             {collections.map((collection) => (
               <SelectItem key={collection.id} value={collection.id}>
