@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useEditor, EditorContent, type JSONContent } from "@tiptap/react";
 import { extensions } from "@/components/editor/extensions";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
@@ -20,9 +21,24 @@ function RichTextEditor({
   "aria-invalid": ariaInvalid,
   id,
 }: RichTextEditorProps) {
+  // Enquanto o editor está montado, ELE é a fonte de verdade do documento
+  // (histórico de undo/redo incluído) — `value` só serve para semear o
+  // conteúdo INICIAL. Capturado uma única vez (inicializador preguiçoso do
+  // useState, não lido de novo depois): se `value` (== field.value do
+  // react-hook-form, um objeto novo a cada `onUpdate`) fosse repassado a
+  // cada render para `content` do useEditor, o EditorInstanceManager do
+  // @tiptap/react detecta a referência diferente e chama
+  // `editor.setOptions(...)` a cada tecla — reconfiguração desnecessária e
+  // frágil a cada keystroke que não deveria existir. `field.onChange`
+  // continua alimentando o react-hook-form normalmente; só não volta a
+  // entrar no editor durante a digitação. Sincronização de volta (carregar
+  // uma resenha existente, limpar após salvar) é feita de forma explícita e
+  // pontual, não a cada render.
+  const [initialContent] = useState(() => value);
+
   const editor = useEditor({
     extensions,
-    content: value,
+    content: initialContent,
     // Sem isso o Next dá erro de hidratação: o editor tentaria renderizar
     // no servidor antes de existir DOM/contenteditable.
     immediatelyRender: false,
