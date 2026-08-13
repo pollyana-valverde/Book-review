@@ -67,19 +67,23 @@ sessões futuras tenham contexto sem depender do histórico do chat.
   recuperação de conta se esquecerem a senha — só login social ou pedir
   para um admin recriar a conta manualmente no banco. Isso precisa ser
   endereçado antes do app ter usuários reais fora de teste.
-- `src/middleware.ts` usa a convenção `middleware`, marcada como deprecated
-  pelo Next 16 em favor de `proxy` (aviso no build: `The "middleware" file
-  convention is deprecated. Please use "proxy" instead.`). Mantido como
-  `middleware.ts` porque foi o nome pedido explicitamente na fase 5; migrar
-  para a convenção `proxy` é candidato a uma fase de manutenção.
-- **Cadastro por e-mail expõe se o e-mail já existe** (fase 5, tarefa 8):
-  `POST /api/auth/sign-up/email` com um e-mail já cadastrado responde `422`
-  com `{"code":"USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"}` — comportamento
-  padrão do BetterAuth, não alterado por decisão explícita (ver seção da
-  fase 5). É um oráculo de existência de conta; mitigar exigiria
-  interceptar essa resposta e mascarar, o que tem custo de UX (usuário
-  não saberia por que o cadastro "falhou" silenciosamente). Decisão de
-  manter ou mascarar fica para revisão futura do usuário.
+- ~~`src/middleware.ts` usa a convenção deprecated~~ — resolvido na fase 6,
+  tarefa 0a: renomeado para `src/proxy.ts` (função `proxy`), conforme
+  `node_modules/next/dist/docs/.../proxy.md` (Next 16.3.0). Nota: a partir
+  do Next 16, Proxy roda no runtime Node.js por padrão (deixou de ser
+  Edge-only) — o comentário no arquivo foi corrigido para não afirmar mais
+  "runtime restrito tipo Edge"; a razão para não usar Prisma ali continua
+  sendo performance (evitar um round-trip de banco em toda navegação), não
+  mais uma limitação técnica do runtime.
+- **Cadastro por e-mail expõe se o e-mail já existe — MANTIDO por decisão
+  do usuário (fase 6, tarefa 0c)**: `POST /api/auth/sign-up/email` com um
+  e-mail já cadastrado responde `422` com
+  `{"code":"USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"}` — comportamento
+  padrão do BetterAuth. Decisão final: manter assim. O custo de usabilidade
+  de mascarar (usuário não entende por que o cadastro "falhou" em silêncio,
+  fluxo de suporte mais confuso) supera o ganho de privacidade neste
+  domínio (uma plataforma de resenhas de livros, não um serviço onde a
+  lista de usuários é sensível). Revisitar se o projeto mudar de natureza.
 
 ## Camadas de servidor (fase 3)
 

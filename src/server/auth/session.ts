@@ -13,21 +13,26 @@ const getSession = cache(async () => {
 });
 
 /**
- * Verificação REAL de autenticação (ao contrário do middleware, que é só
- * UX). Redireciona para /sign-in com `callbackUrl` quando não há sessão.
+ * Verificação REAL de autenticação (ao contrário do proxy, que é só UX).
+ * Redireciona para /sign-in com `callbackUrl` quando não há sessão.
  *
- * O middleware (src/middleware.ts) já barra a maioria das requisições sem
- * cookie antes de chegar aqui, com o `callbackUrl` correto (ele tem acesso
- * direto ao pathname da requisição). Este redirect é o backstop para o caso
- * em que o cookie existe mas a sessão não é mais válida no servidor — nesse
- * caso, sem acesso fácil ao pathname atual a partir de um layout
- * compartilhado, o redirect cai para "/sign-in" sem callbackUrl.
+ * O proxy (src/proxy.ts) já barra a maioria das requisições sem cookie
+ * antes de chegar aqui, com o `callbackUrl` correto. Este redirect é o
+ * backstop para o caso em que o cookie existe mas a sessão não é mais
+ * válida no servidor — o pathname vem do header `x-pathname` que o proxy
+ * grava em toda requisição autenticada (um layout compartilhado não tem
+ * acesso direto ao pathname atual, então não dá pra pegá-lo de outro jeito
+ * aqui).
  */
 async function requireSession() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/sign-in");
+    const pathname = (await headers()).get("x-pathname");
+    const signInUrl = pathname
+      ? `/sign-in?callbackUrl=${encodeURIComponent(pathname)}`
+      : "/sign-in";
+    redirect(signInUrl);
   }
 
   return session;
