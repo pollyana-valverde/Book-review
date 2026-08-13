@@ -11,13 +11,24 @@ import {
 import { errorSchema } from "@/server/api/lib/error-schema";
 import { albumsTag, REVALIDATE_NOW } from "@/server/lib/cache-tags";
 import { zodValidationHook } from "@/server/api/lib/validation-hook";
+import {
+  sessionMiddleware,
+  requireAuth,
+} from "@/server/api/middlewares/session";
 import type { AppEnv } from "@/server/api/factory";
+
+// Todas as rotas de album exigem sessão — nenhuma leitura ou escrita de
+// domínio é pública nesta fase. `middleware` no createRoute em vez de
+// `.use()` encadeado: `.use()` no meio da cadeia degrada o tipo de volta
+// para `Hono` puro e o `.openapi()` seguinte deixa de existir no tipo.
+const authMiddleware = [sessionMiddleware, requireAuth];
 
 const listRoute = createRoute({
   method: "get",
   path: "/",
   tags: ["Albums"],
   summary: "Lista álbuns",
+  middleware: authMiddleware,
   responses: {
     200: {
       content: { "application/json": { schema: albumsListResponseSchema } },
@@ -35,6 +46,7 @@ const createAlbumRoute = createRoute({
   path: "/",
   tags: ["Albums"],
   summary: "Cria um álbum",
+  middleware: authMiddleware,
   request: {
     body: { content: { "application/json": { schema: createAlbumBodySchema } } },
   },
@@ -63,6 +75,7 @@ const removeAlbumRoute = createRoute({
   path: "/{id}",
   tags: ["Albums"],
   summary: "Remove um álbum",
+  middleware: authMiddleware,
   request: { params: albumIdParamSchema },
   responses: {
     204: { description: "Álbum removido" },
@@ -79,22 +92,25 @@ const removeAlbumRoute = createRoute({
 
 const albumRoutes = new OpenAPIHono<AppEnv>({ defaultHook: zodValidationHook })
   .openapi(listRoute, async (c) => {
-    const albums = await albumService.list();
+    const user = c.get("user")!;
+    const albums = await albumService.list(user.id);
     return c.json(albums);
   })
   .openapi(createAlbumRoute, async (c) => {
+    const user = c.get("user")!;
     const data = c.req.valid("json");
-    const album = await albumService.create(data);
+    const album = await albumService.create(user.id, data);
 
-    revalidateTag(albumsTag(), REVALIDATE_NOW);
+    revalidateTag(albumsTag(user.id), REVALIDATE_NOW);
 
     return c.json(album, 201);
   })
   .openapi(removeAlbumRoute, async (c) => {
+    const user = c.get("user")!;
     const { id } = c.req.valid("param");
-    await albumService.remove(id);
+    await albumService.remove(user.id, id);
 
-    revalidateTag(albumsTag(), REVALIDATE_NOW);
+    revalidateTag(albumsTag(user.id), REVALIDATE_NOW);
 
     return c.body(null, 204);
   });

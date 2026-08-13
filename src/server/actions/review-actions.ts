@@ -12,13 +12,18 @@ import {
   reviewTag,
   REVALIDATE_NOW,
 } from "@/server/lib/cache-tags";
+import { requireSession } from "@/server/auth/session";
 
 async function createReview(data: CreateReviewInput): Promise<ActionResult> {
+  // Fora do try/catch de propósito: ver o comentário equivalente em
+  // album-actions.ts sobre requireSession() e redirect().
+  const { user } = await requireSession();
+
   try {
     const parsedData = createReviewSchema.parse(data);
-    await reviewService.create(parsedData);
+    await reviewService.create(user.id, parsedData);
 
-    revalidateTag(reviewsTag(), REVALIDATE_NOW);
+    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
 
     return { success: true };
   } catch (error) {
@@ -27,11 +32,13 @@ async function createReview(data: CreateReviewInput): Promise<ActionResult> {
 }
 
 async function deleteReview(id: string): Promise<ActionResult> {
-  try {
-    await reviewService.remove(id);
+  const { user } = await requireSession();
 
-    revalidateTag(reviewsTag(), REVALIDATE_NOW);
-    revalidateTag(reviewTag(id), REVALIDATE_NOW);
+  try {
+    await reviewService.remove(user.id, id);
+
+    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
+    revalidateTag(reviewTag(user.id, id), REVALIDATE_NOW);
 
     return { success: true };
   } catch (error) {

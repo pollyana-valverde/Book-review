@@ -13,13 +13,24 @@ import {
 import { errorSchema } from "@/server/api/lib/error-schema";
 import { reviewsTag, reviewTag, REVALIDATE_NOW } from "@/server/lib/cache-tags";
 import { zodValidationHook } from "@/server/api/lib/validation-hook";
+import {
+  sessionMiddleware,
+  requireAuth,
+} from "@/server/api/middlewares/session";
 import type { AppEnv } from "@/server/api/factory";
+
+// Todas as rotas de review exigem sessão — nenhuma leitura ou escrita de
+// domínio é pública nesta fase. `middleware` no createRoute em vez de
+// `.use()` encadeado: `.use()` no meio da cadeia degrada o tipo de volta
+// para `Hono` puro e o `.openapi()` seguinte deixa de existir no tipo.
+const authMiddleware = [sessionMiddleware, requireAuth];
 
 const listRoute = createRoute({
   method: "get",
   path: "/",
   tags: ["Reviews"],
   summary: "Lista resenhas",
+  middleware: authMiddleware,
   request: { query: listReviewsQueryOpenApiSchema },
   responses: {
     200: {
@@ -42,6 +53,7 @@ const getByIdRoute = createRoute({
   path: "/{id}",
   tags: ["Reviews"],
   summary: "Busca uma resenha por id",
+  middleware: authMiddleware,
   request: { params: reviewIdParamSchema },
   responses: {
     200: {
@@ -64,6 +76,7 @@ const createReviewRoute = createRoute({
   path: "/",
   tags: ["Reviews"],
   summary: "Cria uma resenha",
+  middleware: authMiddleware,
   request: {
     body: { content: { "application/json": { schema: createReviewBodySchema } } },
   },
@@ -92,6 +105,7 @@ const updateReviewRoute = createRoute({
   path: "/{id}",
   tags: ["Reviews"],
   summary: "Atualiza uma resenha",
+  middleware: authMiddleware,
   request: {
     params: reviewIdParamSchema,
     body: { content: { "application/json": { schema: updateReviewBodySchema } } },
@@ -125,6 +139,7 @@ const removeReviewRoute = createRoute({
   path: "/{id}",
   tags: ["Reviews"],
   summary: "Remove uma resenha",
+  middleware: authMiddleware,
   request: { params: reviewIdParamSchema },
   responses: {
     204: { description: "Resenha removida" },
@@ -141,39 +156,44 @@ const removeReviewRoute = createRoute({
 
 const reviewRoutes = new OpenAPIHono<AppEnv>({ defaultHook: zodValidationHook })
   .openapi(listRoute, async (c) => {
+    const user = c.get("user")!;
     const query = c.req.valid("query");
-    const result = await reviewService.list(query);
+    const result = await reviewService.list(user.id, query);
     return c.json(result);
   })
   .openapi(getByIdRoute, async (c) => {
+    const user = c.get("user")!;
     const { id } = c.req.valid("param");
-    const review = await reviewService.getById(id);
+    const review = await reviewService.getById(user.id, id);
     return c.json(review);
   })
   .openapi(createReviewRoute, async (c) => {
+    const user = c.get("user")!;
     const data = c.req.valid("json");
-    const review = await reviewService.create(data);
+    const review = await reviewService.create(user.id, data);
 
-    revalidateTag(reviewsTag(), REVALIDATE_NOW);
+    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
 
     return c.json(review, 201);
   })
   .openapi(updateReviewRoute, async (c) => {
+    const user = c.get("user")!;
     const { id } = c.req.valid("param");
     const data = c.req.valid("json");
-    const review = await reviewService.update(id, data);
+    const review = await reviewService.update(user.id, id, data);
 
-    revalidateTag(reviewsTag(), REVALIDATE_NOW);
-    revalidateTag(reviewTag(id), REVALIDATE_NOW);
+    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
+    revalidateTag(reviewTag(user.id, id), REVALIDATE_NOW);
 
     return c.json(review);
   })
   .openapi(removeReviewRoute, async (c) => {
+    const user = c.get("user")!;
     const { id } = c.req.valid("param");
-    await reviewService.remove(id);
+    await reviewService.remove(user.id, id);
 
-    revalidateTag(reviewsTag(), REVALIDATE_NOW);
-    revalidateTag(reviewTag(id), REVALIDATE_NOW);
+    revalidateTag(reviewsTag(user.id), REVALIDATE_NOW);
+    revalidateTag(reviewTag(user.id, id), REVALIDATE_NOW);
 
     return c.body(null, 204);
   });
