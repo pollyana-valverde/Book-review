@@ -56,6 +56,16 @@ sessões futuras tenham contexto sem depender do histórico do chat.
   já avisa isso. Continua funcionando e foi o que a fase 4 pediu
   explicitamente; migrar para `"use cache"`/`cacheTag` é candidato a uma
   fase de manutenção futura, não decidido ainda.
+- `next dev` ignora `NODE_ENV` customizado (sempre roda como development,
+  mesmo passando `NODE_ENV=production pnpm dev`). Testar qualquer
+  comportamento condicionado a `NODE_ENV === "production"` (gate de
+  `/api/doc`/`/api/reference` na fase 4.5, rate limit e mensagens genéricas
+  de auth na fase 5) exige `next build && next start`.
+- **Reset de senha removido do escopo** (decisão do usuário na fase 5):
+  usuários cadastrados por e-mail/senha não têm nenhum caminho de
+  recuperação de conta se esquecerem a senha — só login social ou pedir
+  para um admin recriar a conta manualmente no banco. Isso precisa ser
+  endereçado antes do app ter usuários reais fora de teste.
 
 ## Camadas de servidor (fase 3)
 

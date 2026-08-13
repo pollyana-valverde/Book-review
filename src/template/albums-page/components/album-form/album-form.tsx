@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 
 import { rpc } from "@/lib/rpc";
+import { readRpcError } from "@/lib/rpc-error";
 import {
   createAlbumSchema,
   type CreateAlbumInput,
@@ -15,8 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 
 import { toast } from "sonner";
-
-type ApiErrorBody = { error: { code: string; message: string } };
 
 function AlbumForm() {
   const router = useRouter();
@@ -37,11 +36,8 @@ function AlbumForm() {
     const res = await rpc.api.albums.$post({ json: data });
 
     if (!res.ok) {
-      // res.json() aqui é tipado a partir do caminho de sucesso — o RPC do
-      // Hono não infere o formato do `onError` global. O corpo real segue
-      // o contrato documentado em src/server/api/middlewares/error-handler.ts.
-      const body = (await res.json()) as unknown as ApiErrorBody;
-      setError("root", { message: body.error.message });
+      const error = await readRpcError(res);
+      setError("root", { message: error.message });
       return;
     }
 
