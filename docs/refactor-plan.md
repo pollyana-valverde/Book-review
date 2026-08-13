@@ -5,8 +5,9 @@ sessões futuras tenham contexto sem depender do histórico do chat.
 
 ## Decisões de domínio e arquitetura
 
-- **Domínio**: `Album` será renomeado para `Collection`, e `categoryId` para
-  `collectionId`, em schema, DTOs, rotas e UI (PR 7).
+- **Domínio**: `Album` renomeado para `Collection`, e `categoryId` para
+  `collectionId`, em schema, DTOs, rotas e UI (fase 7, concluída — ver
+  seção própria).
 - **API**: Hono montado em `src/app/api/[[...route]]/route.ts`, com camadas
   contract / routes / service / repository / mapper em
   `src/server/modules/`. Server Components importam services diretamente;
@@ -379,6 +380,55 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
   servidor logo em seguida e não vê nada de A — testado nos dois sentidos).
   Ver relatório da fase 6 para a evidência completa.
 
+## Rename: Album → Collection (fase 7)
+
+- **Migração aplicada por RENAME, não recriação.** `prisma migrate diff
+  --script` contra o schema já renomeado confirmou que o Prisma geraria a
+  migração como `DROP TABLE "albums"` + `CREATE TABLE "collections"` (e
+  `DROP COLUMN "categoryId"` + `ADD COLUMN "collection_id"` em `reviews`),
+  o que destruiria todas as linhas. A migração
+  (`prisma/migrations/20260813170000_rename_album_to_collection/
+  migration.sql`) foi escrita à mão só com `ALTER TABLE ... RENAME TO`,
+  `ALTER TABLE ... RENAME COLUMN`, `ALTER TABLE ... RENAME CONSTRAINT` e
+  `ALTER INDEX ... RENAME TO` — preserva linhas, FKs e índices.
+  `categoryId` não tinha `@map` antes (coluna já se chamava `categoryId`
+  no banco); a partir desta fase tem `@map("collection_id")`, então a
+  migração também renomeia a coluna para snake_case.
+  Confirmado com `prisma migrate diff --exit-code` depois de aplicar: "No
+  difference detected" entre schema e banco.
+- **Preservação de dados testada de ponta a ponta**: antes da migração,
+  criados dois usuários de teste com álbuns/resenhas via API (um deles com
+  2 álbuns e 2 resenhas, o mínimo pedido pelo critério de aceite). Depois
+  de aplicar a migração, os mesmos ids, títulos e vínculos (`collection_id`
+  apontando para o `id` certo) foram conferidos com uma query direta no
+  Postgres — ver relatório da fase 7 para a evidência completa (antes e
+  depois lado a lado).
+- **Escopo do rename**: `src/server/modules/albums/` →
+  `src/server/modules/collections/` (arquivos e identificadores),
+  `src/server/lib/cache-tags.ts` (`albumsTag` → `collectionsTag`),
+  `src/server/actions/album-actions.ts` → `collection-actions.ts`, rota
+  pública `/api/albums` → `/api/collections`, `categoryId` → `collectionId`
+  em `listReviewsQuerySchema`/`createReviewSchema`/`reviewDTOSchema`
+  (`categoryTitle` → `collectionTitle`), `src/template/albums-page/` →
+  `src/template/collections-page/`, rota `/albums` → `/collections`,
+  search param `category` → `collection` em `/books-review`,
+  `src/lib/album-badge-color.ts` → `collection-badge-color.ts`. Textos
+  visíveis trocados de álbum/álbuns para coleção/coleções.
+  `src/lib/rpc.type-test.ts` cobre `/api/collections` e foi falsificado de
+  novo depois da mudança (tsc acusou o erro esperado, restaurado depois).
+- **Fora do escopo desta fase, deixado como está**: `new-review-form.tsx`
+  só recebeu os renames mecânicos necessários para compilar contra o
+  contract atualizado — continua no padrão antigo (`<Form>/<FormField>` do
+  shadcn, Server Action em vez de RPC). A migração dele para o padrão
+  `useForm` direto + RPC é da fase 8, junto com o editor Tiptap, para não
+  descartar esse trabalho quando o formulário for reescrito.
+- **Teste de isolamento de cache da fase 6 reexecutado antes desta fase**
+  (tarefa 0a do relatório da fase 7), contra `next build && next start`
+  (não `next dev`, que não exercita cache real): dois usuários, cada um
+  populando `/books-review` primeiro, no dois sentidos — nenhum viu dado
+  do outro. Sem esse resultado, a fase pararia antes da renomeação (regra
+  do relatório).
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -390,7 +440,7 @@ Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
 | 4.5  | OpenAPI com `@hono/zod-openapi` (`createRoute`, `/api/doc`, `/api/reference`) | ✅ Concluída |
 | 5    | BetterAuth (email+senha, Google, GitHub)                         | ✅ Concluída |
 | 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | ✅ Concluída |
-| 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | Pendente    |
+| 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | ✅ Concluída |
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | Pendente    |
 | 9    | Migração `src/template/` → `src/features/<entidade>/`           | Pendente    |
 | 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | Pendente    |

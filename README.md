@@ -1,6 +1,6 @@
 # BookReview
 
-Aplicação web para criar, organizar e consultar resenhas de livros por albums/categorias.
+Aplicação web para criar, organizar e consultar resenhas de livros por coleções.
 
 ## Preview
 
@@ -12,10 +12,10 @@ O BookReview foi construído com Next.js 16 (App Router), React 19 e Prisma com 
 
 Com ele, voce consegue:
 
-- Criar albums para organizar as resenhas.
-- Cadastrar novas resenhas com titulo, autor, album, nota (1-5) e descrição.
+- Criar coleções para organizar as resenhas.
+- Cadastrar novas resenhas com titulo, autor, coleção, nota (1-5) e descrição.
 - Visualizar dashboard com indicadores e itens recentes.
-- Filtrar resenhas por titulo e categoria.
+- Filtrar resenhas por titulo e coleção.
 - Acessar pagina de detalhes de cada resenha.
 
 ## Stack
@@ -33,17 +33,17 @@ Com ele, voce consegue:
 ## Rotas da aplicação
 
 - `/` Dashboard com visão geral.
-- `/books-review` Listagem de resenhas com busca e filtro por album.
+- `/books-review` Listagem de resenhas com busca e filtro por coleção.
 - `/books-review/[id]` Detalhes da resenha.
 - `/new-review` Formulário de nova resenha.
-- `/albums` Gestão de albums.
+- `/collections` Gestão de coleções.
 
 ## Estrutura resumida
 
 ```text
 src/
 	app/                 # Rotas do App Router
-	api/actions/         # Server Actions (albums e reviews)
+	api/actions/         # Server Actions (collections e reviews)
 	template/            # Estrutura das paginas e componentes de domínio
 	components/ui/       # Componentes base de interface
 	lib/                 # Prisma client, utilitários e helpers
@@ -56,7 +56,7 @@ public/
 
 ## Modelagem de dados
 
-### Album
+### Collection
 
 - `id` (UUID)
 - `title` (string)
@@ -68,7 +68,7 @@ public/
 - `id` (UUID)
 - `title` (string)
 - `author` (string)
-- `categoryId` (FK para Album)
+- `collectionId` (FK para Collection)
 - `rating` (inteiro de 1 a 5)
 - `description` (máximo de 280 caracteres)
 - `createdAt`
@@ -146,11 +146,11 @@ nova versão em produção.
 
 ## Validacoes implementadas
 
-- Album:
+- Collection:
   - Titulo obrigatório.
   - Impede duplicidade por titulo.
 - Resenha:
-  - Titulo, autor, album e texto obrigatórios.
+  - Titulo, autor, coleção e texto obrigatórios.
   - Nota obrigatória entre 1 e 5.
   - Descrição com máximo de 280 caracteres.
   - Impede duplicidade de resenha por titulo.
@@ -169,7 +169,7 @@ nova versão em produção.
 
 ## Possíveis melhorias
 
-- Edição e exclusão de resenhas/albums.
+- Edição e exclusão de resenhas/coleções.
 - Confirmação de exclusão e fluxo de undo.
 - Paginação e ordenação da listagem.
 - Autenticação de usuários.
