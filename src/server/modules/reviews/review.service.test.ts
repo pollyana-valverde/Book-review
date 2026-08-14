@@ -358,4 +358,60 @@ describe("review.service.list", () => {
     const result = await reviewService.list(USER_A, { collectionId: "all" });
     expect(result.items).toHaveLength(2);
   });
+
+  it("encontra a resenha pelo texto do corpo (contentText), não só pelo título", async () => {
+    const collection = await seedCollection(USER_A);
+
+    await reviewService.create(USER_A, {
+      title: "Livro sem relação",
+      author: "Autor",
+      collectionId: collection.id,
+      rating: 3,
+      content: validContent("Uma jornada de baleias no oceano profundo"),
+    });
+
+    const result = await reviewService.list(USER_A, { title: "baleias" });
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].title).toBe("Livro sem relação");
+  });
+
+  it("não encontra resenha quando o termo não existe em título nem em contentText", async () => {
+    const collection = await seedCollection(USER_A);
+
+    await reviewService.create(USER_A, {
+      title: "Livro qualquer",
+      author: "Autor",
+      collectionId: collection.id,
+      rating: 3,
+      content: validContent("Texto de resenha comum"),
+    });
+
+    const result = await reviewService.list(USER_A, { title: "inexistente-xyz" });
+    expect(result.items).toHaveLength(0);
+  });
+
+  it("busca por conteúdo não vaza resenha de outro usuário", async () => {
+    const collectionA = await seedCollection(USER_A);
+    const collectionB = await seedCollection(USER_B);
+
+    await reviewService.create(USER_B, {
+      title: "Livro do usuário B",
+      author: "Autor",
+      collectionId: collectionB.id,
+      rating: 3,
+      content: validContent("Termo exclusivo compartilhado123"),
+    });
+    await reviewService.create(USER_A, {
+      title: "Livro do usuário A",
+      author: "Autor",
+      collectionId: collectionA.id,
+      rating: 3,
+      content: validContent("Outro texto qualquer"),
+    });
+
+    const result = await reviewService.list(USER_A, {
+      title: "compartilhado123",
+    });
+    expect(result.items).toHaveLength(0);
+  });
 });
