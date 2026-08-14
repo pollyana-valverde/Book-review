@@ -48,6 +48,58 @@ diretamente. NUNCA chamam a própria API por HTTP.** Mutações do lado do
 cliente vão por Hono RPC (`hc`); o que ainda não foi migrado usa Server
 Action.
 
+## Arquitetura de front: features (fase 11)
+
+O front vive em `src/features/<entidade>/`, uma pasta por entidade de
+domínio (`reviews`, `collections`, `home`, `auth`). `src/template/` não
+existe mais — foi a estrutura anterior à fase 11, hoje só um nome a evitar.
+`src/features/auth/` (criada na fase 5) é o modelo original desse padrão.
+
+Estrutura por dentro de cada feature:
+
+- **`components/`** — peças de UI (client ou server) que recebem dado via
+  prop, sem buscar dado do servidor por conta própria. Uma pasta por
+  componente, com `index.tsx` re-exportando.
+- **`http/`** — o que fala com o servidor: Server Components que chamam
+  `getSession()` + `*.queries.ts` diretamente (os pontos de entrada
+  usados por `src/app/*/page.tsx`/`loading.tsx`), e funções de busca de
+  dado puras (ex.: `home/http/resume-data.ts`). Mutação do lado do
+  cliente (RPC) fica dentro do componente que a dispara (`components/`),
+  não vira uma função separada em `http/` — não extraia lógica de dentro
+  de um componente só para encaixar na convenção de pasta.
+- **`lib/`** — utilidade específica da feature (ex.:
+  `reviews/lib/search-params.ts`).
+- **`types/`** — tipos específicos da feature que não vêm direto de um
+  `*.contract.ts`.
+- **`index.ts`** — a API pública. Só o que é consumido de fora da feature
+  (por `src/app/` ou por outra feature) precisa estar aqui.
+
+**Três regras que fazem essa organização sobreviver ao tempo:**
+
+1. **Uma feature NUNCA importa caminho profundo de outra feature.** Se
+   `home` precisa de `ReviewCard` (de `reviews`), importa de
+   `@/features/reviews` (o `index.ts`), nunca de
+   `@/features/reviews/components/review-card`. Sem isso, mudar um
+   detalhe interno de uma feature quebra outra em silêncio.
+   `grep -rn "@/features/[a-z]*/" src/features/` só deve mostrar imports
+   DENTRO da própria feature — é o teste rápido pra verificar isso.
+2. **`index.ts` exporta só o que é público.** O resto é detalhe interno,
+   mesmo que tecnicamente importável por caminho profundo (TypeScript não
+   impede isso — é convenção, não hard rule).
+3. **`src/app/` continua sem lógica própria**, só compõe o que as
+   features exportam. Regra herdada da fase 3: Client Component nunca
+   importa nada de `src/server/` (o `server-only` de cada módulo já
+   quebra isso em build, não é opcional).
+
+**Componente genuinamente compartilhado (usado por mais de uma feature em
+pé de igualdade, ou consumido também por `src/server/`) vai para
+`src/components/`, não para uma feature arbitrária.** É o caso de
+`src/components/ui/` (shadcn) e `src/components/editor/` — este último
+especificamente porque `src/server/lib/rich-text.ts` importa
+`extensions.ts` de lá; se `editor/` morasse dentro de `features/reviews/`,
+o servidor estaria importando de dentro de uma feature de front, invertendo
+a direção de dependência.
+
 ## As seis regras de trabalho deste projeto
 
 1. **Não expanda o escopo.** Outros problemas encontrados durante uma tarefa
