@@ -1,6 +1,6 @@
-import { ResumeCard } from "@/template/home-page/components/resume-card";
+import { ResumeCard } from "@/features/home/components/resume-card";
 
-import { getResumeData } from "@/utils/resume-data";
+import { getResumeData } from "@/features/home/http/resume-data";
 
 async function ResumeList() {
   const resumeData = await getResumeData();

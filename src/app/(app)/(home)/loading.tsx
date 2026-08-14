@@ -1,4 +1,4 @@
-import { HomeSkeleton } from "@/template/home-page/components/home-skeleton";
+import { HomeSkeleton } from "@/features/home";
 
 function HomeLoading() {
   return <HomeSkeleton />;

@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 
-import { HomeSkeleton } from "./components/home-skeleton";
+import { HomeSkeleton } from "@/features/home/components/home-skeleton";
 import { Text } from "@/components/ui/text";
-import { RecentReviewList } from "@/template/home-page/components/recent-review-list";
-import { ResumeList } from "@/template/home-page/components/resume-list";
-import { CollectionsBooksList } from "@/template/home-page/components/collections-books-list";
+import { RecentReviewList } from "@/features/home/components/recent-review-list";
+import { ResumeList } from "@/features/home/components/resume-list";
+import { CollectionsBooksList } from "@/features/home/components/collections-books-list";
 
 async function HomePageContent() {
   return (

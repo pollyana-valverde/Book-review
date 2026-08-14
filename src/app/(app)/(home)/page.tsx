@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { HomePage } from "@/template/home-page";
+import { HomePage } from "@/features/home";
 
 export const metadata: Metadata = {
   title: "Painel",
