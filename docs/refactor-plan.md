@@ -97,11 +97,6 @@ resolvido durante a reestruturação:
   usuário cadastrado por e-mail/senha que esquece a senha só tem login
   social ou intervenção manual de um admin no banco. Precisa ser
   endereçado antes do app ter usuários reais fora de ambiente de teste.
-- **Sem índice em `content_text`** (fase 8): a busca de resenha por texto
-  usa `ILIKE`/`contains`, que faz varredura completa da tabela. Não criado
-  porque o volume de dados do projeto ainda não justifica a complexidade
-  de um índice trigram/GIN — candidato a fase de manutenção quando o
-  volume crescer.
 - **Cadastro por e-mail expõe se o e-mail já existe — mantido por decisão
   do usuário** (fase 6, tarefa 0c): `POST /api/auth/sign-up/email` com
   e-mail já cadastrado responde `422`
