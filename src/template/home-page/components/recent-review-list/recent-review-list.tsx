@@ -1,7 +1,7 @@
 import { getRecentReviews } from "@/server/modules/reviews/review.queries";
 import { getSession } from "@/server/auth/session";
 
-import { ReviewCard } from "@/template/books-review-page/components/review-card";
+import { ReviewCard } from "@/features/reviews";
 import { EmptyState } from "@/components/ui/empty-state";
 
 import { BookOpenIcon } from "lucide-react";

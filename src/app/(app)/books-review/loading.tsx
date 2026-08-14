@@ -1,5 +1,4 @@
-import { HeaderSkeleton } from "@/template/books-review-page/components/header-skeleton";
-import { ReviewSkeleton } from "@/template/books-review-page/components/review-skeleton";
+import { HeaderSkeleton, ReviewSkeleton } from "@/features/reviews";
 
 function BooksReviewLoading() {
   return (

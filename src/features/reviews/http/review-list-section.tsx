@@ -3,8 +3,8 @@ import { getReviews } from "@/server/modules/reviews/review.queries";
 import { getSession } from "@/server/auth/session";
 
 import { Text } from "@/components/ui/text";
-import { ReviewList } from "@/template/books-review-page/components/review-list";
-import { SearchSection } from "@/template/books-review-page/components/review-search";
+import { ReviewList } from "@/features/reviews/components/review-list";
+import { SearchSection } from "@/features/reviews/components/review-search";
 
 async function BooksReviewHeader() {
   const { user } = (await getSession())!;

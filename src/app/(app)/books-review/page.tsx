@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 import {
   BooksReviewHeader,
   ReviewListSection,
-} from "@/template/books-review-page";
-import { HeaderSkeleton } from "@/template/books-review-page/components/header-skeleton";
-import { ReviewSkeleton } from "@/template/books-review-page/components/review-skeleton";
-import { BooksReviewSearchParams } from "@/template/books-review-page/types";
+  HeaderSkeleton,
+  ReviewSkeleton,
+  type BooksReviewSearchParams,
+} from "@/features/reviews";
 
 export const metadata: Metadata = {
   title: "Resenhas",

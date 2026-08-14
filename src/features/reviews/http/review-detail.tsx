@@ -18,7 +18,7 @@ import {
 
 import { ArrowLeftIcon, StarIcon } from "lucide-react";
 
-import { ReviewDTO } from "@/template/books-review-page/types";
+import { ReviewDTO } from "@/features/reviews/types";
 
 async function ReviewDetailPage({ id }: { id: ReviewDTO["id"] }) {
   if (!id) {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { deleteReview } from "@/server/actions";
-import { ReviewDTO } from "@/template/books-review-page/types";
+import { ReviewDTO } from "@/features/reviews/types";
 import { getCollectionBadgeColor } from "@/lib/collection-badge-color";
 
 import {

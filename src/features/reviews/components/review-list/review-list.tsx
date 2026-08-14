@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ReviewDTO } from "@/template/books-review-page/types";
+import { ReviewDTO } from "@/features/reviews/types";
 import { rpc } from "@/lib/rpc";
 import { readRpcError } from "@/lib/rpc-error";
 
-import { ReviewCard } from "@/template/books-review-page/components/review-card";
+import { ReviewCard } from "@/features/reviews/components/review-card";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { EmptyState } from "@/components/ui/empty-state";

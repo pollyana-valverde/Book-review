@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ReviewDetailPage } from "@/template/books-review-page";
+import { ReviewDetailPage } from "@/features/reviews";
 import { getReviewById } from "@/server/modules/reviews/review.queries";
 import { getSession } from "@/server/auth/session";
 import { NotFoundError } from "@/server/lib/errors";

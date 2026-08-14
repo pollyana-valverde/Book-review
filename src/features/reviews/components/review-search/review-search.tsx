@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   replaceWithParams,
   setOrDeleteParam,
-} from "@/template/books-review-page/lib";
+} from "@/features/reviews/lib/search-params";
 import type { CollectionDTO } from "@/server/modules/collections/collection.contract";
 
 import { Field, FieldLabel } from "@/components/ui/field";

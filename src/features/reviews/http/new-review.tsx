@@ -2,7 +2,7 @@ import { getCollections } from "@/server/modules/collections/collection.queries"
 import { getSession } from "@/server/auth/session";
 
 import { Text } from "@/components/ui/text";
-import { NewReviewForm } from "@/template/new-review/components/new-review-form";
+import { NewReviewForm } from "@/features/reviews/components/new-review-form";
 
 import { BookOpenIcon } from "lucide-react";
 
