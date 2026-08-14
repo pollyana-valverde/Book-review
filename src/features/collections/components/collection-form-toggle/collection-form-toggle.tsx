@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { CollectionForm } from "@/template/collections-page/components/collection-form";
+import { CollectionForm } from "@/features/collections/components/collection-form";
 
 import { PlusIcon } from "lucide-react";
 

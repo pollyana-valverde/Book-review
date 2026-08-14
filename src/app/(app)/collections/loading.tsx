@@ -1,4 +1,4 @@
-import { CollectionSkeleton } from "@/template/collections-page/components/collection-skeleton";
+import { CollectionSkeleton } from "@/features/collections";
 
 function CollectionsLoading() {
   return <CollectionSkeleton />;

@@ -1,5 +1,5 @@
 import { getCollectionsWithReviewCount } from "@/server/modules/collections/collection.queries";
-import { CollectionCard } from "@/template/collections-page/components/collection-card";
+import { CollectionCard } from "@/features/collections/components/collection-card";
 import { getSession } from "@/server/auth/session";
 import { EmptyState } from "@/components/ui/empty-state";
 
