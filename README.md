@@ -70,7 +70,10 @@ public/
 - `author` (string)
 - `collectionId` (FK para Collection)
 - `rating` (inteiro de 1 a 5)
-- `description` (máximo de 280 caracteres)
+- `content` (documento do editor rico, JSON no formato Tiptap/ProseMirror —
+  fonte de verdade do conteúdo)
+- `contentText` (texto puro derivado de `content`, usado na busca)
+- `excerpt` (resumo curto derivado de `content`, usado nos cards)
 - `createdAt`
 - `updatedAt`
 
@@ -95,6 +98,10 @@ DATABASE_URL="postgresql://admin:admin@localhost:5433/bookreview"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 POSTGRES_PORT=5433
 ```
+
+Se a porta `5433` já estiver em uso por outro container/processo na sua
+máquina, mude `POSTGRES_PORT` (e a porta correspondente em `DATABASE_URL`)
+para uma porta livre — `docker compose up -d` respeita essa variável.
 
 3. Suba o banco com Docker (opcional, recomendado):
 
@@ -153,9 +160,10 @@ nova versão em produção.
   - Titulo obrigatório.
   - Impede duplicidade por titulo.
 - Resenha:
-  - Titulo, autor, coleção e texto obrigatórios.
+  - Titulo, autor, coleção e conteúdo obrigatórios.
   - Nota obrigatória entre 1 e 5.
-  - Descrição com máximo de 280 caracteres.
+  - Conteúdo validado no servidor contra o schema do editor (nós fora da
+    lista de extensões são rejeitados) e limitado a ~100KB.
   - Impede duplicidade de resenha por titulo.
 
 ## Testes
