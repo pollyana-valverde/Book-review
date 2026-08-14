@@ -1,0 +1,23 @@
+function CollectionSkeleton() {
+  return (
+    <div className="animate-pulse flex flex-col gap-8">
+      <div className="flex justify-between items-end">
+        <div className="space-y-2 w-full">
+          <div className="h-7.5 w-1/2 bg-muted rounded-xl" />
+          <div className="h-5 w-2/3 bg-muted rounded-xl" />
+        </div>
+        <div className="h-10 w-45 bg-muted rounded-xl" />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="h-40 bg-muted rounded-xl" />
+        <div className="h-40 bg-muted rounded-xl" />
+        <div className="h-40 bg-muted rounded-xl" />
+        <div className="h-40 bg-muted rounded-xl" />
+        <div className="h-40 bg-muted rounded-xl" />
+        <div className="h-40 bg-muted rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+export { CollectionSkeleton };

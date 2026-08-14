@@ -1,0 +1,759 @@
+# Plano de reestruturação
+
+Este documento registra as decisões da reestruturação em 11 fases para que
+sessões futuras tenham contexto sem depender do histórico do chat. **As 11
+fases estão concluídas** — o que segue é um resumo do estado final para
+quem chega sem ter acompanhado o processo; o resto do documento é o
+histórico fase a fase, mantido como referência.
+
+## Estado final, em resumo
+
+- **Domínio**: `Collection` (renomeada de `Album` na fase 7) e `Review`,
+  cada resenha pertence a uma coleção e a um usuário (`userId`).
+- **Servidor**: uma pasta por módulo em `src/server/modules/<módulo>/`,
+  em camadas — `*.contract.ts` (Zod, neutro) → `*.repository.ts` (Prisma)
+  → `*.mapper.ts` → `*.service.ts` (regra de negócio) → `*.routes.ts`
+  (Hono/`@hono/zod-openapi`) + `*.queries.ts` (leitura cacheada com
+  `unstable_cache`, chave e tag por `userId`) + `*.openapi.ts` (metadados
+  OpenAPI). Transporte HTTP montado em `src/app/api/[[...route]]/route.ts`;
+  RPC tipado (`hc<AppType>()`) em `src/lib/rpc.ts`.
+- **Front**: `src/features/<entidade>/` (`reviews`, `collections`, `home`,
+  `auth`), cada uma com `components/`/`http/`/`lib/`/`types/`/`index.ts`.
+  `src/app/` só compõe; nenhuma feature importa caminho profundo de outra
+  (ver "Arquitetura de front: features" em `CLAUDE.md`).
+- **Auth**: BetterAuth (e-mail+senha, Google/GitHub condicionais), sem
+  reset de senha nem verificação de e-mail (fora de escopo por decisão).
+- **Editor**: Tiptap 3, JSON como fonte de verdade; `contentText`/`excerpt`
+  sempre derivados no servidor.
+- **Testes**: Vitest nos services + `rich-text.ts`, com repositories falsos
+  tipados contra o módulo real; CI roda lint → typecheck → test → build.
+- Para as regras que evitam redescobrir armadilhas já resolvidas
+  (RPC do Hono, cache por usuário, estrutura de features etc.), ver
+  `CLAUDE.md` — este documento é o histórico, aquele é o guia de uso
+  diário.
+
+## Decisões de domínio e arquitetura
+
+- **Domínio**: `Album` renomeado para `Collection`, e `categoryId` para
+  `collectionId`, em schema, DTOs, rotas e UI (fase 7, concluída — ver
+  seção própria).
+- **API**: Hono montado em `src/app/api/[[...route]]/route.ts`, com camadas
+  contract / routes / service / repository / mapper em
+  `src/server/modules/`. Server Components importam services diretamente;
+  NUNCA chamam a própria API por HTTP. Mutações do cliente vão por Hono RPC
+  (`hc`).
+- **Auth**: BetterAuth com email+senha, Google e GitHub. Reset de senha e
+  verificação de e-mail foram REMOVIDOS do escopo (decisão do usuário na
+  fase 5, não "opcionais" como este documento dizia antes) — ver seção
+  própria da fase 5 e "Dívida técnica".
+- **Editor**: Tiptap, JSON como fonte de verdade, com `contentText` e
+  `excerpt` derivados no servidor.
+- **Front**: `src/template/` vira `src/features/<entidade>/`.
+- **Testes**: Vitest nos services, com repositories falsos.
+- **Docs**: OpenAPI via `@hono/zod-openapi`.
+
+## Decisões de infraestrutura (fase 2)
+
+- **TypeScript e ESLint travados em versões estáveis, não nas mais novas.**
+  `typescript@^7` quebrava `pnpm lint` (`TypeError: Cannot read properties of
+  undefined (reading 'Cjs')` em `@typescript-eslint/typescript-estree`), e
+  depois de corrigir isso, `eslint@^10` quebrava de novo
+  (`react/display-name` lançando `contextOrFilename.getFilename is not a
+  function`).
+  - `@typescript-eslint/typescript-estree` (última versão publicada,
+    8.67.0) declara `peerDependencies.typescript: ">=4.8.4 <6.1.0"` — não
+    existe hoje nenhuma versão de `@typescript-eslint` que suporte
+    TypeScript 7.
+  - `eslint-plugin-react` (última versão publicada, 7.37.5, trazida pelo
+    `eslint-config-next@16.3.0`) declara `peerDependencies.eslint` até
+    `^9.7` — ESLint 10 ainda não é suportado pelo plugin.
+  - `prisma@7.9.1` e `@hookform/resolvers` (via `valibot`) só exigem
+    `typescript >=5.4.0` / `>=5`, então travar o TypeScript numa faixa
+    5.x/6.x não quebra nenhuma outra dependência.
+  - **Decisão**: `typescript` fixado em `~6.0.3` (a única faixa 6.x
+    publicada, já que o TypeScript pulou de `6.0.3` direto para `7.0.x`) e
+    `eslint` fixado em `^9`. Reavaliar quando `@typescript-eslint` e
+    `eslint-plugin-react`/`eslint-config-next` publicarem suporte oficial a
+    TypeScript 7 e ESLint 10 — não fazer upgrade "no escuro" antes disso.
+
+## Dívida técnica
+
+Itens em aberto, cada um com o motivo pelo qual foi adiado em vez de
+resolvido durante a reestruturação:
+
+- **TypeScript fixado em `~6.0.3` e ESLint em `^9`.** Nenhuma versão
+  publicada de `@typescript-eslint` declara suporte a TypeScript 7 (peer
+  dependency trava em `<6.1.0`), e `eslint-plugin-react` trazido pelo
+  `eslint-config-next` trava em ESLint `^9.7`. Adiado até essas libs
+  publicarem suporte oficial — não é para fazer upgrade "no escuro" antes
+  disso (ver seção "Decisões de infraestrutura" acima).
+- **`unstable_cache` está deprecated** no Next 16 em favor de `"use cache"`
+  / Cache Components. Continua funcionando e é o que todo `*.queries.ts`
+  usa desde a fase 4; migrar exigiria revalidar toda a estratégia de tags
+  por usuário (fase 6) e não foi pedido — candidato a uma fase de
+  manutenção futura, não decidido ainda.
+- **Sem caminho de recuperação de conta** (decisão do usuário, fase 5):
+  reset de senha e verificação de e-mail nunca foram implementados;
+  usuário cadastrado por e-mail/senha que esquece a senha só tem login
+  social ou intervenção manual de um admin no banco. Precisa ser
+  endereçado antes do app ter usuários reais fora de ambiente de teste.
+- **Cadastro por e-mail expõe se o e-mail já existe — mantido por decisão
+  do usuário** (fase 6, tarefa 0c): `POST /api/auth/sign-up/email` com
+  e-mail já cadastrado responde `422`
+  (`USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`, comportamento padrão do
+  BetterAuth). Mascarar essa resposta pioraria a experiência de cadastro
+  (falha silenciosa, mais suporte) por um ganho de privacidade que não se
+  justifica numa plataforma de resenhas de livros. Revisitar só se o
+  projeto mudar de natureza.
+- `next dev` ignora `NODE_ENV` customizado (sempre roda como development).
+  Não é dívida do projeto, é comportamento do Next — mas todo teste de
+  comportamento condicionado a `NODE_ENV === "production"` (gate de
+  `/api/doc`/`/api/reference`, rate limit, mensagens genéricas de auth)
+  precisa ser feito contra `next build && next start`, nunca `next dev`.
+
+## Camadas de servidor (fase 3)
+
+Uma pasta por módulo em `src/server/modules/<módulo>/`, sem Hono ainda
+(fase 4 monta o transporte por cima disso):
+
+- **`*.contract.ts`** — schemas Zod (input e DTO de saída) e os tipos
+  inferidos. Sem `import "server-only"`: o front importa daqui para validar
+  formulários com `zodResolver`.
+- **`*.repository.ts`** — só Prisma. Finders explícitos (`findById`,
+  `findByTitle`, nunca `where: { [key]: value }`), `include` centralizado
+  com `satisfies Prisma.<Model>Include`, e `findMany` já preparado para
+  paginação por cursor (`cursor`/`limit`, busca `limit + 1`) — a UI ainda usa
+  só o default.
+- **`*.mapper.ts`** — converte o shape do Prisma para o DTO do contract.
+- **`*.service.ts`** — regra de negócio: normaliza filtros (`category ===
+  "all"` vira `undefined` aqui, não no componente), lança `AppError`
+  (`src/server/lib/errors.ts`) em vez de devolver `{ success, error }`, e
+  troca o padrão check-then-create por confiar na unique constraint e tratar
+  o `P2002` do Prisma. Nenhum `revalidatePath` aqui.
+- **`src/server/actions/`** — a borda: Server Actions finas que chamam o
+  service, convertem `AppError`/`ZodError` para `{ success, error }` via
+  `src/server/lib/action-result.ts`, e fazem `revalidatePath` usando a lista
+  única `REVALIDATE_PATHS`. Erros que não são `AppError` são logados e viram
+  mensagem genérica — nunca vazam a mensagem do Prisma.
+- **`src/server/db/prisma.ts`** — client singleton (movido de `src/lib/`).
+
+`src/api/` foi apagado por completo. Os tipos globais ambientes `Album` e
+`BookReview` (`src/types/*.d.ts`) também — os componentes agora importam
+`AlbumDTO`/`ReviewDTO` dos contracts.
+
+## Transporte HTTP com Hono (fase 4)
+
+- **Hono montado em `src/app/api/[[...route]]/route.ts`** via `handle` de
+  `hono/vercel`, exportando `GET/POST/PATCH/PUT/DELETE`. Sem
+  `runtime = "edge"` — o Prisma precisa do runtime Node.
+- **`src/server/api/index.ts`** monta o app raiz (`.basePath("/api")`),
+  registra `app.onError(errorHandler)` e compõe `/health`, `/reviews`
+  (`review.routes.ts`) e `/albums` (`album.routes.ts`) numa única expressão
+  encadeada — é dessa variável (`routes`) que `AppType` é inferido. Um teste
+  de tipo em `src/lib/rpc.type-test.ts` prova essa inferência (ver relatório
+  da fase 4 para a saída).
+- **Rotas são só controller**: validam com `zValidator` + o hook
+  `zodValidationHook` (padroniza o 400 no formato `{ error: { code,
+  message } }`), chamam o service, escolhem status (201 no create, 204 no
+  delete) e disparam `revalidateTag`. Zero regra de negócio.
+- **`app.onError`** traduz `AppError` para `{ error: { code, message } }`
+  com o status certo; erros desconhecidos viram 500 genérico e são
+  logados. O cliente RPC não infere esse formato de erro (limitação do
+  Hono) — todo chamador do RPC precisa checar `res.ok` antes de ler o corpo
+  como sucesso.
+- **Cache por tags**: `src/server/lib/cache-tags.ts` define `reviews`,
+  `review:${id}`, `albums` e `REVALIDATE_NOW` (`{ expire: 0 }` — o Next 16
+  exige um segundo argumento em `revalidateTag`; usamos expiração imediata
+  em vez do `"max"` recomendado porque `"max"` dá stale-while-revalidate e
+  quebraria "a lista atualiza sem reload manual"). A camada de leitura
+  cacheada fica em `src/server/modules/<módulo>/*.queries.ts`
+  (`review.queries.ts`, `album.queries.ts`), envolvendo os services com
+  `unstable_cache` e essas tags — todos os Server Components que liam dos
+  services agora leem daqui. As rotas Hono de mutação e as Server Actions
+  que sobraram chamam `revalidateTag` com a mesma tag.
+- **`src/lib/rpc.ts`** cria o cliente `hc<AppType>()` com
+  `import type { AppType }` (import normal vazaria Prisma/services para o
+  bundle do cliente) e `env.NEXT_PUBLIC_APP_URL` como base. Isso só é seguro
+  porque `src/lib/env.ts` foi ajustado nesta fase: `DATABASE_URL`/`NODE_ENV`
+  viraram getters avaliados só na leitura (lazy), em vez de calculados no
+  carregamento do módulo — senão importar `env` num Client Component (como
+  `rpc.ts`) derrubava o bundle do browser tentando validar `DATABASE_URL`.
+- **Fatia vertical migrada**: `album-form.tsx` foi para o RPC (sem
+  `<Form>/<FormField>` do shadcn — `useForm` + `register` + `Field`/
+  `FieldLabel`/`FieldError`/`Input` puros, erro de servidor em
+  `errors.root`, `router.refresh()` no sucesso para repintar os Server
+  Components após o `revalidateTag`). A Server Action `createAlbum` foi
+  removida por ficar sem chamador; `deleteAlbum` continua como Server
+  Action.
+- **`new-review-form.tsx` continua em Server Action** — a migração dele
+  para RPC fica para a fase 8, junto com o editor Tiptap, para não jogar
+  fora o trabalho quando o formulário for reescrito. As duas abordagens
+  (RPC no álbum, Server Action na resenha) coexistindo é transitório e
+  intencional.
+- **OpenAPI**: decidido na fase 4.5 — ver seção própria abaixo.
+- **Verificação pós-fase (fase 4.5, tarefa 0a)**: `DATABASE_URL="" pnpm
+  build` continua falhando com mensagem clara mesmo com os getters lazy de
+  `src/lib/env.ts`. Motivo: `src/server/db/prisma.ts` lê `env.DATABASE_URL`
+  no topo do módulo (`new PrismaPg({ connectionString: env.DATABASE_URL
+  })`), e toda rota coletada no build — incluindo `/api/[[...route]]` — 
+  importa esse módulo transitivamente. O getter só adia a validação para o
+  primeiro acesso real, e esse acesso acontece de qualquer forma durante o
+  build. Não foi necessário separar `env.server.ts`/`env.client.ts`.
+
+## OpenAPI com @hono/zod-openapi (fase 4.5)
+
+- **Decisão**: `@hono/zod-openapi` (versão instalada: **1.5.2**). É a
+  mesma lib que o plano original (linha "Docs" no topo deste documento) já
+  prevesse — a preocupação histórica de que ela dependesse de uma versão de
+  `@asteasolutions/zod-to-openapi` presa ao Zod 3 **não se aplica mais**:
+  1.5.2 declara `peerDependencies.zod: "^4.0.0"` e usa
+  `@asteasolutions/zod-to-openapi@^8.5.0`, que por sua vez também declara
+  `peerDependencies.zod: "^4.0.0"`. Confirmado com `npm view` antes de
+  instalar qualquer coisa, e validado com uma prova de conceito (uma rota,
+  um schema Zod 4, `app.doc31()` gerando OpenAPI 3.1 válido) antes de tocar
+  no app real. Nenhum downgrade de Zod foi necessário.
+  - `hono-openapi` (a alternativa) não foi avaliada a fundo — não houve
+    motivo para procurar alternativa depois que a verificação de
+    compatibilidade deu certo de primeira.
+- **Onde vivem os metadados OpenAPI**: `src/server/modules/<módulo>/
+  <módulo>.openapi.ts` (`review.openapi.ts`, `album.openapi.ts`). Os
+  `*.contract.ts` continuam em Zod puro, sem nenhum import de
+  `@hono/zod-openapi` — o front os importa para validar formulários com
+  `zodResolver`, e a extensão `.openapi()` não pode ir junto no bundle do
+  cliente. Verificado (runtime e tipos) que chamar `.openapi()` num schema
+  criado com `import z from "zod"` funciona desde que
+  `import "@hono/zod-openapi"` (efeito colateral, sem binding) tenha
+  rodado antes em algum ponto do processo — é o que cada `*.openapi.ts` faz
+  no próprio topo, sem depender da ordem de import de quem o consome.
+  Path params (`{id}`) e o schema de erro compartilhado
+  (`src/server/api/lib/error-schema.ts`) seguem a mesma regra: ficam fora
+  dos contracts.
+- **Documentação**: `GET /api/doc` (OpenAPI 3.1 via `app.doc31()`) e
+  `GET /api/reference` (Scalar, `@scalar/hono-api-reference`). Os dois só
+  respondem quando `NODE_ENV !== "production"` — em produção devolvem 404.
+  Testado com `next build && next start` (o `next dev` ignora
+  `NODE_ENV` custom e sempre roda como development, então não serve para
+  testar esse gate). Sem security schemes ainda — cookie de sessão é fase 5.
+- **RPC (`AppType`) preservado**: `OpenAPIHono` estende `Hono`, então as
+  três armadilhas da fase 4 (`.route()` encadeado, tipo inferido de uma
+  variável, `.openapi()`/rotas encadeadas dentro de cada módulo) continuam
+  valendo. `src/lib/rpc.type-test.ts` foi falsificado de novo depois da
+  migração (trocada uma propriedade por um nome inexistente) e o `tsc`
+  acusou o erro esperado; restaurado, voltou a passar limpo.
+
+## Autenticação com BetterAuth (fase 5)
+
+- **Escopo**: usuário, sessão, cadastro/login por e-mail+senha, login social
+  (Google, GitHub condicionais), logout. `userId`/ownership em Album e
+  Review, filtro por dono e autorização nos services ficam para a fase 6 —
+  o banco já tem as tabelas de auth, mas os dados de domínio continuam sem
+  dono nesta fase.
+- **Verificação de e-mail e reset de senha foram REMOVIDOS do escopo**
+  (decisão do usuário, não "opcionais" como a primeira versão deste plano
+  dizia). Nenhum `sendResetPassword`/`sendVerificationEmail` foi
+  configurado, nenhum provedor de e-mail foi instalado. O campo
+  `emailVerified` existe na tabela `user` porque é parte do modelo base do
+  BetterAuth (não dá pra tirar), mas nunca é checado — `requireEmailVerification`
+  não foi setado, então nunca bloqueia login.
+- **Schema gerado pela CLI oficial** (`pnpm dlx @better-auth/cli generate`),
+  não escrito à mão — os nomes de campo (`session.token`, `account.providerId`
+  etc.) são contratuais com a lib. Diff revisado antes de migrar: só
+  adicionou `User`/`Session`/`Account`/`Verification`, nenhuma mudança em
+  `Album`/`Review`, nenhuma relação nova com eles.
+- **Providers sociais são condicionais em runtime, não em código**:
+  `src/server/auth/providers.ts` só considera um provedor "configurado"
+  quando SEU PAR completo (client id + secret) existe em `env`. O mesmo
+  helper decide o que `src/server/auth/auth.ts` registra em
+  `socialProviders` e o que a página de sign-in/sign-up passa como prop
+  para `SocialButtons` — um botão que leva a um provedor mal configurado é
+  pior que nenhum botão. Testado de ponta a ponta com as duas variáveis
+  vazias (cenário real deste ambiente, sem credenciais OAuth): o app sobe,
+  cadastro/login por e-mail funcionam, nenhum botão social aparece.
+- **Basta bater o `basePath`**: `auth.ts` usa `basePath: "/api/auth"`, e o
+  handler é montado em `src/server/api/index.ts` com
+  `app.on(["POST","GET"], "/auth/*", (c) => auth.handler(c.req.raw))` —
+  FORA da expressão encadeada dos `.route()` de propósito (não é
+  `createRoute`, não deve compor `AppType`, não deve aparecer no cliente
+  RPC nem no `/api/doc`). Confirmado com curl: `/api/doc` só lista as 4
+  rotas de reviews/albums, nunca `/api/auth/*` nem `/api/me`.
+- **`Set-Cookie` atravessa `handle()` de `hono/vercel` intacto** — testado
+  explicitamente via curl em `POST /api/auth/sign-up/email`: chegam os dois
+  cookies (`better-auth.session_token` e `better-auth.session_data`, esse
+  por causa do `cookieCache` com maxAge de 5 min). Esse era o ponto do
+  integração com maior risco de falhar em silêncio e não falhou.
+- **`AppEnv.Variables`** deixou de ser `Record<string, never>` e ganhou
+  `user`/`session` (nulável). `src/server/api/middlewares/session.ts` tem
+  `sessionMiddleware` (só popula) e `requireAuth` (lança `UnauthorizedError`
+  se não há usuário) — nenhum dos dois é global; aplicados só em
+  `GET /api/me`, a rota de exemplo que prova o mecanismo. Rotas de
+  review/album não os usam ainda.
+- **Duas camadas de proteção, propósitos diferentes**:
+  `src/middleware.ts` é checagem OTIMISTA (só olha se existe cookie via
+  `getSessionCookie`, sem bater no banco) para evitar flash de tela
+  protegida — nunca usa Prisma, roda em runtime restrito. A verificação
+  REAL é `src/server/auth/session.ts::requireSession()`, chamada por
+  `src/app/(app)/layout.tsx`, que de fato busca a sessão
+  (`auth.api.getSession`, envolvida em `cache()` do React porque várias
+  Server Components pedem a sessão na mesma renderização). O middleware
+  seta `callbackUrl` com o pathname exato da requisição; o backstop do
+  layout (caso raro: cookie existe mas sessão não é mais válida) redireciona
+  para `/sign-in` sem `callbackUrl`, por não ter acesso fácil ao pathname a
+  partir de um layout compartilhado.
+- **Formulários no padrão da fase 4** (`useForm` direto, `register`,
+  `Field`/`FieldLabel`/`FieldError`/`Input` puros, `errors.root` para erro
+  de servidor, `autoComplete` correto). `readRpcError` (tarefa 0) não se
+  aplica aqui — os formulários de auth usam `authClient` do BetterAuth
+  (`{ data, error }`), não o RPC do Hono.
+- **Segurança (tarefa 8)**:
+  - Rate limit nativo do BetterAuth (`rateLimit: { enabled: true }` —
+    por padrão só liga em produção; forçado para cobrir outros ambientes
+    também). Testado: 3 tentativas de login com senha errada passam, a
+    partir da 4ª a API responde `429`.
+  - Login com senha errada: o BetterAuth já responde de forma genérica por
+    padrão (`INVALID_EMAIL_OR_PASSWORD`, sem distinguir "senha errada" de
+    "e-mail não existe"); o front força uma mensagem fixa
+    ("E-mail ou senha incorretos.") de qualquer forma, ignorando o texto
+    que vier da API.
+  - Cadastro com e-mail duplicado: **não** é genérico por padrão — ver
+    "Dívida técnica".
+  - `BETTER_AUTH_SECRET` com `.min(32)` no Zod schema; testado com
+    `BETTER_AUTH_SECRET` de 8 caracteres — `pnpm build` falha com mensagem
+    apontando exatamente essa variável.
+
+## Ownership: userId em Album/Review (fase 6)
+
+- **Estado do banco antes de migrar**: verificado antes de escrever
+  qualquer migração — `albums`, `reviews` e `user` estavam **vazios**
+  (0 linhas) neste ambiente de desenvolvimento. Mesmo assim, a migração foi
+  escrita para rodar de forma segura contra um banco COM dados (é isso que
+  a torna reutilizável em produção depois), não só contra o vazio local.
+- **Estratégia de migração** (`prisma/migrations/
+  20260813010000_add_ownership_to_albums_reviews/migration.sql`), em três
+  passos (expand → backfill → contract), porque `ADD COLUMN ... NOT NULL`
+  direto falha em qualquer tabela com linhas existentes:
+  1. `ADD COLUMN user_id TEXT` (nullable);
+  2. `UPDATE ... SET user_id = COALESCE(<dono via GUC>, <usuário mais
+     antigo>) WHERE user_id IS NULL`;
+  3. só então `ALTER COLUMN user_id SET NOT NULL`.
+  - **Critério de dono do backfill**: por padrão, o usuário mais antigo
+    (`ORDER BY "createdAt" ASC LIMIT 1`) — o único critério que uma
+    migração SQL estática consegue expressar sem depender de nada externo.
+    SQL de migração não lê variáveis de ambiente do processo Node
+    (`SEED_OWNER_EMAIL` não existe do ponto de vista do Postgres); o
+    equivalente dentro do banco é a GUC de sessão `app.seed_owner_email` —
+    um operador que queira um dono específico roda
+    `SET app.seed_owner_email = 'dono@example.com';` na mesma sessão antes
+    de aplicar a migração. Sem essa GUC, cai no fallback. Testado
+    isoladamente (tabelas temporárias, dentro de uma transação com
+    `ROLLBACK`) nos dois cenários — sem GUC e com GUC — antes de aplicar
+    a migração de verdade.
+  - Índices únicos globais antigos (`albums_title_key`, `reviews_title_key`
+    — o bug de multi-tenancy: o primeiro a criar "Ficção" travava todo
+    mundo) removidos; substituídos por `@@unique([userId, title])`.
+  - Confirmado com `prisma migrate diff --exit-code` que o banco após a
+    migração bate exatamente com o schema ("No difference detected").
+- **`onDelete` de `Review.category` mudou de `Cascade` para `Restrict`**:
+  apagar um álbum que ainda tem resenhas dentro agora é recusado pelo
+  banco (constraint de foreign key, código Prisma `P2003`) em vez de
+  apagar as resenhas junto silenciosamente. `album.service.remove` traduz
+  esse erro para `ConflictError` ("Este álbum tem resenhas. Mova ou apague
+  as resenhas antes.") — a UI existente (`album-card.tsx`) já mostra esse
+  texto via `toast.error()`, porque o encanamento genérico
+  `AppError → toActionResult → { error }` já existia desde a fase 3/4;
+  nenhuma mudança de UI foi necessária.
+- **Repositories**: toda função recebe `userId` e filtra por ele.
+  Update/delete por id usam `updateMany`/`deleteMany` com
+  `where: { id, userId }` — se `count` vier 0, o service trata como
+  `NotFoundError`, nunca `ForbiddenError`, para não revelar a existência de
+  um recurso alheio (confirmado no teste 2 e 3 da tarefa 8: 404, não 403).
+- **Services**: `userId` é sempre o primeiro parâmetro; nenhum service
+  busca sessão sozinho. `review.service.create`/`update` valida que
+  `categoryId` pertence ao mesmo `userId` antes de gravar (senão, um id de
+  álbum alheio simplesmente lançaria `NotFoundError` — testado na tarefa 8,
+  teste 4).
+- **Cache por usuário — a parte crítica**: `src/server/lib/cache-tags.ts`
+  agora exige `userId` (`reviews:${userId}`, `review:${userId}:${id}`,
+  `albums:${userId}`) — sem isso a tag por si só não evita nada, porque
+  quem vaza dado entre contas é a CHAVE do `unstable_cache`, não a tag.
+  Por isso `src/server/modules/*/*.queries.ts` foram reescritas: cada
+  função de leitura agora recebe `userId` e embrulha `unstable_cache`
+  DENTRO de uma função chamada com esse `userId` em mãos (`keyParts`
+  inclui `userId` explicitamente), em vez do padrão anterior de um wrapper
+  único criado uma vez no carregamento do módulo. Provado com o teste 5 da
+  tarefa 8 (ver seção de testes) — não foi só inspeção de código.
+- **Armadilha nova do OpenAPIHono**: `.use("*", sessionMiddleware,
+  requireAuth)` encadeado no meio da cadeia `.openapi(...)` degrada o tipo
+  de volta para `Hono` puro — `.openapi()` some do tipo da variável
+  seguinte (mesma classe de bug das "três armadilhas" da fase 4, um caso
+  novo). Resolvido usando o campo `middleware` do próprio `createRoute()`
+  em cada rota, em vez de `.use()` encadeado — mantém a inferência de
+  `AppType` intacta. `src/lib/rpc.type-test.ts` foi falsificado de novo
+  depois da mudança e voltou a passar limpo.
+- **OpenAPI**: security scheme `cookieAuth` (apiKey em cookie) registrado
+  uma vez em `src/server/api/index.ts`; toda rota de review/album declara
+  `security: [{ cookieAuth: [] }]` e documenta a resposta `401`. O handler
+  do BetterAuth continua fora do documento (não é `createRoute`).
+- **Server Actions remanescentes** (`deleteAlbum`, `createReview`,
+  `deleteReview`) chamam `requireSession()` FORA do `try/catch` de
+  propósito — `requireSession()` usa `redirect()` do Next por baixo, que
+  lança um erro especial (`NEXT_REDIRECT`) que precisa atravessar sem ser
+  capturado; um `catch` genérico ao redor transformaria o redirect num
+  resultado de erro comum.
+- **Teste de isolamento entre contas**: os sete cenários da tarefa 8
+  passaram, incluindo o de cache (usuário A popula o cache de
+  `/books-review`, usuário B carrega a mesma rota na mesma instância do
+  servidor logo em seguida e não vê nada de A — testado nos dois sentidos).
+  Ver relatório da fase 6 para a evidência completa.
+
+## Rename: Album → Collection (fase 7)
+
+- **Migração aplicada por RENAME, não recriação.** `prisma migrate diff
+  --script` contra o schema já renomeado confirmou que o Prisma geraria a
+  migração como `DROP TABLE "albums"` + `CREATE TABLE "collections"` (e
+  `DROP COLUMN "categoryId"` + `ADD COLUMN "collection_id"` em `reviews`),
+  o que destruiria todas as linhas. A migração
+  (`prisma/migrations/20260813170000_rename_album_to_collection/
+  migration.sql`) foi escrita à mão só com `ALTER TABLE ... RENAME TO`,
+  `ALTER TABLE ... RENAME COLUMN`, `ALTER TABLE ... RENAME CONSTRAINT` e
+  `ALTER INDEX ... RENAME TO` — preserva linhas, FKs e índices.
+  `categoryId` não tinha `@map` antes (coluna já se chamava `categoryId`
+  no banco); a partir desta fase tem `@map("collection_id")`, então a
+  migração também renomeia a coluna para snake_case.
+  Confirmado com `prisma migrate diff --exit-code` depois de aplicar: "No
+  difference detected" entre schema e banco.
+- **Preservação de dados testada de ponta a ponta**: antes da migração,
+  criados dois usuários de teste com álbuns/resenhas via API (um deles com
+  2 álbuns e 2 resenhas, o mínimo pedido pelo critério de aceite). Depois
+  de aplicar a migração, os mesmos ids, títulos e vínculos (`collection_id`
+  apontando para o `id` certo) foram conferidos com uma query direta no
+  Postgres — ver relatório da fase 7 para a evidência completa (antes e
+  depois lado a lado).
+- **Escopo do rename**: `src/server/modules/albums/` →
+  `src/server/modules/collections/` (arquivos e identificadores),
+  `src/server/lib/cache-tags.ts` (`albumsTag` → `collectionsTag`),
+  `src/server/actions/album-actions.ts` → `collection-actions.ts`, rota
+  pública `/api/albums` → `/api/collections`, `categoryId` → `collectionId`
+  em `listReviewsQuerySchema`/`createReviewSchema`/`reviewDTOSchema`
+  (`categoryTitle` → `collectionTitle`), `src/template/albums-page/` →
+  `src/template/collections-page/`, rota `/albums` → `/collections`,
+  search param `category` → `collection` em `/books-review`,
+  `src/lib/album-badge-color.ts` → `collection-badge-color.ts`. Textos
+  visíveis trocados de álbum/álbuns para coleção/coleções.
+  `src/lib/rpc.type-test.ts` cobre `/api/collections` e foi falsificado de
+  novo depois da mudança (tsc acusou o erro esperado, restaurado depois).
+- **Fora do escopo desta fase, deixado como está**: `new-review-form.tsx`
+  só recebeu os renames mecânicos necessários para compilar contra o
+  contract atualizado — continua no padrão antigo (`<Form>/<FormField>` do
+  shadcn, Server Action em vez de RPC). A migração dele para o padrão
+  `useForm` direto + RPC é da fase 8, junto com o editor Tiptap, para não
+  descartar esse trabalho quando o formulário for reescrito.
+- **Teste de isolamento de cache da fase 6 reexecutado antes desta fase**
+  (tarefa 0a do relatório da fase 7), contra `next build && next start`
+  (não `next dev`, que não exercita cache real): dois usuários, cada um
+  populando `/books-review` primeiro, no dois sentidos — nenhum viu dado
+  do outro. Sem esse resultado, a fase pararia antes da renomeação (regra
+  do relatório).
+
+## Editor rico com Tiptap (fase 8)
+
+- **Versão instalada: Tiptap 3.30.1.** Confirmado na doc oficial (Context7)
+  antes de escrever código, não de memória — a v3 mudou API em relação à
+  v2: `undoRedo` (não mais `history`) dentro do StarterKit, listas movidas
+  para `@tiptap/extension-list`, `underline`/`link` agora inclusos por
+  padrão no StarterKit, e existe um renderizador estático dedicado
+  (`@tiptap/static-renderer`, ver abaixo) que não existia na v2.
+  `@tiptap/core` precisou entrar como dependência direta (antes só vinha
+  como transitiva de `@tiptap/react`) porque `getSchema` é importado
+  direto dele em `src/server/lib/rich-text.ts`.
+- **JSON como fonte de verdade**: `Review.content` (Json) é o documento
+  Tiptap/ProseMirror; `contentText` (texto puro, para busca) e `excerpt`
+  (resumo para os cards) são DERIVADOS no servidor a cada create/update —
+  nunca aceitos do cliente. `description` foi removida.
+- **Migração por expand → backfill → contract**
+  (`prisma/migrations/20260814000000_add_rich_text_content_to_reviews/
+  migration.sql`), pelo mesmo motivo de sempre: a migração que o Prisma
+  geraria (`DROP COLUMN description` + três `ADD COLUMN ... NOT NULL` sem
+  default, tudo num único `ALTER TABLE`) falha contra qualquer tabela com
+  linhas. Backfill: `description` vira um documento de um parágrafo com um
+  nó de texto; quando `trim(description) = ''`, vira um parágrafo SEM nó
+  de texto (`{"type":"doc","content":[{"type":"paragraph"}]}`) — um nó de
+  texto vazio é inválido no ProseMirror e quebraria a renderização.
+  Testado contra 5 linhas reais (uma delas só espaços, inserida direto via
+  SQL para simular dado legado, e uma com >180 caracteres) — ver relatório
+  da fase 8 para a evidência antes/depois.
+- **`src/components/editor/extensions.ts` é o contrato entre cliente e
+  servidor**: StarterKit (heading limitado a níveis 2 e 3) + Placeholder,
+  sem `server-only` nem import de servidor. É importado tanto por
+  `rich-text-editor.tsx` (cliente, `useEditor`) quanto por
+  `src/server/lib/rich-text.ts` (`getSchema`, sanitização) e
+  `rich-text-content.tsx` (renderização estática) — os três usam
+  exatamente o mesmo conjunto de nós/marcas, de propósito.
+- **A sanitização de verdade não é Zod**: `review.contract.ts` só confirma
+  que `content` parece um documento (`type: "doc"` + `content` opcional,
+  `.loose()` para permitir `attrs` do ProseMirror). Quem valida de fato é
+  `src/server/lib/rich-text.ts::sanitizeRichText`, reconstruindo a árvore
+  com `Node.fromJSON(schema, json)` + `.check()` contra o schema derivado
+  de `extensions.ts` — nós/marcas fora da lista (ex.: `{"type":"script"}`)
+  não sobrevivem à reconstrução e viram `ValidationError` (422). Limite de
+  ~100KB no JSON serializado ANTES de qualquer parse. Testado com um nó
+  desconhecido e com payload sobredimensionado — os dois rejeitados (ver
+  relatório da fase 8).
+- **Busca estendida para `contentText`**: `review.repository.ts::findMany`
+  passou a buscar por título OU `contentText` (antes só título), já que
+  agora existe texto puro derivado do conteúdo. **Dívida técnica nova**:
+  não há índice em `content_text` — o filtro usa `ILIKE` (`contains`), que
+  faz varredura completa da tabela e fica lento com volume. Não criado
+  nesta fase; candidato a índice trigram/GIN numa fase de manutenção
+  futura.
+- **`contentText` não é exposto no DTO**: nenhum componente do front
+  precisa dele (é só para o `WHERE` do repository) — `reviewDTOSchema`
+  expõe `content` e `excerpt`, não `contentText`.
+- **Renderização estática, não HTML**: a página de detalhe usa
+  `renderToReactElement` (`@tiptap/static-renderer/pm/react`, pacote
+  adicional além dos pedidos originalmente — não estava na lista de
+  instalação, mas é onde vive o renderizador estático da v3, confirmado na
+  doc oficial) para converter o JSON salvo direto em elementos React, sem
+  passar por uma string HTML em nenhum momento. Isso elimina de vez a
+  classe de risco de `dangerouslySetInnerHTML` — não foi cogitado usar
+  `generateHTML` porque exigiria sanitizar HTML manualmente depois, um
+  passo a mais e uma superfície de risco que o caminho React não tem.
+- **`new-review-form.tsx` migrado para o padrão RPC** (`useForm` direto,
+  `register` nos inputs nativos, `Controller` no editor/rating/coleção,
+  `Field`/`FieldLabel`/`FieldError`/`Input`, erro de servidor em
+  `errors.root`) — o último formulário que ainda estava no padrão antigo
+  (`<Form>/<FormField>` do shadcn + Server Action). `createReview` (Server
+  Action) removida por ficar sem chamador, mesmo padrão de `createAlbum`
+  na fase 4; `deleteReview` continua como Server Action. Acessibilidade do
+  rating (`onClick` em ícone) e da seleção de coleção (`onClick` em badge)
+  NÃO foi mexida de propósito — isso é fase 9, misturar as duas coisas
+  tornaria o diff difícil de revisar.
+- **Enviar `contentText`/`excerpt` no payload não tem efeito**: os
+  schemas de entrada (`createReviewSchema`/`updateReviewSchema`) não
+  declaram esses campos, então o Zod os descarta ao fazer `parse`; o
+  service também nunca olha para eles no `data` recebido — só usa o que
+  `sanitizeRichText`/`toPlainText`/`toExcerpt` derivam de `content`.
+  Testado enviando os dois campos com valores falsos junto de um `content`
+  válido: a resposta e o banco mostram os valores derivados do `content`
+  real, não os enviados.
+
+## Redefinição da fase 9 (era migração de pastas, virou polimento)
+
+A fase 9 original era só "migração `src/template/` → `src/features/`". O
+usuário pediu, sob o nome "fase 9", um escopo diferente: acessibilidade
+(rating e seleção de coleção como `radiogroup`), performance de interação
+(debounce na busca), idioma consistente, paginação, estados de erro/vazio e
+`metadata`. Confirmado explicitamente com o usuário que a intenção era
+redefinir a fase 9 para esse escopo, não abrir uma fase não numerada — a
+migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
+(fase 10), que já estava planejada e não deveria perder a posição.
+
+## Polimento: acessibilidade, interação, idioma, erros (fase 9)
+
+- **Pendência da fase 8 fechada**: `PATCH /api/reviews/:id` já tratava
+  corretamente os três casos de risco (content válido regenera
+  contentText/excerpt; nó fora da lista rejeitado; PATCH sem content não
+  toca content/contentText/excerpt, porque `review.service.ts::update` só
+  monta esses três campos no patch quando `data.content` existe). Nenhum
+  código mudou — só testado e documentado no relatório da fase 9.
+- **Rating e seleção de coleção viraram `radiogroup`** de verdade
+  (`src/components/ui/radio-group.tsx`, wrapper sobre o primitivo
+  `RadioGroup` do pacote `radix-ui` já instalado — mesmo padrão de
+  `select.tsx`). Radix dá de graça `role="radiogroup"`/`role="radio"`,
+  `aria-checked`, roving tabindex (Tab entra/sai do grupo uma vez, setas
+  movem E selecionam) e foco visível — não foi reimplementado nada disso
+  à mão. A seleção de coleção usa `RadioGroupItem asChild` envolvendo o
+  `Badge` existente, preservando a cor por coleção.
+- **Busca com debounce próprio, não `use-debounce`**: a lógica inteira é
+  um `useRef` guardando o `setTimeout` pendente, limpo a cada tecla e no
+  unmount — não justificava uma dependência para ~10 linhas. Input do
+  título virou não-controlado (`defaultValue` + `ref`), lido direto do
+  DOM no debounce/submit em vez de re-renderizar a partir do
+  `searchParams` a cada tecla — é isso que elimina o lag, não o debounce
+  em si. `router.replace` (não `push`) com `scroll: false`;
+  `useTransition` alimenta um indicador sutil (spinner no lugar da lupa).
+- **Paginação por cursor conectada**: os repositories já suportavam desde
+  a fase 3; a UI descartava o `nextCursor`. `review-list.tsx` virou client
+  component com estado local acumulando páginas via RPC
+  (`rpc.api.reviews.$get`), mesmos filtros + cursor. Estados de
+  carregando/fim da lista/erro cobertos.
+- **Idioma**: nenhum texto em inglês deveria sobrar (`Read More` → `Ler
+  mais`, `Select a collection`/`Collections`/`Search for a book...` →
+  traduzidos, `Dashboard` → `Painel` inclusive o caso especial do label
+  curto na navbar mobile). Não foi introduzida lib de i18n — ver
+  recomendação abaixo.
+- **`error.tsx` por segmento** (`(app)/error.tsx`, `(auth)/error.tsx`,
+  `global-error.tsx` para o layout raiz), sempre com mensagem genérica em
+  português — `error.message` nunca aparece na tela, só `console.error`.
+  **`loading.tsx`** completado nos segmentos que ainda bloqueavam a
+  navegação sem feedback (o único gap real de verdade era
+  `new-review/page.tsx`, que fazia dois `await` em sequência sem nenhum
+  Suspense interno; os outros ganharam `loading.tsx` por consistência,
+  reaproveitando os skeletons já existentes).
+- **`src/components/ui/empty-state.tsx`**: um componente único (ícone +
+  título + descrição + ação opcional) substituindo o `<h2>`/`<p>` cru
+  repetido em quatro lugares. Ação oferecida onde faz sentido
+  ("Escrever resenha", "Criar coleção"); omitida onde já existe um botão
+  equivalente visível na mesma página (a lista de coleções vazia na
+  própria página `/collections`, que já tem "Nova Coleção" logo acima).
+- **Confirmação de exclusão via `alert-dialog`**: já existia desde as
+  fases 6/7 em `review-card.tsx`/`collection-card.tsx` — conferido, não
+  precisou de mudança.
+- **`metadata` por página** + `title.template` no layout raiz (`"%s | Book
+  Review"`). `generateMetadata` na página de detalhe da resenha usa só
+  título e autor — nunca `content`/`excerpt`/`rating` (vazaria em preview
+  de link) — e devolve título genérico sem tocar o banco quando não há
+  sessão. `robots: { index: false, follow: false }` porque é conteúdo
+  pessoal do usuário.
+- **Revisão de acessibilidade geral encontrou bugs reais, não só
+  polimento cosmético**: o gatilho de deletar (review/coleção) era um
+  `<svg>` puro com `onClick` — não focável, não operável por teclado, e
+  `opacity-0` até `:hover` (então um usuário de teclado nunca via o foco
+  chegar nele). Virou `<button>` real. O botão de limpar busca tinha o
+  mesmo problema (`<div role="group">` com `onClick`) — trocado pelo
+  `InputGroupButton` que já existia em `input-group.tsx` e não era usado
+  ali. `navbar.tsx`/`mobile-navbar.tsx` tinham `bg-white` hardcoded
+  (quebrava no tema escuro) — virou `bg-background`.
+- **Recomendação sobre i18n**: não introduzida porque o app é monolíngue
+  por decisão explícita desta fase. Se o produto vier a precisar de outro
+  idioma, `next-intl` é a opção mais madura para App Router hoje — mas
+  isso é uma decisão de produto, não algo a antecipar em código morto.
+
+## Correção de bugs e testes com Vitest (fase 10)
+
+- **Três bugs de uso real corrigidos antes dos testes** (tarefas 0a-0c):
+  1. **Undo/redo do editor não funcionava**: `RichTextEditor` repassava
+     `value` (o `field.value` do react-hook-form, um objeto novo a cada
+     `onUpdate`) para `content` do `useEditor` em TODO render. Isso fazia
+     o `EditorInstanceManager` do `@tiptap/react` chamar
+     `editor.setOptions(...)` a cada tecla — testado isoladamente
+     (`@tiptap/core` puro e depois com React + Controller reais, via
+     jsdom) e essa reconfiguração sozinha não chegou a zerar o histórico
+     na versão instalada (3.30.1), mas é exatamente o anti-padrão que o
+     modelo do Tiptap proíbe ("o editor é a fonte de verdade enquanto
+     montado") e a explicação mais plausível para o sintoma em navegador
+     real. Corrigido capturando `value` uma única vez
+     (`useState(() => value)`, nunca mais lido depois do mount).
+  2. **Editor não limpava e não navegava após salvar**: `reset()` do
+     react-hook-form não alcança o estado interno do Tiptap.
+     `RichTextEditor` ganhou `clearContent()` via `useImperativeHandle`
+     (React 19, sem `forwardRef`); ordem no `onSubmit`:
+     `clearContent()` → `reset()` (nessa ordem, para o `onUpdate` do
+     clear não deixar o form sujo de novo) → toast → `router.push` +
+     `router.refresh()`.
+  3. **Contagem de livros por coleção ficava presa**: mutação de review
+     só invalidava `reviews:${userId}`, nunca `collections:${userId}` —
+     apesar de `collection.service.listWithReviewCount` ler `reviewsCount`
+     através da relação Collection → Review. Nova função
+     `tagsForReviewMutation(userId, reviewId?)` em `cache-tags.ts`
+     centraliza o conjunto completo de tags que toda mutação de review
+     precisa invalidar. Auditado o resto do projeto atrás da mesma classe
+     de dependência cruzada (todo uso de `unstable_cache`) — nenhuma outra
+     encontrada.
+- **Vitest configurado só para services** (`vitest.config.ts`): ambiente
+  `node` (sem DOM), alias `@/` → `src/` (mesmo do tsconfig), e um alias
+  de `server-only` para um stub vazio (`src/test/stubs/server-only.ts`) —
+  o pacote real lança um erro incondicional fora do bundler do Next.
+- **Dublês de repository via `vi.mock`, não injeção de dependência
+  explícita**: os services importam repository como módulo inteiro
+  (`import * as reviewRepository from "..."`), consumido por 3
+  chamadores cada (routes/queries/actions) por módulo — converter para
+  DI explícita mudaria a assinatura pública dos services e obrigaria
+  editar 6 chamadores em produção só para viabilizar teste. `vi.mock`
+  intercepta o import no nível do módulo sem tocar em código de
+  produção. O ponto fraco de um mock genérico (divergir do repository
+  real sem ninguém notar) é resolvido tipando o dublê contra
+  `typeof <módulo real>` — se o repository mudar de forma, o dublê para
+  de compilar. **Achado real durante a implementação**: o dublê guardava
+  `content` como `Prisma.InputJsonValue`, mas o repository real LÊ
+  `Review.content` como `Prisma.JsonValue` (tipos diferentes no Prisma,
+  `InputJsonObject` não é um `JsonValue` válido) — pego na hora pela
+  checagem de tipos contra `typeof ReviewRepository`.
+- **Falsificação do dublê** (mesma técnica do teste de tipo do RPC):
+  renomeado `findAll` → `findAllReviews` no repository real de propósito
+  → `tsc` acusou erro em três lugares (o dublê, o módulo `.mock.ts`, e
+  `review.service.ts`, que usa o mesmo nome) → restaurado, voltou a
+  compilar limpo. **Achado relevante**: `pnpm test` sozinho (esbuild via
+  Vite, sem checagem de tipos) NÃO detectou a quebra — os 25 testes
+  continuaram passando com o dublê já desalinhado do repository real.
+  Só `tsc` (via `pnpm validate:typecheck`) pegou o problema. É por isso
+  que o workflow de CI roda os dois, nessa ordem, e por isso a estratégia
+  de dublê tipado só vale alguma coisa combinada com typecheck em CI —
+  sozinha, no runtime dos testes, não protege contra nada.
+- **Cobertura**: 93.75% statements/lines, 94.54% branches, 80% funções
+  nos três arquivos cobertos (`review.service.ts`, `collection.service.ts`,
+  `rich-text.ts`). Sem limite mínimo configurado — não é meta a perseguir.
+  Gaps deixados de propósito: getters triviais sem nenhum branch
+  (`collection.service.list`, `review.service.listRecent`/`getAll`) e uma
+  linha defensiva em `review.service.update` que o próprio comentário no
+  código diz que "não deveria acontecer" (só seria alcançável com um
+  dublê deliberadamente inconsistente).
+- **CI** (`.github/workflows/ci.yml`): install → lint → typecheck → test
+  → build, em push e pull request. Variáveis de ambiente todas dummy
+  (`SKIP_ENV_VALIDATION=true`) — confirmado localmente, com
+  `docker compose stop`, que os quatro comandos completam sem um Postgres
+  de verdade (as rotas são todas dinâmicas, nenhuma prerenderização
+  estática bate no banco durante o build).
+
+## Migração `src/template/` → `src/features/` (fase 11)
+
+- **Mapeamento**: `books-review-page/` e `new-review/` (mesma entidade)
+  viraram `src/features/reviews/`; `collections-page/` virou
+  `src/features/collections/`; `home-page/` virou `src/features/home/`.
+  `src/features/auth/` (criada na fase 5) serviu de modelo — mesma
+  estrutura interna (`components/`, `http/`, `lib/`, `types/`, `index.ts`).
+- **Mecânica pura, sem mudança de comportamento**: cada arquivo movido com
+  `git mv` (preserva histórico — `git log --follow` funciona nos arquivos
+  renomeados); identificadores exportados mantidos, só caminho/nome de
+  arquivo mudou. Único ajuste de nome explícito: `header-skeleton.tsx` →
+  `review-header-skeleton.tsx` (nome genérico demais fora da pasta
+  original) e `books-review-page.tsx` → `http/review-list-section.tsx`
+  (nome que refletia a pasta antiga, não o conteúdo).
+- **`http/` vs `components/`**: `http/` é o ponto de entrada consumido
+  direto por `src/app/*/page.tsx`/`loading.tsx` (Server Components que
+  chamam `getSession()` + `*.queries.ts`) e funções de busca de dado puras;
+  `components/` é tudo que é consumido internamente pela própria feature,
+  mesmo quando busca dado por conta própria (ex.: `CollectionList`,
+  `RecentReviewList`).
+- **Bug real pego pelo `validate:typecheck` durante a migração**:
+  `home-page.tsx` tinha um import RELATIVO (`./components/home-skeleton`)
+  que só era válido na localização antiga — `git mv` não reescreve imports
+  relativos. Corrigido para caminho absoluto (`@/features/home/...`)
+  antes de commitar a feature `home`.
+- **Único cross-feature real**: `home` consome `ReviewCard` de `reviews`,
+  sempre pela API pública (`@/features/reviews`, nunca caminho profundo).
+  Confirmado com `grep -rn "@/features/[a-z]*/" src/features/` — só
+  aparecem imports dentro da própria feature.
+- **`src/components/editor/` ficou fora de `features/reviews/`
+  deliberadamente**: `src/server/lib/rich-text.ts` (código de servidor)
+  importa `extensions.ts` de lá; mover o editor para dentro de uma feature
+  inverteria a direção de dependência servidor → front.
+- **`src/template/` não existe mais** — confirmado (`ls src/template`
+  falha) depois de mover as quatro features; nenhuma re-exportação de
+  compatibilidade foi deixada para trás.
+- **Verificação de comportamento contra `next build && next start`**: CRUD
+  completo de coleção e resenha (criar/editar/apagar), contagem de
+  resenhas por coleção atualizando, filtro por coleção, busca por título,
+  paginação por cursor, apagar coleção vazia (204) vs. apagar coleção com
+  resenha dentro (409 `CONFLICT`), isolamento entre contas nos dois
+  sentidos (usuário B recebe 404, não 403, ao tentar acessar recurso de A,
+  e vice-versa), `/api/doc` válido (200, OpenAPI 3.1) em modo dev e 404 em
+  produção (comportamento herdado da fase 4.5, não uma regressão), teste
+  de tipo do RPC falsificado e restaurado. Nenhuma diferença de
+  comportamento encontrada.
+
+## Fases
+
+| Fase | Escopo                                                          | Status      |
+| ---- | ---------------------------------------------------------------- | ----------- |
+| 1    | Correções pontuais (Toaster/CSS duplicados, Suspense, docker-compose, lefthook, nomes) | ✅ Concluída |
+| 2    | Fundação de infraestrutura (ESLint/TypeScript, `env.ts`, `server-only`, scripts de release, porta do Postgres) | ✅ Concluída |
+| 3    | Camadas contract / repository / service / mapper (sem Hono)      | ✅ Concluída |
+| 4    | Hono montado em `src/app/api/[[...route]]/route.ts`, route handler, middlewares, RPC | ✅ Concluída |
+| 4.5  | OpenAPI com `@hono/zod-openapi` (`createRoute`, `/api/doc`, `/api/reference`) | ✅ Concluída |
+| 5    | BetterAuth (email+senha, Google, GitHub)                         | ✅ Concluída |
+| 6    | Ownership: `userId` em Album/Review, filtro por dono, autorização nos services | ✅ Concluída |
+| 7    | Rename `Album` → `Collection` / `categoryId` → `collectionId`    | ✅ Concluída |
+| 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | ✅ Concluída |
+| 9    | Polimento: acessibilidade, performance de interação, idioma, estados de erro/vazio, metadata | ✅ Concluída |
+| 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | ✅ Concluída |
+| 11   | Migração `src/template/` → `src/features/<entidade>/` (redefinida a partir da fase 9 original) | ✅ Concluída |

@@ -1,3 +1,10 @@
+allowBuilds:
+  "@prisma/engines": false
+  lefthook: false
+  prisma: false
+  unrs-resolver: false
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+minimumReleaseAgeExclude:
+  - pnpm@11.21.0

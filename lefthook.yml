@@ -1,8 +1,8 @@
 pre-commit:
   commands:
     check:
-      run: pnpm format {staged_files}
-      glob: "*.{ts,tsx,js,jsx,.mjs,css,json,md}"
+      run: pnpm format:fix {staged_files}
+      glob: "*.{ts,tsx,js,jsx,mjs,css,json,md}"
       stage_fixed: true
 
 pre-push:

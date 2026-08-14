@@ -7,7 +7,7 @@ import {
 
 const NAVLINKS = [
   {
-    label: "Dashboard",
+    label: "Painel",
     href: "/",
     icon: LayoutDashboardIcon,
   },
@@ -22,8 +22,8 @@ const NAVLINKS = [
     icon: PlusCircleIcon,
   },
   {
-    label: "Albums",
-    href: "/albums",
+    label: "Coleções",
+    href: "/collections",
     icon: FolderOpenIcon,
   },
 ];

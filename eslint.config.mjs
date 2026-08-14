@@ -19,6 +19,9 @@ const eslintConfig = defineConfig([
     "src/generated/prisma/**",
     "bookreview-pgdata/**",
     "node_modules/**",
+    // Relatório HTML gerado por `pnpm test:coverage` — já em .gitignore,
+    // mas o ESLint (flat config) não lê .gitignore sozinho.
+    "coverage/**",
   ]),
 ]);
 

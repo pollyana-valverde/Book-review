@@ -3,7 +3,6 @@ import { Roboto } from "next/font/google";
 import "@/styles/globals.css";
 
 import { Toaster } from "sonner";
-import { Navbar, MobileNavbar } from "@/components/layout";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -11,9 +10,12 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Book Review",
+  title: {
+    default: "Book Review",
+    template: "%s | Book Review",
+  },
   description:
-    "Uma plataforma para compartilhar resenhas de livros e álbuns de música.",
+    "Uma plataforma para criar, organizar e consultar resenhas de livros por coleções.",
   icons: {
     icon: "/favicon.ico",
   },
@@ -27,15 +29,7 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body className={`${roboto.variable} antialiased font-sans`}>
-        <Navbar />
-        <div
-          className={`
-          container mx-auto px-4 py-5 
-          mb-14 md:mb-0 md:mt-15`}
-        >
-          {children}
-        </div>
-        <MobileNavbar />
+        {children}
         <Toaster position="top-right" />
       </body>
     </html>
