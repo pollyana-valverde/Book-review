@@ -42,11 +42,12 @@ Com ele, voce consegue:
 
 ```text
 src/
-	app/                 # Rotas do App Router
-	api/actions/         # Server Actions (collections e reviews)
-	template/            # Estrutura das paginas e componentes de domínio
-	components/ui/       # Componentes base de interface
-	lib/                 # Prisma client, utilitários e helpers
+	app/                 # Rotas do App Router (só composição, sem lógica)
+	features/            # Front por entidade (reviews, collections, home, auth)
+	server/              # Camadas de domínio (contract/repository/service/...) e Hono
+	components/ui/       # Componentes base de interface (shadcn)
+	components/editor/   # Editor Tiptap, compartilhado entre cliente e servidor
+	lib/                 # Cliente RPC, utilitários e helpers
 prisma/
 	schema.prisma        # Modelos e datasource
 	migrations/          # Histórico de migrações

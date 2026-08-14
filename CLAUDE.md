@@ -2,8 +2,9 @@
 
 Contexto para sessões futuras neste repositório. Leia isto inteiro antes de
 mexer em qualquer coisa, e leia `docs/refactor-plan.md` para o histórico
-completo das decisões e o plano de reestruturação em 10 fases (o índice de
-fases no final desse documento diz o que já está concluído).
+completo das decisões e o plano de reestruturação em 11 fases (todas
+concluídas — ver o resumo no topo desse documento e o índice de fases no
+final).
 
 ## Stack
 
@@ -278,7 +279,6 @@ Components depois do `revalidateTag`.
 ## Mais contexto
 
 `docs/refactor-plan.md` tem o histórico completo: decisões de domínio e
-infraestrutura, dívida técnica, e o status fase a fase (1 a 10
-concluídas; fase 11 — migração `src/template/` → `src/features/`,
-remanejada da fase 9 original — pendente no momento em que este arquivo
-foi escrito).
+infraestrutura, dívida técnica, e o status fase a fase (1 a 11 concluídas
+— o plano de reestruturação original terminou aqui; a fase 11, migração
+`src/template/` → `src/features/`, foi remanejada da fase 9 original).

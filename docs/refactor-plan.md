@@ -1,7 +1,36 @@
 # Plano de reestruturação
 
-Este documento registra as decisões da reestruturação em 10 PRs para que
-sessões futuras tenham contexto sem depender do histórico do chat.
+Este documento registra as decisões da reestruturação em 11 fases para que
+sessões futuras tenham contexto sem depender do histórico do chat. **As 11
+fases estão concluídas** — o que segue é um resumo do estado final para
+quem chega sem ter acompanhado o processo; o resto do documento é o
+histórico fase a fase, mantido como referência.
+
+## Estado final, em resumo
+
+- **Domínio**: `Collection` (renomeada de `Album` na fase 7) e `Review`,
+  cada resenha pertence a uma coleção e a um usuário (`userId`).
+- **Servidor**: uma pasta por módulo em `src/server/modules/<módulo>/`,
+  em camadas — `*.contract.ts` (Zod, neutro) → `*.repository.ts` (Prisma)
+  → `*.mapper.ts` → `*.service.ts` (regra de negócio) → `*.routes.ts`
+  (Hono/`@hono/zod-openapi`) + `*.queries.ts` (leitura cacheada com
+  `unstable_cache`, chave e tag por `userId`) + `*.openapi.ts` (metadados
+  OpenAPI). Transporte HTTP montado em `src/app/api/[[...route]]/route.ts`;
+  RPC tipado (`hc<AppType>()`) em `src/lib/rpc.ts`.
+- **Front**: `src/features/<entidade>/` (`reviews`, `collections`, `home`,
+  `auth`), cada uma com `components/`/`http/`/`lib/`/`types/`/`index.ts`.
+  `src/app/` só compõe; nenhuma feature importa caminho profundo de outra
+  (ver "Arquitetura de front: features" em `CLAUDE.md`).
+- **Auth**: BetterAuth (e-mail+senha, Google/GitHub condicionais), sem
+  reset de senha nem verificação de e-mail (fora de escopo por decisão).
+- **Editor**: Tiptap 3, JSON como fonte de verdade; `contentText`/`excerpt`
+  sempre derivados no servidor.
+- **Testes**: Vitest nos services + `rich-text.ts`, com repositories falsos
+  tipados contra o módulo real; CI roda lint → typecheck → test → build.
+- Para as regras que evitam redescobrir armadilhas já resolvidas
+  (RPC do Hono, cache por usuário, estrutura de features etc.), ver
+  `CLAUDE.md` — este documento é o histórico, aquele é o guia de uso
+  diário.
 
 ## Decisões de domínio e arquitetura
 
@@ -49,42 +78,43 @@ sessões futuras tenham contexto sem depender do histórico do chat.
 
 ## Dívida técnica
 
-- TypeScript fixado em `~6.0.3` e ESLint em `^9` porque nenhuma versão
-  publicada de `@typescript-eslint` suporta TypeScript 7. Revisitar quando
-  houver suporte.
-- `unstable_cache` (usado em `*.queries.ts` desde a fase 4) está deprecated
-  no Next 16 em favor da diretiva `"use cache"` / Cache Components — a
-  própria doc do pacote (`node_modules/next/dist/docs/.../unstable_cache.md`)
-  já avisa isso. Continua funcionando e foi o que a fase 4 pediu
-  explicitamente; migrar para `"use cache"`/`cacheTag` é candidato a uma
-  fase de manutenção futura, não decidido ainda.
-- `next dev` ignora `NODE_ENV` customizado (sempre roda como development,
-  mesmo passando `NODE_ENV=production pnpm dev`). Testar qualquer
+Itens em aberto, cada um com o motivo pelo qual foi adiado em vez de
+resolvido durante a reestruturação:
+
+- **TypeScript fixado em `~6.0.3` e ESLint em `^9`.** Nenhuma versão
+  publicada de `@typescript-eslint` declara suporte a TypeScript 7 (peer
+  dependency trava em `<6.1.0`), e `eslint-plugin-react` trazido pelo
+  `eslint-config-next` trava em ESLint `^9.7`. Adiado até essas libs
+  publicarem suporte oficial — não é para fazer upgrade "no escuro" antes
+  disso (ver seção "Decisões de infraestrutura" acima).
+- **`unstable_cache` está deprecated** no Next 16 em favor de `"use cache"`
+  / Cache Components. Continua funcionando e é o que todo `*.queries.ts`
+  usa desde a fase 4; migrar exigiria revalidar toda a estratégia de tags
+  por usuário (fase 6) e não foi pedido — candidato a uma fase de
+  manutenção futura, não decidido ainda.
+- **Sem caminho de recuperação de conta** (decisão do usuário, fase 5):
+  reset de senha e verificação de e-mail nunca foram implementados;
+  usuário cadastrado por e-mail/senha que esquece a senha só tem login
+  social ou intervenção manual de um admin no banco. Precisa ser
+  endereçado antes do app ter usuários reais fora de ambiente de teste.
+- **Sem índice em `content_text`** (fase 8): a busca de resenha por texto
+  usa `ILIKE`/`contains`, que faz varredura completa da tabela. Não criado
+  porque o volume de dados do projeto ainda não justifica a complexidade
+  de um índice trigram/GIN — candidato a fase de manutenção quando o
+  volume crescer.
+- **Cadastro por e-mail expõe se o e-mail já existe — mantido por decisão
+  do usuário** (fase 6, tarefa 0c): `POST /api/auth/sign-up/email` com
+  e-mail já cadastrado responde `422`
+  (`USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`, comportamento padrão do
+  BetterAuth). Mascarar essa resposta pioraria a experiência de cadastro
+  (falha silenciosa, mais suporte) por um ganho de privacidade que não se
+  justifica numa plataforma de resenhas de livros. Revisitar só se o
+  projeto mudar de natureza.
+- `next dev` ignora `NODE_ENV` customizado (sempre roda como development).
+  Não é dívida do projeto, é comportamento do Next — mas todo teste de
   comportamento condicionado a `NODE_ENV === "production"` (gate de
-  `/api/doc`/`/api/reference` na fase 4.5, rate limit e mensagens genéricas
-  de auth na fase 5) exige `next build && next start`.
-- **Reset de senha removido do escopo** (decisão do usuário na fase 5):
-  usuários cadastrados por e-mail/senha não têm nenhum caminho de
-  recuperação de conta se esquecerem a senha — só login social ou pedir
-  para um admin recriar a conta manualmente no banco. Isso precisa ser
-  endereçado antes do app ter usuários reais fora de teste.
-- ~~`src/middleware.ts` usa a convenção deprecated~~ — resolvido na fase 6,
-  tarefa 0a: renomeado para `src/proxy.ts` (função `proxy`), conforme
-  `node_modules/next/dist/docs/.../proxy.md` (Next 16.3.0). Nota: a partir
-  do Next 16, Proxy roda no runtime Node.js por padrão (deixou de ser
-  Edge-only) — o comentário no arquivo foi corrigido para não afirmar mais
-  "runtime restrito tipo Edge"; a razão para não usar Prisma ali continua
-  sendo performance (evitar um round-trip de banco em toda navegação), não
-  mais uma limitação técnica do runtime.
-- **Cadastro por e-mail expõe se o e-mail já existe — MANTIDO por decisão
-  do usuário (fase 6, tarefa 0c)**: `POST /api/auth/sign-up/email` com um
-  e-mail já cadastrado responde `422` com
-  `{"code":"USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"}` — comportamento
-  padrão do BetterAuth. Decisão final: manter assim. O custo de usabilidade
-  de mascarar (usuário não entende por que o cadastro "falhou" em silêncio,
-  fluxo de suporte mais confuso) supera o ganho de privacidade neste
-  domínio (uma plataforma de resenhas de livros, não um serviço onde a
-  lista de usuários é sensível). Revisitar se o projeto mudar de natureza.
+  `/api/doc`/`/api/reference`, rate limit, mensagens genéricas de auth)
+  precisa ser feito contra `next build && next start`, nunca `next dev`.
 
 ## Camadas de servidor (fase 3)
 
@@ -669,6 +699,53 @@ migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
   de verdade (as rotas são todas dinâmicas, nenhuma prerenderização
   estática bate no banco durante o build).
 
+## Migração `src/template/` → `src/features/` (fase 11)
+
+- **Mapeamento**: `books-review-page/` e `new-review/` (mesma entidade)
+  viraram `src/features/reviews/`; `collections-page/` virou
+  `src/features/collections/`; `home-page/` virou `src/features/home/`.
+  `src/features/auth/` (criada na fase 5) serviu de modelo — mesma
+  estrutura interna (`components/`, `http/`, `lib/`, `types/`, `index.ts`).
+- **Mecânica pura, sem mudança de comportamento**: cada arquivo movido com
+  `git mv` (preserva histórico — `git log --follow` funciona nos arquivos
+  renomeados); identificadores exportados mantidos, só caminho/nome de
+  arquivo mudou. Único ajuste de nome explícito: `header-skeleton.tsx` →
+  `review-header-skeleton.tsx` (nome genérico demais fora da pasta
+  original) e `books-review-page.tsx` → `http/review-list-section.tsx`
+  (nome que refletia a pasta antiga, não o conteúdo).
+- **`http/` vs `components/`**: `http/` é o ponto de entrada consumido
+  direto por `src/app/*/page.tsx`/`loading.tsx` (Server Components que
+  chamam `getSession()` + `*.queries.ts`) e funções de busca de dado puras;
+  `components/` é tudo que é consumido internamente pela própria feature,
+  mesmo quando busca dado por conta própria (ex.: `CollectionList`,
+  `RecentReviewList`).
+- **Bug real pego pelo `validate:typecheck` durante a migração**:
+  `home-page.tsx` tinha um import RELATIVO (`./components/home-skeleton`)
+  que só era válido na localização antiga — `git mv` não reescreve imports
+  relativos. Corrigido para caminho absoluto (`@/features/home/...`)
+  antes de commitar a feature `home`.
+- **Único cross-feature real**: `home` consome `ReviewCard` de `reviews`,
+  sempre pela API pública (`@/features/reviews`, nunca caminho profundo).
+  Confirmado com `grep -rn "@/features/[a-z]*/" src/features/` — só
+  aparecem imports dentro da própria feature.
+- **`src/components/editor/` ficou fora de `features/reviews/`
+  deliberadamente**: `src/server/lib/rich-text.ts` (código de servidor)
+  importa `extensions.ts` de lá; mover o editor para dentro de uma feature
+  inverteria a direção de dependência servidor → front.
+- **`src/template/` não existe mais** — confirmado (`ls src/template`
+  falha) depois de mover as quatro features; nenhuma re-exportação de
+  compatibilidade foi deixada para trás.
+- **Verificação de comportamento contra `next build && next start`**: CRUD
+  completo de coleção e resenha (criar/editar/apagar), contagem de
+  resenhas por coleção atualizando, filtro por coleção, busca por título,
+  paginação por cursor, apagar coleção vazia (204) vs. apagar coleção com
+  resenha dentro (409 `CONFLICT`), isolamento entre contas nos dois
+  sentidos (usuário B recebe 404, não 403, ao tentar acessar recurso de A,
+  e vice-versa), `/api/doc` válido (200, OpenAPI 3.1) em modo dev e 404 em
+  produção (comportamento herdado da fase 4.5, não uma regressão), teste
+  de tipo do RPC falsificado e restaurado. Nenhuma diferença de
+  comportamento encontrada.
+
 ## Fases
 
 | Fase | Escopo                                                          | Status      |
@@ -684,4 +761,4 @@ migração de pastas foi empurrada para uma fase 11 nova, depois de Vitest
 | 8    | Editor Tiptap (JSON, `contentText`/`excerpt` derivados)          | ✅ Concluída |
 | 9    | Polimento: acessibilidade, performance de interação, idioma, estados de erro/vazio, metadata | ✅ Concluída |
 | 10   | Testes (Vitest) — a documentação OpenAPI foi adiantada para a fase 4.5 | ✅ Concluída |
-| 11   | Migração `src/template/` → `src/features/<entidade>/` (redefinida a partir da fase 9 original) | Pendente    |
+| 11   | Migração `src/template/` → `src/features/<entidade>/` (redefinida a partir da fase 9 original) | ✅ Concluída |
